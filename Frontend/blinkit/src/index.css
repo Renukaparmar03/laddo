@@ -1,0 +1,85 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+
+:root {
+  /* Pastel Palette */
+  --color-pink: #FFF0F5;
+  --color-lavender: #E6E6FA;
+  --color-cream: #FFFDD0;
+  --color-white: #FFFFFF;
+  --color-purple: #F3E5F5;
+  --color-blue: #E3F2FD;
+  --color-soft-gray: #f2f4f6; /* Slightly darker for better contrast */
+  
+  /* Text & Accents */
+  --text-primary: #1a1a1a;
+  --text-secondary: #666666;
+  --accent-color: #ff4d4d; /* More vibrant red/coral */
+  --veg-color: #0c831f;
+  --nonveg-color: #d11243;
+  
+  /* Shadows & Radius */
+  --shadow-soft: 0 1px 4px rgba(0, 0, 0, 0.08);
+  --shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.12);
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-xl: 50px;
+  
+  /* Layout */
+  --header-height: 54px;
+  --bottom-nav-height: 60px;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Outfit', sans-serif;
+  background-color: var(--color-white);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.5;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+  font-family: inherit;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+/* Hide Scrollbar */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Responsive Grid Utilities */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 0 15px;
+  }
+}
