@@ -2,15 +2,27 @@ import React from 'react';
 import ProductCard from './ProductCard';
 import { PRODUCTS } from '../data';
 
-const ProductGrid = () => {
+const ProductGrid = ({ activeCategory }) => {
+  const filteredProducts = activeCategory === 'All'
+    ? PRODUCTS
+    : PRODUCTS.filter(product => product.category === activeCategory);
+
   return (
     <section className="product-grid-section">
-      <h3 className="section-title">Fresh Picks for You</h3>
-      <div className="product-grid">
-        {PRODUCTS.map(product => (
-          <ProductCard key={product.id} product={product} />
-        ))}
-      </div>
+      <h3 className="section-title">
+        {activeCategory === 'All' ? 'Fresh Picks for You' : `${activeCategory}`}
+      </h3>
+      {filteredProducts.length > 0 ? (
+        <div className="product-grid">
+          {filteredProducts.map(product => (
+            <ProductCard key={product.id} product={product} />
+          ))}
+        </div>
+      ) : (
+        <div className="no-products-container">
+          <p className="no-products-text">No products found in this category.</p>
+        </div>
+      )}
     </section>
   );
 };

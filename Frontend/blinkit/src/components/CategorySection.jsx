@@ -1,13 +1,18 @@
 import React from 'react';
 import { CATEGORIES } from '../data';
 
-const CategorySection = () => {
+const CategorySection = ({ activeCategory, setActiveCategory }) => {
   return (
     <section className="category-section">
       <h3 className="section-title">Shop by Category</h3>
       <div className="category-grid hide-scrollbar">
         {CATEGORIES.slice(1).map((cat) => (
-          <div key={cat.id} className="category-card" style={{ backgroundColor: cat.color }}>
+          <div 
+            key={cat.id} 
+            className={`category-card ${activeCategory === cat.name ? 'active' : ''}`} 
+            style={{ backgroundColor: cat.color }}
+            onClick={() => setActiveCategory && setActiveCategory(cat.name)}
+          >
             <div className="category-img-wrapper">
               <img 
                 src={cat.image} 

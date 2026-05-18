@@ -1,25 +1,37 @@
 import React from 'react';
 import { Home, ClipboardList, Grid, User } from 'lucide-react';
 
-const BottomNav = () => {
+const BottomNav = ({ activeTab, setActiveTab }) => {
   return (
     <nav className="bottom-nav">
-      <div className="bottom-nav-item active">
+      <button 
+        className={`bottom-nav-item ${activeTab === 'home' ? 'active' : ''}`}
+        onClick={() => setActiveTab('home')}
+      >
         <Home size={22} />
         <span>Home</span>
-      </div>
-      <div className="bottom-nav-item">
+      </button>
+      <button 
+        className={`bottom-nav-item ${activeTab === 'orders' ? 'active' : ''}`}
+        onClick={() => setActiveTab('orders')}
+      >
         <ClipboardList size={22} />
         <span>Orders</span>
-      </div>
-      <div className="bottom-nav-item">
+      </button>
+      <button 
+        className={`bottom-nav-item ${activeTab === 'categories' ? 'active' : ''}`}
+        onClick={() => setActiveTab('home')} // Reset to home for categories
+      >
         <Grid size={22} />
         <span>Categories</span>
-      </div>
-      <div className="bottom-nav-item">
+      </button>
+      <button 
+        className={`bottom-nav-item ${activeTab === 'profile' ? 'active' : ''}`}
+        onClick={() => setActiveTab('home')} // Placeholder reset
+      >
         <User size={22} />
         <span>Profile</span>
-      </div>
+      </button>
     </nav>
   );
 };

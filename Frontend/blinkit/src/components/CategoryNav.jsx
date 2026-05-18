@@ -1,10 +1,8 @@
-import React, { useState } from 'react';
+import React from 'react';
 import * as LucideIcons from 'lucide-react';
 import { CATEGORIES } from '../data';
 
-const CategoryNav = () => {
-  const [activeCategory, setActiveCategory] = useState('All');
-
+const CategoryNav = ({ activeCategory, setActiveCategory }) => {
   return (
     <nav className="category-nav hide-scrollbar">
       <div className="category-nav-inner">

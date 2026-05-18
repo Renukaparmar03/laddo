@@ -8,7 +8,7 @@ export const CATEGORIES = [
   { id: 7, name: 'Mobiles', icon: 'Smartphone', color: '#E3F2FD', image: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=100&q=80' },
   { id: 8, name: 'Furniture', icon: 'Lamp', color: '#F3E5F5', image: 'https://images.unsplash.com/photo-1524758631624-e2822e304c36?w=100&q=80' },
   { id: 9, name: 'Shoes', icon: 'Footprints', color: '#FFF0F5', image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=100&q=80' },
-  { id: 10, name: 'Toys', icon: 'Gamepad2', color: '#E6E6FA', image: 'https://images.unsplash.com/photo-1559440666-306ceb52701d?w=100&q=80' },
+  { id: 10, name: 'Toys', icon: 'Gamepad2', color: '#E6E6FA', image: 'https://images.unsplash.com/photo-1559251606-c623743a6d76?w=100&q=80' },
 ];
 
 export const PRODUCTS = [
@@ -96,7 +96,7 @@ export const PRODUCTS = [
     weight: '300g',
     rating: 4.9,
     deliveryTime: 'Tomorrow',
-    image: 'https://images.unsplash.com/photo-1559440666-306ceb52701d?w=400&q=80',
+    image: 'https://images.unsplash.com/photo-1559251606-c623743a6d76?w=400&q=80',
     isVeg: true,
     category: 'Toys'
   }

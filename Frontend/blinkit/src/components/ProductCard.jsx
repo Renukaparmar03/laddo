@@ -1,7 +1,17 @@
-import React from 'react';
-import { Heart, Star, Clock } from 'lucide-react';
+import React, { useState } from 'react';
+import { Heart, Star, Clock, Check } from 'lucide-react';
 
-const ProductCard = ({ product }) => {
+const ProductCard = ({ product, isOrderView }) => {
+  const [isReordered, setIsReordered] = useState(false);
+
+  const handleReorder = (e) => {
+    e.stopPropagation();
+    setIsReordered(true);
+    setTimeout(() => {
+      setIsReordered(false);
+    }, 2000);
+  };
+
   return (
     <div className="product-card">
       <div className="product-img-wrapper">
@@ -32,7 +42,23 @@ const ProductCard = ({ product }) => {
         
         <div className="product-footer">
           <span className="product-price">₹{product.price}</span>
-          <button className="add-btn">ADD</button>
+          {isOrderView ? (
+            <button 
+              className={`reorder-btn ${isReordered ? 'reordered' : ''}`}
+              onClick={handleReorder}
+            >
+              {isReordered ? (
+                <>
+                  <Check size={12} style={{ marginRight: '2px' }} />
+                  Reordered
+                </>
+              ) : (
+                'Reorder'
+              )}
+            </button>
+          ) : (
+            <button className="add-btn">ADD</button>
+          )}
         </div>
       </div>
     </div>
