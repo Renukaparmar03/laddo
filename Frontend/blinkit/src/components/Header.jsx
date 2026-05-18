@@ -1,13 +1,16 @@
 import React from 'react';
 import { User, Wallet, MapPin } from 'lucide-react';
 
-const Header = ({ setActiveTab }) => {
+const Header = ({ setActiveTab, setActiveCategory }) => {
   return (
     <header className="header">
       <div className="header-container">
         <div 
           className="logo" 
-          onClick={() => setActiveTab && setActiveTab('home')}
+          onClick={() => {
+            setActiveTab && setActiveTab('home');
+            setActiveCategory && setActiveCategory('All');
+          }}
           style={{ cursor: 'pointer' }}
         >
           <span className="logo-text">blink<span className="logo-accent">it</span></span>

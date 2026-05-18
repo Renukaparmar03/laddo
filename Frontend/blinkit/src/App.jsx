@@ -7,6 +7,7 @@ import CategorySection from './components/CategorySection'
 import ProductGrid from './components/ProductGrid'
 import BottomNav from './components/BottomNav'
 import OrdersPage from './components/OrdersPage'
+import CategoryPage from './components/CategoryPage'
 import './App.css'
 
 function App() {
@@ -15,7 +16,7 @@ function App() {
 
   return (
     <div className="app">
-      <Header setActiveTab={setActiveTab} />
+      <Header setActiveTab={setActiveTab} setActiveCategory={setActiveCategory} />
       <SearchBar />
       
       {activeTab === 'home' ? (
@@ -23,9 +24,15 @@ function App() {
           <CategoryNav activeCategory={activeCategory} setActiveCategory={setActiveCategory} />
           
           <main className="content-area">
-            <HeroBanner />
-            <CategorySection activeCategory={activeCategory} setActiveCategory={setActiveCategory} />
-            <ProductGrid activeCategory={activeCategory} />
+            {activeCategory === 'All' ? (
+              <>
+                <HeroBanner />
+                <CategorySection activeCategory={activeCategory} setActiveCategory={setActiveCategory} />
+                <ProductGrid activeCategory={activeCategory} />
+              </>
+            ) : (
+              <CategoryPage activeCategory={activeCategory} setActiveCategory={setActiveCategory} />
+            )}
           </main>
         </>
       ) : (
@@ -34,7 +41,12 @@ function App() {
         </main>
       )}
 
-      <BottomNav activeTab={activeTab} setActiveTab={setActiveTab} />
+      <BottomNav 
+        activeTab={activeTab} 
+        setActiveTab={setActiveTab} 
+        activeCategory={activeCategory}
+        setActiveCategory={setActiveCategory}
+      />
     </div>
   )
 }
