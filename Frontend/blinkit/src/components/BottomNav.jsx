@@ -1,12 +1,15 @@
 import React from 'react';
 import { Home, ClipboardList, Grid, User } from 'lucide-react';
 
-const BottomNav = ({ activeTab, setActiveTab }) => {
+const BottomNav = ({ activeTab, setActiveTab, activeCategory, setActiveCategory }) => {
   return (
     <nav className="bottom-nav">
       <button 
-        className={`bottom-nav-item ${activeTab === 'home' ? 'active' : ''}`}
-        onClick={() => setActiveTab('home')}
+        className={`bottom-nav-item ${activeTab === 'home' && activeCategory === 'All' ? 'active' : ''}`}
+        onClick={() => {
+          setActiveTab('home');
+          setActiveCategory && setActiveCategory('All');
+        }}
       >
         <Home size={22} />
         <span>Home</span>
@@ -19,15 +22,23 @@ const BottomNav = ({ activeTab, setActiveTab }) => {
         <span>Orders</span>
       </button>
       <button 
-        className={`bottom-nav-item ${activeTab === 'categories' ? 'active' : ''}`}
-        onClick={() => setActiveTab('home')} // Reset to home for categories
+        className={`bottom-nav-item ${activeTab === 'home' && activeCategory !== 'All' ? 'active' : ''}`}
+        onClick={() => {
+          setActiveTab('home');
+          if (setActiveCategory && activeCategory === 'All') {
+            setActiveCategory('Grocery & Kitchen');
+          }
+        }}
       >
         <Grid size={22} />
         <span>Categories</span>
       </button>
       <button 
         className={`bottom-nav-item ${activeTab === 'profile' ? 'active' : ''}`}
-        onClick={() => setActiveTab('home')} // Placeholder reset
+        onClick={() => {
+          setActiveTab('home');
+          setActiveCategory && setActiveCategory('All');
+        }}
       >
         <User size={22} />
         <span>Profile</span>
