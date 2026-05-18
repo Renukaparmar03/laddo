@@ -11,7 +11,7 @@ const BANNERS = [
   },
   {
     id: 2,
-    image: "https://images.unsplash.com/photo-1506617564039-2f3b650ad755?w=1200&q=80",
+    image: "https://i1-c.pinimg.com/1200x/83/ba/38/83ba38494db43b20a71c3863801f06cf.jpg",
     title: "Super Fast Delivery",
     desc: "Fresh essentials in 10 minutes",
     btnText: "Order Now",
@@ -40,15 +40,15 @@ const HeroBanner = () => {
   return (
     <div className="hero-banner">
       <div className="banner-slider-container">
-        <div 
-          className="banner-slider-track" 
+        <div
+          className="banner-slider-track"
           style={{ transform: `translateX(-${currentIndex * 100}%)` }}
         >
           {BANNERS.map((banner) => (
             <div key={banner.id} className="banner-slide">
-              <img 
-                src={banner.image} 
-                alt={banner.title} 
+              <img
+                src={banner.image}
+                alt={banner.title}
                 className="banner-img"
               />
               <div className="banner-overlay" style={{ background: banner.gradient }}>
@@ -59,7 +59,7 @@ const HeroBanner = () => {
             </div>
           ))}
         </div>
-        
+
         {/* Slider Indicators / Dots */}
         <div className="banner-dots">
           {BANNERS.map((_, idx) => (
