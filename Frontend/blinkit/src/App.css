@@ -486,22 +486,138 @@
 .product-grid {
   display: grid;
   gap: 8px;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(3, 1fr);
 }
 
 @media (min-width: 600px) {
   .product-grid {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 12px;
   }
 }
 
 @media (min-width: 992px) {
   .product-grid {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(5, 1fr);
     max-width: 1200px;
     margin: 0 auto;
     gap: 16px;
+  }
+}
+
+/* Mobile Compact Product Cards */
+@media (max-width: 600px) {
+  .product-grid-section {
+    padding: 8px;
+  }
+  
+  .product-grid {
+    gap: 6px;
+  }
+  
+  .product-card {
+    border-radius: 8px;
+  }
+  
+  .product-img-wrapper {
+    border-bottom: 1px solid #f8f8f8;
+  }
+  
+  .product-img {
+    padding: 6px;
+  }
+  
+  .wishlist-btn {
+    top: 4px;
+    right: 4px;
+    padding: 3px;
+  }
+  
+  .wishlist-btn svg {
+    width: 12px;
+    height: 12px;
+  }
+  
+  .veg-indicator {
+    top: 4px;
+    left: 4px;
+    width: 10px;
+    height: 10px;
+    border-width: 1px;
+  }
+  
+  .indicator-circle {
+    width: 4px;
+    height: 4px;
+  }
+  
+  .product-info {
+    padding: 6px;
+  }
+  
+  .delivery-tag {
+    padding: 1px 4px;
+    font-size: 8px;
+    gap: 2px;
+    margin-bottom: 4px;
+    border-radius: 3px;
+  }
+  
+  .delivery-tag svg {
+    width: 8px;
+    height: 8px;
+  }
+  
+  .product-title {
+    font-size: 10px;
+    height: 26px;
+    margin-bottom: 4px;
+    font-weight: 500;
+  }
+  
+  .product-meta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    margin-bottom: 6px;
+  }
+  
+  .product-weight {
+    font-size: 9px;
+  }
+  
+  .product-rating {
+    font-size: 8px;
+    padding: 0 3px;
+    gap: 1px;
+    border-radius: 3px;
+  }
+  
+  .product-rating svg {
+    width: 8px;
+    height: 8px;
+  }
+  
+  .product-footer {
+    padding-top: 2px;
+    gap: 4px;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .product-price {
+    font-size: 11px;
+    font-weight: 800;
+    text-align: left;
+  }
+  
+  .add-btn, .reorder-btn {
+    padding: 4px 8px;
+    font-size: 9px;
+    border-radius: 4px;
+    width: 100%;
+    text-align: center;
+    justify-content: center;
   }
 }
 
