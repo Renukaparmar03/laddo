@@ -36,8 +36,7 @@ const BottomNav = ({ activeTab, setActiveTab, activeCategory, setActiveCategory 
       <button 
         className={`bottom-nav-item ${activeTab === 'profile' ? 'active' : ''}`}
         onClick={() => {
-          setActiveTab('home');
-          setActiveCategory && setActiveCategory('All');
+          setActiveTab('profile');
         }}
       >
         <User size={22} />
