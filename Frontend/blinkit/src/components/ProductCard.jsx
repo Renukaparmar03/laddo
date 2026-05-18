@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Heart, Star, Clock, Check } from 'lucide-react';
 
-const ProductCard = ({ product, isOrderView }) => {
+const ProductCard = ({ product, isOrderView, onCardClick }) => {
   const [isReordered, setIsReordered] = useState(false);
 
   const handleReorder = (e) => {
@@ -13,10 +13,10 @@ const ProductCard = ({ product, isOrderView }) => {
   };
 
   return (
-    <div className="product-card">
+    <div className="product-card" onClick={() => onCardClick && onCardClick(product)}>
       <div className="product-img-wrapper">
         <img src={product.image} alt={product.title} className="product-img" />
-        <button className="wishlist-btn">
+        <button className="wishlist-btn" onClick={(e) => e.stopPropagation()}>
           <Heart size={18} />
         </button>
         <div className={`veg-indicator ${product.isVeg ? 'veg' : 'non-veg'}`}>
@@ -57,7 +57,10 @@ const ProductCard = ({ product, isOrderView }) => {
               )}
             </button>
           ) : (
-            <button className="add-btn">ADD</button>
+            <button className="add-btn" onClick={(e) => {
+              e.stopPropagation();
+              // Prevent detail trigger when clicking ADD
+            }}>ADD</button>
           )}
         </div>
       </div>

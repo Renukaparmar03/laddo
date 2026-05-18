@@ -2,7 +2,7 @@ import React from 'react';
 import ProductCard from './ProductCard';
 import { PRODUCTS } from '../data';
 
-const ProductGrid = ({ activeCategory }) => {
+const ProductGrid = ({ activeCategory, onProductSelect }) => {
   const filteredProducts = activeCategory === 'All'
     ? PRODUCTS
     : PRODUCTS.filter(product => product.category === activeCategory);
@@ -15,7 +15,7 @@ const ProductGrid = ({ activeCategory }) => {
       {filteredProducts.length > 0 ? (
         <div className="product-grid">
           {filteredProducts.map(product => (
-            <ProductCard key={product.id} product={product} />
+            <ProductCard key={product.id} product={product} onCardClick={onProductSelect} />
           ))}
         </div>
       ) : (

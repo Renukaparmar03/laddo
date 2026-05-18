@@ -7,46 +7,53 @@ import CategorySection from './components/CategorySection'
 import ProductGrid from './components/ProductGrid'
 import BottomNav from './components/BottomNav'
 import OrdersPage from './components/OrdersPage'
-import CategoryPage from './components/CategoryPage'
+import ProductDetailPage from './components/ProductDetailPage'
 import './App.css'
 
 function App() {
   const [activeCategory, setActiveCategory] = useState('All');
   const [activeTab, setActiveTab] = useState('home'); // 'home' or 'orders'
+  const [selectedProduct, setSelectedProduct] = useState(null);
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    setSelectedProduct(null);
+  };
 
   return (
     <div className="app">
-      <Header setActiveTab={setActiveTab} setActiveCategory={setActiveCategory} />
-      <SearchBar />
-      
-      {activeTab === 'home' ? (
+      {selectedProduct ? (
+        <main className="content-area">
+          <ProductDetailPage 
+            product={selectedProduct} 
+            onBack={() => setSelectedProduct(null)} 
+            onSelectProduct={setSelectedProduct} 
+          />
+        </main>
+      ) : (
         <>
-          <CategoryNav activeCategory={activeCategory} setActiveCategory={setActiveCategory} />
+          <Header setActiveTab={handleTabChange} />
+          <SearchBar />
           
-          <main className="content-area">
-            {activeCategory === 'All' ? (
-              <>
+          {activeTab === 'home' ? (
+            <>
+              <CategoryNav activeCategory={activeCategory} setActiveCategory={setActiveCategory} />
+              
+              <main className="content-area">
                 <HeroBanner />
                 <CategorySection activeCategory={activeCategory} setActiveCategory={setActiveCategory} />
-                <ProductGrid activeCategory={activeCategory} />
-              </>
-            ) : (
-              <CategoryPage activeCategory={activeCategory} setActiveCategory={setActiveCategory} />
-            )}
-          </main>
-        </>
-      ) : (
-        <main className="content-area">
-          <OrdersPage />
-        </main>
-      )}
+                <ProductGrid activeCategory={activeCategory} onProductSelect={setSelectedProduct} />
+              </main>
+            </>
+          ) : (
+            <main className="content-area">
+              <OrdersPage onProductSelect={setSelectedProduct} />
+            </main>
+          )}
 
-      <BottomNav 
-        activeTab={activeTab} 
-        setActiveTab={setActiveTab} 
-        activeCategory={activeCategory}
-        setActiveCategory={setActiveCategory}
-      />
+          <BottomNav activeTab={activeTab} setActiveTab={handleTabChange} />
+        </>
+      )}
     </div>
   )
 }

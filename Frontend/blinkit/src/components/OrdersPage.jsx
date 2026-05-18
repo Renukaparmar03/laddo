@@ -3,9 +3,9 @@ import ProductCard from './ProductCard';
 import { PRODUCTS } from '../data';
 import { RefreshCw, Sparkles, ShoppingBag } from 'lucide-react';
 
-const OrdersPage = () => {
+const OrdersPage = ({ onProductSelect }) => {
   // Mock ordered items (customer's past order history)
-  const orderedProducts = PRODUCTS.filter(p => [1, 3, 5, 8].includes(p.id));
+  const orderedProducts = PRODUCTS.filter(p => [101, 103, 105, 108].includes(p.id));
 
   return (
     <div className="orders-page">
@@ -34,7 +34,7 @@ const OrdersPage = () => {
         </div>
         <div className="product-grid">
           {orderedProducts.map(product => (
-            <ProductCard key={product.id} product={product} isOrderView={true} />
+            <ProductCard key={product.id} product={product} isOrderView={true} onCardClick={onProductSelect} />
           ))}
         </div>
       </section>
