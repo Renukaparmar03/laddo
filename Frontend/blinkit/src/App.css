@@ -1157,7 +1157,6 @@
   }
 }
 
-<<<<<<< HEAD
 /* Product Detail Page Styles */
 .product-detail-page {
   background-color: #f7f9fa;
@@ -1198,68 +1197,10 @@
 }
 
 .detail-header-btn:hover {
-=======
-/* ==========================================================================
-   Profile & Settings Screen Styles (Pixel-Perfect Match to Blinkit Screenshots)
-   ========================================================================== */
-.profile-page-container {
-  display: flex;
-  flex-direction: column;
-  background-color: #f3f4f7; /* Matching the exact blue-grey background */
-  height: calc(100vh - var(--header-height) - var(--bottom-nav-height));
-  overflow-y: auto;
-  position: relative;
-  font-family: 'Outfit', sans-serif;
-  scrollbar-width: none;
-}
-
-.profile-page-container::-webkit-scrollbar {
-  display: none;
-}
-
-.profile-sticky-header {
-  position: sticky;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 52px;
-  display: flex;
-  align-items: center;
-  padding: 0 16px;
-  z-index: 1000;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  background-color: transparent;
-}
-
-.profile-sticky-header.scrolled {
-  background-color: #ffffff;
-  border-bottom: 1px solid #eef0f3;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
-}
-
-.profile-sticky-header .profile-back-btn {
-  background-color: #ffffff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  border-radius: 50%;
-  width: 34px;
-  height: 34px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  cursor: pointer;
-  color: var(--text-primary);
-  transition: all 0.2s ease;
-  flex-shrink: 0;
-}
-
-.profile-sticky-header .profile-back-btn:hover {
->>>>>>> e1ff80d8a1e4369efcde73d024733ca3948065af
   background-color: #f7f9fa;
   transform: scale(1.05);
 }
 
-<<<<<<< HEAD
 .detail-header-right {
   display: flex;
   gap: 8px;
@@ -1503,159 +1444,12 @@
   background-color: #0c831f;
   width: 14px;
   height: 14px;
-=======
-.profile-sticky-header.scrolled .profile-back-btn {
-  background-color: transparent;
-  box-shadow: none;
-  border-radius: 0;
-  width: auto;
-  height: auto;
-  padding: 4px;
-  color: #111;
-}
-
-.profile-sticky-title {
-  font-size: 16px;
-  font-weight: 800;
-  color: var(--text-primary);
-  margin-left: 14px;
-  opacity: 0;
-  transition: opacity 0.2s ease;
-}
-
-.profile-sticky-header.scrolled .profile-sticky-title {
-  opacity: 1;
-}
-
-.profile-header-gradient {
-  background: linear-gradient(to bottom, #ffe89f 0%, #f3f4f7 100%);
-  padding: 10px 16px 20px 16px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.01);
-}
-
-.profile-avatar-section {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-top: 5px;
-}
-
-.profile-avatar-circle {
-  width: 86px;
-  height: 86px;
-  border-radius: 50%;
-  background-color: #ffffff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
-  margin-bottom: 12px;
-  border: 3px solid #ffffff;
-}
-
-.profile-avatar-icon {
-  color: #a0aec0;
-}
-
-.profile-username {
-  font-size: 22px;
-  font-weight: 850;
-  color: var(--text-primary);
-  margin-bottom: 2px;
-  letter-spacing: -0.4px;
-}
-
-.profile-phone {
-  font-size: 12px;
-  color: var(--text-secondary);
-  font-weight: 600;
-}
-
-.profile-page-content {
-  padding: 0 16px 40px 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-/* Birthday Promotion Banner */
-.birthday-banner {
-  background: linear-gradient(135deg, #fffcf0 0%, #fff6d2 100%);
-  border: 1px solid #ffe89f;
-  border-radius: 16px;
-  padding: 14px 18px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  box-shadow: 0 2px 8px rgba(255, 232, 159, 0.15);
-}
-
-.birthday-text-col {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-}
-
-.birthday-title {
-  font-size: 13px;
-  font-weight: 800;
-  color: var(--text-primary);
-}
-
-.birthday-action {
-  font-size: 11px;
-  font-weight: 800;
-  color: var(--veg-color);
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-}
-
-.birthday-cake-art {
-  font-size: 28px;
-}
-
-/* Triple Action Cards Grid */
-.profile-action-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-}
-
-.action-card {
-  background-color: #ffffff;
-  border-radius: 16px;
-  border: 1px solid #f0f3f6;
-  padding: 14px 6px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.01);
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.action-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.04);
-  border-color: #e2e8f0;
-}
-
-.action-card-icon-wrapper {
-  width: 44px;
-  height: 44px;
->>>>>>> e1ff80d8a1e4369efcde73d024733ca3948065af
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-<<<<<<< HEAD
 .unit-card-pricing {
   display: flex;
   flex-direction: column;
@@ -1880,7 +1674,215 @@
   }
 }
 
-=======
+/* ==========================================================================
+   Profile & Settings Screen Styles (Pixel-Perfect Match to Blinkit Screenshots)
+   ========================================================================== */
+.profile-page-container {
+  display: flex;
+  flex-direction: column;
+  background-color: #f3f4f7; /* Matching the exact blue-grey background */
+  height: calc(100vh - var(--header-height) - var(--bottom-nav-height));
+  overflow-y: auto;
+  position: relative;
+  font-family: 'Outfit', sans-serif;
+  scrollbar-width: none;
+}
+
+.profile-page-container::-webkit-scrollbar {
+  display: none;
+}
+
+.profile-sticky-header {
+  position: sticky;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  z-index: 1000;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  background-color: transparent;
+}
+
+.profile-sticky-header.scrolled {
+  background-color: #ffffff;
+  border-bottom: 1px solid #eef0f3;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+}
+
+.profile-sticky-header .profile-back-btn {
+  background-color: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border-radius: 50%;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  cursor: pointer;
+  color: var(--text-primary);
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.profile-sticky-header .profile-back-btn:hover {
+  background-color: #f7f9fa;
+  transform: scale(1.05);
+}
+
+.profile-sticky-header.scrolled .profile-back-btn {
+  background-color: transparent;
+  box-shadow: none;
+  border-radius: 0;
+  width: auto;
+  height: auto;
+  padding: 4px;
+  color: #111;
+}
+
+.profile-sticky-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-left: 14px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.profile-sticky-header.scrolled .profile-sticky-title {
+  opacity: 1;
+}
+
+.profile-header-gradient {
+  background: linear-gradient(to bottom, #ffe89f 0%, #f3f4f7 100%);
+  padding: 10px 16px 20px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.01);
+}
+
+.profile-avatar-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 5px;
+}
+
+.profile-avatar-circle {
+  width: 86px;
+  height: 86px;
+  border-radius: 50%;
+  background-color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+  margin-bottom: 12px;
+  border: 3px solid #ffffff;
+}
+
+.profile-avatar-icon {
+  color: #a0aec0;
+}
+
+.profile-username {
+  font-size: 22px;
+  font-weight: 850;
+  color: var(--text-primary);
+  margin-bottom: 2px;
+  letter-spacing: -0.4px;
+}
+
+.profile-phone {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.profile-page-content {
+  padding: 0 16px 40px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Birthday Promotion Banner */
+.birthday-banner {
+  background: linear-gradient(135deg, #fffcf0 0%, #fff6d2 100%);
+  border: 1px solid #ffe89f;
+  border-radius: 16px;
+  padding: 14px 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 8px rgba(255, 232, 159, 0.15);
+}
+
+.birthday-text-col {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.birthday-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.birthday-action {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--veg-color);
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.birthday-cake-art {
+  font-size: 28px;
+}
+
+/* Triple Action Cards Grid */
+.profile-action-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.action-card {
+  background-color: #ffffff;
+  border-radius: 16px;
+  border: 1px solid #f0f3f6;
+  padding: 14px 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.01);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.action-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.04);
+  border-color: #e2e8f0;
+}
+
+.action-card-icon-wrapper {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .action-card-icon-wrapper.orders {
   background-color: #ebfbf0;
   color: var(--veg-color);
@@ -2333,6 +2335,3 @@
   height: calc(100vh - var(--bottom-nav-height));
   overflow: hidden;
 }
-
-
->>>>>>> e1ff80d8a1e4369efcde73d024733ca3948065af
