@@ -1,4 +1,5 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
+import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom'
 import Header from './components/Header'
 import SearchBar from './components/SearchBar'
 import CategoryNav from './components/CategoryNav'
@@ -10,15 +11,30 @@ import OrdersPage from './components/OrdersPage'
 import ProductDetailPage from './components/ProductDetailPage'
 import CategoryPage from './components/CategoryPage'
 import ProfilePage from './components/ProfilePage'
+import DeliveryApp from './components/delivery/DeliveryApp'
 import './App.css'
 
-function App() {
+function CustomerApp() {
   const [activeCategory, setActiveCategory] = useState('All');
-  const [activeTab, setActiveTab] = useState('home'); // 'home', 'orders', or 'profile'
   const [selectedProduct, setSelectedProduct] = useState(null);
+  
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // Redirect base path to /user/home
+  useEffect(() => {
+    if (location.pathname === '/' || location.pathname === '/user' || location.pathname === '/user/') {
+      navigate('/user/home', { replace: true });
+    }
+  }, [location.pathname, navigate]);
+
+  // Derive active tab from URL path
+  let activeTab = 'home';
+  if (location.pathname.includes('/user/orders')) activeTab = 'orders';
+  if (location.pathname.includes('/user/profile')) activeTab = 'profile';
 
   const handleTabChange = (tab) => {
-    setActiveTab(tab);
+    navigate(`/user/${tab}`);
     setSelectedProduct(null);
   };
 
@@ -34,8 +50,8 @@ function App() {
         </main>
       ) : (
         <>
-          {/* Persistent Address Header & Searchbar are ONLY rendered on the homepage tab */}
-          {activeTab === 'home' && (
+          {/* Persistent Address Header & Searchbar are rendered on the homepage and orders tab */}
+          {(activeTab === 'home' || activeTab === 'orders') && (
             <>
               <Header setActiveTab={handleTabChange} setActiveCategory={setActiveCategory} />
               <SearchBar />
@@ -86,4 +102,15 @@ function App() {
   )
 }
 
+function App() {
+  return (
+    <Routes>
+      <Route path="/delivery/*" element={<DeliveryApp />} />
+      <Route path="/user/*" element={<CustomerApp />} />
+      <Route path="/" element={<Navigate to="/user/home" replace />} />
+    </Routes>
+  )
+}
+
 export default App
+
