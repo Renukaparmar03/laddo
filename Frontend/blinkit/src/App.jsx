@@ -12,6 +12,7 @@ import ProductDetailPage from './components/ProductDetailPage'
 import CategoryPage from './components/CategoryPage'
 import ProfilePage from './components/ProfilePage'
 import DeliveryApp from './components/delivery/DeliveryApp'
+import SellerApp from './components/seller/SellerApp'
 import './App.css'
 
 function CustomerApp() {
@@ -106,6 +107,7 @@ function App() {
   return (
     <Routes>
       <Route path="/delivery/*" element={<DeliveryApp />} />
+      <Route path="/seller/*" element={<SellerApp />} />
       <Route path="/user/*" element={<CustomerApp />} />
       <Route path="/" element={<Navigate to="/user/home" replace />} />
     </Routes>
