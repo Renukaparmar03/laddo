@@ -13,13 +13,11 @@ import {
   X
 } from 'lucide-react';
 import './SellerApp.css';
-
-// Placeholder for other pages
-const ProductsPage = () => <div className="seller-page"><h2>Products</h2></div>;
-const OrdersPage = () => <div className="seller-page"><h2>Orders</h2></div>;
-const EarningsPage = () => <div className="seller-page"><h2>Earnings</h2></div>;
-const ProfilePage = () => <div className="seller-page"><h2>Profile</h2></div>;
-const SettingsPage = () => <div className="seller-page"><h2>Settings</h2></div>;
+import SellerProducts from './SellerProducts';
+import SellerOrders from './SellerOrders';
+import SellerEarnings from './SellerEarnings';
+import SellerProfile from './SellerProfile';
+import SellerSettings from './SellerSettings';
 
 // Dashboard Home Component
 const DashboardHome = () => {
@@ -205,7 +203,7 @@ export default function SellerApp() {
           ))}
         </nav>
         <div className="sidebar-footer">
-          <button className="nav-item logout" onClick={() => navigate('/login')}>
+          <button className="nav-item logout" onClick={() => navigate('/user/home')}>
             <LogOut size={20} />
             <span>Logout</span>
           </button>
@@ -240,11 +238,11 @@ export default function SellerApp() {
         <div className="seller-content">
           <Routes>
             <Route path="home" element={<DashboardHome />} />
-            <Route path="products" element={<ProductsPage />} />
-            <Route path="orders" element={<OrdersPage />} />
-            <Route path="earnings" element={<EarningsPage />} />
-            <Route path="profile" element={<ProfilePage />} />
-            <Route path="settings" element={<SettingsPage />} />
+            <Route path="products" element={<SellerProducts />} />
+            <Route path="orders" element={<SellerOrders />} />
+            <Route path="earnings" element={<SellerEarnings />} />
+            <Route path="profile" element={<SellerProfile />} />
+            <Route path="settings" element={<SellerSettings />} />
             <Route path="" element={<Navigate to="home" replace />} />
           </Routes>
         </div>
