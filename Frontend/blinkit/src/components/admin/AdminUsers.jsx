@@ -1,0 +1,223 @@
+import React, { useState } from 'react';
+import { 
+  Search, Filter, Eye, Ban, Trash2, X, MapPin, 
+  ShoppingBag, Calendar, Phone, Mail, User
+} from 'lucide-react';
+import './AdminUsers.css';
+
+const MOCK_USERS = [
+  { id: 'USR-001', name: 'Rahul Sharma', email: 'rahul.s@example.com', phone: '+91 9876543210', orders: 24, joinDate: 'Jan 12, 2023', status: 'Active', img: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=50&q=80', address: 'B-42, Silicon Valley Appt, Andheri West, Mumbai' },
+  { id: 'USR-002', name: 'Priya Patel', email: 'priya.p@example.com', phone: '+91 9876543211', orders: 12, joinDate: 'Feb 05, 2023', status: 'Active', img: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=50&q=80', address: '45, MG Road, Camp, Pune' },
+  { id: 'USR-003', name: 'Amit Kumar', email: 'amit.k@example.com', phone: '+91 9876543212', orders: 0, joinDate: 'Oct 20, 2023', status: 'Pending', img: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=50&q=80', address: 'Not provided yet' },
+  { id: 'USR-004', name: 'Neha Gupta', email: 'neha.g@example.com', phone: '+91 9876543213', orders: 56, joinDate: 'Nov 11, 2022', status: 'Blocked', img: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=50&q=80', address: '12/A, Link Road, Malad West, Mumbai' },
+  { id: 'USR-005', name: 'Vikram Singh', email: 'vikram.s@example.com', phone: '+91 9876543214', orders: 8, joinDate: 'Sep 30, 2023', status: 'Active', img: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=50&q=80', address: 'Plot 88, Sector 17, Vashi, Navi Mumbai' },
+];
+
+export default function AdminUsers() {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('All');
+  const [users, setUsers] = useState(MOCK_USERS);
+  
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleSearch = (e) => setSearchTerm(e.target.value);
+  const handleFilter = (e) => setStatusFilter(e.target.value);
+
+  const filteredUsers = users.filter(user => {
+    const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                          user.email.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === 'All' || user.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
+
+  const openModal = (user) => {
+    setSelectedUser(user);
+    setIsModalOpen(true);
+  };
+  
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setSelectedUser(null);
+  };
+
+  const getStatusClass = (status) => {
+    switch (status) {
+      case 'Active': return 'status-active';
+      case 'Blocked': return 'status-blocked';
+      case 'Pending': return 'status-pending';
+      default: return '';
+    }
+  };
+
+  return (
+    <div className="admin-users-page">
+      {/* Header Section */}
+      <div className="users-header">
+        <div className="header-title">
+          <h1>Users</h1>
+          <p>Manage and monitor customer accounts</p>
+        </div>
+        <div className="header-actions">
+          <div className="search-box">
+            <Search size={18} className="icon" />
+            <input 
+              type="text" 
+              placeholder="Search by name or email..." 
+              value={searchTerm}
+              onChange={handleSearch}
+            />
+          </div>
+          <div className="filter-dropdown">
+            <Filter size={18} className="icon" />
+            <select value={statusFilter} onChange={handleFilter}>
+              <option value="All">All Status</option>
+              <option value="Active">Active</option>
+              <option value="Blocked">Blocked</option>
+              <option value="Pending">Pending</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {/* Users Table */}
+      <div className="users-card card">
+        <div className="table-responsive">
+          {filteredUsers.length === 0 ? (
+            <div className="empty-state">
+              <User size={48} className="empty-icon" />
+              <h3>No Users Found</h3>
+              <p>Try adjusting your search or filter criteria.</p>
+            </div>
+          ) : (
+            <table className="users-table">
+              <thead>
+                <tr>
+                  <th>User</th>
+                  <th>Contact Info</th>
+                  <th>Total Orders</th>
+                  <th>Join Date</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredUsers.map((user) => (
+                  <tr key={user.id}>
+                    <td>
+                      <div className="user-cell">
+                        <img src={user.img} alt={user.name} />
+                        <div>
+                          <p className="user-name">{user.name}</p>
+                          <p className="user-id">{user.id}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <div className="contact-cell">
+                        <p>{user.email}</p>
+                        <p>{user.phone}</p>
+                      </div>
+                    </td>
+                    <td><span className="orders-count">{user.orders}</span></td>
+                    <td>{user.joinDate}</td>
+                    <td>
+                      <span className={`status-badge ${getStatusClass(user.status)}`}>
+                        {user.status}
+                      </span>
+                    </td>
+                    <td>
+                      <div className="action-buttons">
+                        <button className="btn-icon view" title="View Profile" onClick={() => openModal(user)}>
+                          <Eye size={18} />
+                        </button>
+                        <button className="btn-icon block" title="Block User">
+                          <Ban size={18} />
+                        </button>
+                        <button className="btn-icon delete" title="Delete User">
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </div>
+
+      {/* User Details Modal */}
+      {isModalOpen && selectedUser && (
+        <div className="modal-overlay" onClick={closeModal}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>User Profile</h2>
+              <button className="close-btn" onClick={closeModal}><X size={24} /></button>
+            </div>
+            
+            <div className="modal-body">
+              <div className="modal-profile-header">
+                <img src={selectedUser.img} alt={selectedUser.name} className="modal-user-img" />
+                <div className="modal-user-title">
+                  <h3>{selectedUser.name}</h3>
+                  <p>{selectedUser.id}</p>
+                  <span className={`status-badge mt-2 ${getStatusClass(selectedUser.status)}`}>
+                    {selectedUser.status}
+                  </span>
+                </div>
+              </div>
+
+              <div className="modal-info-grid">
+                <div className="info-item">
+                  <div className="info-icon bg-blue"><Mail size={16} /></div>
+                  <div className="info-text">
+                    <label>Email Address</label>
+                    <p>{selectedUser.email}</p>
+                  </div>
+                </div>
+                <div className="info-item">
+                  <div className="info-icon bg-green"><Phone size={16} /></div>
+                  <div className="info-text">
+                    <label>Phone Number</label>
+                    <p>{selectedUser.phone}</p>
+                  </div>
+                </div>
+                <div className="info-item">
+                  <div className="info-icon bg-purple"><ShoppingBag size={16} /></div>
+                  <div className="info-text">
+                    <label>Total Orders</label>
+                    <p>{selectedUser.orders} completed</p>
+                  </div>
+                </div>
+                <div className="info-item">
+                  <div className="info-icon bg-orange"><Calendar size={16} /></div>
+                  <div className="info-text">
+                    <label>Join Date</label>
+                    <p>{selectedUser.joinDate}</p>
+                  </div>
+                </div>
+                <div className="info-item full-width">
+                  <div className="info-icon bg-gray"><MapPin size={16} /></div>
+                  <div className="info-text">
+                    <label>Delivery Address</label>
+                    <p>{selectedUser.address}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="modal-actions">
+                <button className="btn-outline-danger">
+                  <Ban size={18} /> Block User
+                </button>
+                <button className="btn-primary" onClick={closeModal}>
+                  Done
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

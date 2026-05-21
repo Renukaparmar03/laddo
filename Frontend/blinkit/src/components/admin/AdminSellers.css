@@ -1,0 +1,246 @@
+/* AdminSellers.css */
+
+.admin-sellers-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 100%;
+}
+
+/* Header Section */
+.sellers-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.header-title h1 {
+  font-size: 1.8rem;
+  margin: 0 0 8px 0;
+  color: var(--admin-text, #1e293b);
+  font-weight: 700;
+}
+
+.header-title p {
+  color: var(--admin-text-muted, #64748b);
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.header-actions {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.search-box, .filter-dropdown {
+  display: flex;
+  align-items: center;
+  background-color: var(--admin-card, #ffffff);
+  border: 1px solid var(--admin-border, #e2e8f0);
+  border-radius: var(--admin-radius-sm, 8px);
+  padding: 8px 16px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.search-box:focus-within {
+  border-color: var(--admin-primary, #3b82f6);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.icon {
+  color: var(--admin-text-muted, #64748b);
+  margin-right: 8px;
+}
+
+.search-box input {
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 0.95rem;
+  width: 260px;
+  color: var(--admin-text, #1e293b);
+}
+
+.filter-dropdown select {
+  border: none;
+  background: transparent;
+  outline: none;
+  color: var(--admin-text, #1e293b);
+  font-family: inherit;
+  font-size: 0.95rem;
+  cursor: pointer;
+  appearance: none;
+  padding-right: 20px;
+}
+
+/* Empty State */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.empty-icon {
+  color: #cbd5e1;
+  margin-bottom: 16px;
+}
+
+.empty-state h3 {
+  font-size: 1.2rem;
+  color: var(--admin-text, #1e293b);
+  margin: 0 0 8px 0;
+}
+
+.empty-state p {
+  color: var(--admin-text-muted, #64748b);
+  margin: 0;
+}
+
+/* Table */
+.sellers-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.sellers-table th {
+  padding: 16px 24px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--admin-text-muted, #64748b);
+  border-bottom: 1px solid var(--admin-border, #e2e8f0);
+  background-color: #f8fafc;
+  white-space: nowrap;
+}
+
+.sellers-table td {
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--admin-border, #e2e8f0);
+  vertical-align: middle;
+  font-size: 0.95rem;
+  color: var(--admin-text, #1e293b);
+}
+
+.sellers-table tr:last-child td {
+  border-bottom: none;
+}
+
+.sellers-table tr:hover {
+  background-color: #f8fafc;
+}
+
+.seller-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.seller-cell img {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.shop-name {
+  margin: 0 0 4px 0;
+  font-weight: 600;
+  color: var(--admin-text, #1e293b);
+}
+
+.seller-id {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--admin-text-muted, #64748b);
+}
+
+.contact-cell p {
+  margin: 0;
+}
+.contact-cell .owner-name {
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+.contact-cell .email-text {
+  font-size: 0.85rem;
+  color: var(--admin-text-muted, #64748b);
+}
+
+.count-badge {
+  font-weight: 600;
+  color: var(--admin-primary, #3b82f6);
+  background-color: #eff6ff;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+}
+
+.count-badge.orders {
+  color: #ea580c;
+  background-color: #ffedd5;
+}
+
+.revenue-text {
+  font-weight: 700;
+  color: #16a34a;
+}
+
+/* Actions */
+.btn-icon.approve { color: #16a34a; background-color: #dcfce7; }
+.btn-icon.approve:hover { background-color: #bbf7d0; }
+
+.btn-success {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #16a34a;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: var(--admin-radius-sm, 8px);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-success:hover {
+  background-color: #15803d;
+}
+
+.bg-green-light { background-color: #dcfce7; color: #16a34a; }
+
+/* Modal User Icon Fix */
+.modal-seller-img {
+  width: 80px;
+  height: 80px;
+  border-radius: 12px;
+  object-fit: cover;
+  border: 1px solid var(--admin-border, #e2e8f0);
+}
+
+.modal-seller-title h3 {
+  margin: 0 0 4px 0;
+  font-size: 1.4rem;
+  color: var(--admin-text, #1e293b);
+}
+
+.modal-seller-title p {
+  margin: 0;
+  color: var(--admin-text-muted, #64748b);
+  font-size: 0.9rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .sellers-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

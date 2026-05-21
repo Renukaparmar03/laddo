@@ -295,7 +295,7 @@ const ProfilePage = ({ setActiveTab, setActiveCategory }) => {
               <span className="list-label">Notification preferences</span>
               <ChevronRight size={16} className="list-chevron" />
             </div>
-            <div className="profile-list-item log-out-item">
+            <div className="profile-list-item log-out-item" onClick={handleBackToHome} style={{ cursor: 'pointer' }}>
               <LogOut size={18} className="list-icon logout" />
               <span className="list-label logout">Log out</span>
               <ChevronRight size={16} className="list-chevron" />

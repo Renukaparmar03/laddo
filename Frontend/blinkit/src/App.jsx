@@ -13,6 +13,7 @@ import CategoryPage from './components/CategoryPage'
 import ProfilePage from './components/ProfilePage'
 import DeliveryApp from './components/delivery/DeliveryApp'
 import SellerApp from './components/seller/SellerApp'
+import AdminApp from './components/admin/AdminApp'
 import './App.css'
 
 function CustomerApp() {
@@ -109,6 +110,7 @@ function App() {
       <Route path="/delivery/*" element={<DeliveryApp />} />
       <Route path="/seller/*" element={<SellerApp />} />
       <Route path="/user/*" element={<CustomerApp />} />
+      <Route path="/admin/*" element={<AdminApp />} />
       <Route path="/" element={<Navigate to="/user/home" replace />} />
     </Routes>
   )
