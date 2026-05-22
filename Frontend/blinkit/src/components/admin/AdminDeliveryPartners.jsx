@@ -109,69 +109,74 @@ export default function AdminDeliveryPartners() {
         </div>
       </div>
 
-      <div className="partners-grid">
-        {filteredPartners.map((partner) => (
-          <div className="partner-card" key={partner.id}>
-            <div className="partner-card-header">
-              <img src={partner.image} alt={partner.name} className="partner-img" />
-              <div className="partner-title">
-                <h3>{partner.name}</h3>
-                <p>ID: {partner.id}</p>
-              </div>
-              <span className={`status-dot ${partner.status.toLowerCase()}`}></span>
-            </div>
-
-            <div className="partner-stats-row">
-              <div className="stat-badge rating">
-                <Star size={14} className="star-icon" />
-                <span>{partner.rating}</span>
-              </div>
-              <div className="stat-badge deliveries">
-                <strong>{partner.deliveries}</strong> Deliveries
-              </div>
-              <div className={`stat-badge status-label ${partner.status.toLowerCase()}`}>
-                {partner.status}
-              </div>
-            </div>
-
-            <div className="partner-details">
-              <div className="detail-item">
-                <Phone size={16} className="detail-icon" />
-                <span>{partner.phone}</span>
-              </div>
-              <div className="detail-item">
-                <Bike size={16} className="detail-icon" />
-                <span>{partner.vehicleNo} • {partner.vehicleType}</span>
-              </div>
-              <div className="detail-item">
-                <MapPin size={16} className="detail-icon" />
-                <span>{partner.location}</span>
-              </div>
-            </div>
-
-            <div className="partner-actions">
-              <button className="btn-action view" onClick={() => setSelectedPartner(partner)}>
-                <Eye size={16} /> View
-              </button>
-              <div className="action-row">
-                <button 
-                  className="btn-action block flex-1" 
-                  onClick={() => handleAction(partner.id, 'block')}
-                  disabled={partner.status === 'Suspended'}
-                >
-                  <Ban size={16} /> {partner.status === 'Suspended' ? 'Blocked' : 'Block'}
-                </button>
-                <button 
-                  className="btn-action assign flex-1"
-                  onClick={() => handleAction(partner.id, 'assign')}
-                  disabled={partner.status !== 'Active'}
-                >
-                  <Navigation size={16} /> Assign Order
-                </button>
-              </div>
-            </div>
-          </div>
-        ))}
+      <div className="table-responsive" style={{ marginTop: '20px', backgroundColor: 'white', borderRadius: '12px', padding: '16px', boxShadow: '0 2px 10px rgba(0,0,0,0.05)' }}>
+        <table className="admin-table">
+          <thead>
+            <tr>
+              <th>Rider Info</th>
+              <th>Contact & Location</th>
+              <th>Vehicle Details</th>
+              <th>Status</th>
+              <th>Performance</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredPartners.map((partner) => (
+              <tr key={partner.id}>
+                <td>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <img src={partner.image} alt={partner.name} style={{ width: '40px', height: '40px', borderRadius: '8px', objectFit: 'cover' }} />
+                    <div>
+                      <h4 style={{ margin: 0, fontSize: '0.95rem', color: '#1f2937' }}>{partner.name}</h4>
+                      <p style={{ margin: 0, fontSize: '0.8rem', color: '#6b7280' }}>ID: {partner.id}</p>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <div style={{ fontSize: '0.85rem', color: '#4b5563' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}><Phone size={12} /> {partner.phone}</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><MapPin size={12} /> {partner.location}</div>
+                  </div>
+                </td>
+                <td>
+                  <div style={{ fontSize: '0.85rem', color: '#4b5563' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}><Bike size={12} /> {partner.vehicleNo}</div>
+                    <div style={{ color: '#6b7280' }}>{partner.vehicleType}</div>
+                  </div>
+                </td>
+                <td>
+                  <span className={`status-badge ${partner.status.toLowerCase()}`} style={{ padding: '4px 8px', borderRadius: '20px', fontSize: '0.75rem', fontWeight: '500' }}>
+                    {partner.status}
+                  </span>
+                </td>
+                <td>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.85rem', color: '#f59e0b', fontWeight: '600' }}>
+                      <Star size={14} fill="currentColor" /> {partner.rating}
+                    </div>
+                    <div style={{ fontSize: '0.8rem', color: '#6b7280' }}>
+                      {partner.deliveries} deliveries
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button onClick={() => setSelectedPartner(partner)} style={{ padding: '6px', borderRadius: '6px', backgroundColor: '#eff6ff', color: '#3b82f6', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="View">
+                      <Eye size={16} />
+                    </button>
+                    <button onClick={() => handleAction(partner.id, 'assign')} disabled={partner.status !== 'Active'} style={{ padding: '6px', borderRadius: '6px', backgroundColor: partner.status === 'Active' ? '#ecfdf5' : '#f3f4f6', color: partner.status === 'Active' ? '#10b981' : '#9ca3af', border: 'none', cursor: partner.status === 'Active' ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Assign Order">
+                      <Navigation size={16} />
+                    </button>
+                    <button onClick={() => handleAction(partner.id, 'block')} disabled={partner.status === 'Suspended'} style={{ padding: '6px', borderRadius: '6px', backgroundColor: partner.status === 'Suspended' ? '#f3f4f6' : '#fff7ed', color: partner.status === 'Suspended' ? '#9ca3af' : '#f97316', border: 'none', cursor: partner.status === 'Suspended' ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title={partner.status === 'Suspended' ? 'Blocked' : 'Block'}>
+                      <Ban size={16} />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
 
       {/* Modal / Details Panel */}

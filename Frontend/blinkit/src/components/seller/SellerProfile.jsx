@@ -42,8 +42,8 @@ export default function SellerProfile() {
       {/* Header Section */}
       <div className="profile-header-bar">
         <div className="header-title">
-          <h1>Profile</h1>
-          <p>Manage your personal and shop information</p>
+          <h1>My Profile</h1>
+          <p>Manage your personal and store information</p>
         </div>
         <div className="header-actions">
           <button className="btn-primary">
@@ -58,6 +58,12 @@ export default function SellerProfile() {
         <div className="profile-left-col">
           {/* Profile Card Section */}
           <div className="profile-main-card card">
+            <div className="profile-cover">
+              <img src="https://images.unsplash.com/photo-1557683316-973673baf926?w=800&q=80" alt="Cover" className="cover-img" />
+              <button className="cover-edit-btn">
+                <Upload size={14} /> Edit Cover
+              </button>
+            </div>
             <div className="profile-image-container">
               <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&q=80" alt="Profile" className="profile-large-img" />
               <button className="img-upload-btn">
@@ -67,10 +73,11 @@ export default function SellerProfile() {
             <div className="profile-basic-info">
               <div className="name-status">
                 <h2>{SELLER_INFO.personal.fullName}</h2>
-                <span className="status-badge online">Online</span>
+                <span className="status-badge online">Active</span>
               </div>
-              <p className="email"><Mail size={14}/> {SELLER_INFO.personal.email}</p>
               <p className="shop-name"><Building size={14}/> {SELLER_INFO.shop.name}</p>
+              <p className="email"><Mail size={14}/> {SELLER_INFO.personal.email}</p>
+              <div className="join-date">Member since Jan 2023</div>
             </div>
             
             <div className="profile-action-buttons">
@@ -121,32 +128,32 @@ export default function SellerProfile() {
           {/* Personal Information Section */}
           <div className="info-card card">
             <div className="card-header">
-              <h3>Personal Information</h3>
+              <h3><User size={20} className="text-purple" /> Personal Information</h3>
             </div>
             <div className="info-grid">
               <div className="info-item">
                 <label>Full Name</label>
-                <div className="info-value"><User size={16} /> {SELLER_INFO.personal.fullName}</div>
+                <div className="info-value">{SELLER_INFO.personal.fullName}</div>
               </div>
               <div className="info-item">
                 <label>Email Address</label>
-                <div className="info-value"><Mail size={16} /> {SELLER_INFO.personal.email}</div>
+                <div className="info-value">{SELLER_INFO.personal.email}</div>
               </div>
               <div className="info-item">
                 <label>Phone Number</label>
-                <div className="info-value"><Phone size={16} /> {SELLER_INFO.personal.phone}</div>
+                <div className="info-value">{SELLER_INFO.personal.phone}</div>
               </div>
               <div className="info-item">
                 <label>City</label>
-                <div className="info-value"><MapPin size={16} /> {SELLER_INFO.personal.city}</div>
+                <div className="info-value">{SELLER_INFO.personal.city}</div>
               </div>
               <div className="info-item">
                 <label>Country</label>
-                <div className="info-value"><MapPin size={16} /> {SELLER_INFO.personal.country}</div>
+                <div className="info-value">{SELLER_INFO.personal.country}</div>
               </div>
               <div className="info-item full-width">
                 <label>Address</label>
-                <div className="info-value"><MapPin size={16} /> {SELLER_INFO.personal.address}</div>
+                <div className="info-value">{SELLER_INFO.personal.address}</div>
               </div>
             </div>
           </div>
@@ -154,28 +161,28 @@ export default function SellerProfile() {
           {/* Shop Information Section */}
           <div className="info-card card">
             <div className="card-header">
-              <h3>Shop Information</h3>
+              <h3><Building size={20} className="text-blue" /> Shop Information</h3>
             </div>
             <div className="info-grid">
               <div className="info-item">
                 <label>Shop Name</label>
-                <div className="info-value"><Building size={16} /> {SELLER_INFO.shop.name}</div>
+                <div className="info-value">{SELLER_INFO.shop.name}</div>
               </div>
               <div className="info-item">
                 <label>Shop Category</label>
-                <div className="info-value"><Package size={16} /> {SELLER_INFO.shop.category}</div>
+                <div className="info-value">{SELLER_INFO.shop.category}</div>
               </div>
               <div className="info-item">
                 <label>GST Number</label>
-                <div className="info-value"><CreditCard size={16} /> {SELLER_INFO.shop.gstNumber}</div>
+                <div className="info-value">{SELLER_INFO.shop.gstNumber}</div>
               </div>
               <div className="info-item">
                 <label>Business Type</label>
-                <div className="info-value"><Building size={16} /> {SELLER_INFO.shop.businessType}</div>
+                <div className="info-value">{SELLER_INFO.shop.businessType}</div>
               </div>
               <div className="info-item full-width">
                 <label>Shop Address</label>
-                <div className="info-value"><MapPin size={16} /> {SELLER_INFO.shop.shopAddress}</div>
+                <div className="info-value">{SELLER_INFO.shop.shopAddress}</div>
               </div>
             </div>
           </div>
@@ -183,7 +190,7 @@ export default function SellerProfile() {
           {/* Recent Activity Section */}
           <div className="activity-card card">
             <div className="card-header">
-              <h3>Recent Activity</h3>
+              <h3><Activity size={20} className="text-green" /> Recent Activity</h3>
             </div>
             <div className="activity-timeline">
               {SELLER_INFO.activities.map(activity => (
