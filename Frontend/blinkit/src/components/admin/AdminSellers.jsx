@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Filter, MoreVertical, Mail, Phone, ShoppingCart, IndianRupee, Shield, ShieldAlert, Star, MapPin, X, Calendar, Package, FileText, Briefcase, Eye, Edit, Ban, Trash2 } from 'lucide-react';
+import { Search, Filter, MoreVertical, Mail, Phone, ShoppingCart, IndianRupee, Shield, ShieldAlert, Star, MapPin, X, Calendar, Package, FileText, Briefcase, Eye, Edit, Ban, Trash2, Store, TrendingUp } from 'lucide-react';
 import './AdminSellers.css';
 
 const MOCK_SELLERS = [
@@ -144,75 +144,70 @@ export default function AdminSellers() {
         </div>
       </div>
 
-      <div className="sellers-grid">
-        {filteredSellers.map((seller) => (
-          <div className="seller-card" key={seller.id}>
-            <div className="seller-card-header">
-              <img src={seller.image} alt={seller.ownerName} className="seller-image" />
-              <div className="seller-header-info">
-                <h3>{seller.shopName}</h3>
-                <p className="owner-name">{seller.ownerName}</p>
-              </div>
-            </div>
-
-            <div className="seller-status-row">
-              <span className={`status-badge ${seller.status.toLowerCase().replace(' ', '-')}`}>
-                {seller.status}
-              </span>
-              <div className={`gst-status ${seller.gstStatus.toLowerCase()}`}>
-                {seller.gstStatus === 'Verified' ? <Shield size={14} /> : <ShieldAlert size={14} />}
-                <span>GST {seller.gstStatus}</span>
-              </div>
-            </div>
-
-            <div className="seller-contact-info">
-              <div className="contact-item">
-                <Mail size={14} />
-                <span>{seller.email}</span>
-              </div>
-              <div className="contact-item">
-                <Phone size={14} />
-                <span>{seller.phone}</span>
-              </div>
-            </div>
-
-            <div className="seller-stats-grid">
-              <div className="stat-box">
-                <div className="stat-icon-small bg-green">
-                  <IndianRupee size={16} />
-                </div>
-                <div className="stat-data">
-                  <span>Revenue</span>
-                  <strong>{seller.revenue}</strong>
-                </div>
-              </div>
-              
-              <div className="stat-box">
-                <div className="stat-icon-small bg-blue">
-                  <ShoppingCart size={16} />
-                </div>
-                <div className="stat-data">
-                  <span>Orders</span>
+      <div className="table-responsive" style={{ marginTop: '20px', backgroundColor: 'white', borderRadius: '12px', padding: '16px', boxShadow: '0 2px 10px rgba(0,0,0,0.05)' }}>
+        <table className="admin-table">
+          <thead>
+            <tr>
+              <th>Seller Info</th>
+              <th>Contact Details</th>
+              <th>Status & GST</th>
+              <th>Orders</th>
+              <th>Revenue</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredSellers.map((seller) => (
+              <tr key={seller.id}>
+                <td>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <img src={seller.image} alt={seller.ownerName} style={{ width: '40px', height: '40px', borderRadius: '8px', objectFit: 'cover' }} />
+                    <div>
+                      <h4 style={{ margin: 0, fontSize: '0.95rem', color: '#1f2937' }}>{seller.shopName}</h4>
+                      <p style={{ margin: 0, fontSize: '0.8rem', color: '#6b7280' }}>{seller.ownerName}</p>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <div style={{ fontSize: '0.85rem', color: '#4b5563' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}><Mail size={12} /> {seller.email}</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Phone size={12} /> {seller.phone}</div>
+                  </div>
+                </td>
+                <td>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <span className={`status-badge ${seller.status.toLowerCase().replace(' ', '-')}`} style={{ width: 'max-content' }}>
+                      {seller.status}
+                    </span>
+                    <div className={`gst-status ${seller.gstStatus.toLowerCase()}`} style={{ fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '4px', width: 'max-content' }}>
+                      {seller.gstStatus === 'Verified' ? <Shield size={12} /> : <ShieldAlert size={12} />}
+                      <span>GST {seller.gstStatus}</span>
+                    </div>
+                  </div>
+                </td>
+                <td>
                   <strong>{seller.orders}</strong>
-                </div>
-              </div>
-            </div>
-
-            <div className="seller-card-actions">
-              <button className="btn-action view" onClick={() => setSelectedSeller(seller)}>
-                <Eye size={16} /> View Full Detail
-              </button>
-              <div className="action-row">
-                <button className="btn-action block flex-1">
-                  <Ban size={16} /> Block Seller
-                </button>
-                <button className="btn-action delete flex-1">
-                  <Trash2 size={16} /> Delete Seller
-                </button>
-              </div>
-            </div>
-          </div>
-        ))}
+                </td>
+                <td>
+                  <strong>{seller.revenue}</strong>
+                </td>
+                <td>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button onClick={() => setSelectedSeller(seller)} style={{ padding: '6px', borderRadius: '6px', backgroundColor: '#eff6ff', color: '#3b82f6', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="View">
+                      <Eye size={16} />
+                    </button>
+                    <button style={{ padding: '6px', borderRadius: '6px', backgroundColor: '#fff7ed', color: '#f97316', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Block">
+                      <Ban size={16} />
+                    </button>
+                    <button style={{ padding: '6px', borderRadius: '6px', backgroundColor: '#fef2f2', color: '#ef4444', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Delete">
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
 
       {/* Seller Full Profile Modal */}
