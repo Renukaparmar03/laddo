@@ -25,6 +25,7 @@ import AdminRevenue from './AdminRevenue';
 import AdminReports from './AdminReports';
 import AdminSettings from './AdminSettings';
 import AdminProfile from './AdminProfile';
+import AdminLogin from './AdminLogin';
 
 // Placeholder Pages
 
@@ -238,6 +239,18 @@ export default function AdminApp() {
   const navigate = useNavigate();
   const location = useLocation();
 
+  React.useEffect(() => {
+    const isLoggedIn = localStorage.getItem('admin_logged_in') === 'true';
+
+    if (!isLoggedIn && location.pathname !== '/admin/login') {
+      navigate('/admin/login');
+    }
+
+    if (isLoggedIn && (location.pathname === '/admin' || location.pathname === '/admin/' || location.pathname === '/admin/login')) {
+      navigate('/admin/home');
+    }
+  }, [location.pathname, navigate]);
+
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
   
   const toggleMenu = (menuName) => {
@@ -279,6 +292,10 @@ export default function AdminApp() {
     { name: 'Reports', path: '/admin/reports', icon: <FileText size={20} /> },
     { name: 'Settings', path: '/admin/settings', icon: <Settings size={20} /> },
   ];
+
+  if (location.pathname === '/admin/login') {
+    return <AdminLogin />;
+  }
 
   return (
     <div className="admin-layout">

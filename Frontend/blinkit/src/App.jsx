@@ -14,6 +14,7 @@ import ProfilePage from './components/ProfilePage'
 import DeliveryApp from './components/delivery/DeliveryApp'
 import SellerApp from './components/seller/SellerApp'
 import AdminApp from './components/admin/AdminApp'
+import UserLogin from './components/UserLogin'
 import './App.css'
 
 function CustomerApp() {
@@ -25,7 +26,16 @@ function CustomerApp() {
 
   // Redirect base path to /user/home
   useEffect(() => {
-    if (location.pathname === '/' || location.pathname === '/user' || location.pathname === '/user/') {
+    const isLoggedIn = localStorage.getItem('user_logged_in') === 'true';
+
+    // If user is not logged in and trying to access main tabs, redirect to login
+    if (!isLoggedIn && location.pathname !== '/user/login') {
+      navigate('/user/login');
+      return;
+    }
+
+    // Redirect base path to /user/home if logged in
+    if (isLoggedIn && (location.pathname === '/' || location.pathname === '/user' || location.pathname === '/user/' || location.pathname === '/user/login')) {
       navigate('/user/home', { replace: true });
     }
   }, [location.pathname, navigate]);
@@ -109,8 +119,9 @@ function App() {
     <Routes>
       <Route path="/delivery/*" element={<DeliveryApp />} />
       <Route path="/seller/*" element={<SellerApp />} />
-      <Route path="/user/*" element={<CustomerApp />} />
       <Route path="/admin/*" element={<AdminApp />} />
+      <Route path="/user/login" element={<UserLogin />} />
+      <Route path="/user/*" element={<CustomerApp />} />
       <Route path="/" element={<Navigate to="/user/home" replace />} />
     </Routes>
   )

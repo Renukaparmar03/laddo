@@ -18,6 +18,8 @@ import SellerOrders from './SellerOrders';
 import SellerEarnings from './SellerEarnings';
 import SellerProfile from './SellerProfile';
 import SellerSettings from './SellerSettings';
+import SellerLogin from './SellerLogin';
+import SellerRegister from './SellerRegister';
 
 // Dashboard Home Component
 const DashboardHome = () => {
@@ -166,6 +168,18 @@ export default function SellerApp() {
   const navigate = useNavigate();
   const location = useLocation();
 
+  React.useEffect(() => {
+    const isLoggedIn = localStorage.getItem('seller_logged_in') === 'true';
+
+    if (!isLoggedIn && location.pathname !== '/seller/login' && location.pathname !== '/seller/register') {
+      navigate('/seller/login');
+    }
+
+    if (isLoggedIn && (location.pathname === '/seller' || location.pathname === '/seller/' || location.pathname === '/seller/login' || location.pathname === '/seller/register')) {
+      navigate('/seller/home');
+    }
+  }, [location.pathname, navigate]);
+
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
 
   const menuItems = [
@@ -176,6 +190,14 @@ export default function SellerApp() {
     { name: 'Profile', path: '/seller/profile', icon: <User size={20} /> },
     { name: 'Settings', path: '/seller/settings', icon: <Settings size={20} /> },
   ];
+
+  if (location.pathname === '/seller/login') {
+    return <SellerLogin />;
+  }
+
+  if (location.pathname === '/seller/register') {
+    return <SellerRegister />;
+  }
 
   return (
     <div className="seller-layout">
@@ -237,6 +259,8 @@ export default function SellerApp() {
         {/* Page Content */}
         <div className="seller-content">
           <Routes>
+            <Route path="login" element={<SellerLogin />} />
+            <Route path="register" element={<SellerRegister />} />
             <Route path="home" element={<DashboardHome />} />
             <Route path="products" element={<SellerProducts />} />
             <Route path="orders" element={<SellerOrders />} />
