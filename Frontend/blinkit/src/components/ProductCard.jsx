@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Heart, Star, Clock, Check } from 'lucide-react';
+import { Heart, Star, Clock, Check, ShoppingCart } from 'lucide-react';
 
 const ProductCard = ({ product, isOrderView, onCardClick }) => {
   const [isReordered, setIsReordered] = useState(false);
@@ -13,11 +13,11 @@ const ProductCard = ({ product, isOrderView, onCardClick }) => {
   };
 
   return (
-    <div className="product-card" onClick={() => onCardClick && onCardClick(product)}>
+    <div className="product-card new-design" onClick={() => onCardClick && onCardClick(product)}>
       <div className="product-img-wrapper">
         <img src={product.image} alt={product.title} className="product-img" />
         <button className="wishlist-btn" onClick={(e) => e.stopPropagation()}>
-          <Heart size={18} />
+          <Heart size={16} />
         </button>
         <div className={`veg-indicator ${product.isVeg ? 'veg' : 'non-veg'}`}>
           <div className="indicator-circle"></div>
@@ -32,24 +32,36 @@ const ProductCard = ({ product, isOrderView, onCardClick }) => {
         
         <h4 className="product-title">{product.title}</h4>
         
-        <div className="product-meta">
-          <span className="product-weight">{product.weight}</span>
-          <div className="product-rating">
-            <Star size={14} fill="#FFD700" color="#FFD700" />
-            <span>{product.rating}</span>
+        <div className="product-subtitle">
+          {product.weight} • Fresh quality
+        </div>
+        
+        <div className="card-divider"></div>
+        
+        <div className="price-rating-row">
+          <div className="price-section">
+            <span className="product-price">₹{product.price}</span>
+            <span className="price-unit">per pack</span>
+          </div>
+          
+          <div className="rating-section">
+            <span className="rating-label">Rating</span>
+            <div className="rating-value">
+              <Star size={14} fill="#FFB800" color="#FFB800" />
+              <span className="score">{product.rating}</span>
+            </div>
           </div>
         </div>
         
         <div className="product-footer">
-          <span className="product-price">₹{product.price}</span>
           {isOrderView ? (
             <button 
-              className={`reorder-btn ${isReordered ? 'reordered' : ''}`}
+              className={`reorder-btn full-width ${isReordered ? 'reordered' : ''}`}
               onClick={handleReorder}
             >
               {isReordered ? (
                 <>
-                  <Check size={12} style={{ marginRight: '2px' }} />
+                  <Check size={16} style={{ marginRight: '6px' }} />
                   Reordered
                 </>
               ) : (
@@ -57,10 +69,12 @@ const ProductCard = ({ product, isOrderView, onCardClick }) => {
               )}
             </button>
           ) : (
-            <button className="add-btn" onClick={(e) => {
+            <button className="add-btn full-width" onClick={(e) => {
               e.stopPropagation();
-              // Prevent detail trigger when clicking ADD
-            }}>ADD</button>
+            }}>
+              <ShoppingCart size={16} style={{ marginRight: '6px' }} />
+              ADD
+            </button>
           )}
         </div>
       </div>
