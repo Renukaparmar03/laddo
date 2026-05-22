@@ -197,7 +197,7 @@ export default function SellerOrders() {
                     <td>
                       <div className="action-buttons">
                         <button 
-                          className="action-btn view-btn" 
+                          className="seller-action-btn view-btn" 
                           title="View Details"
                           onClick={() => setSelectedOrder(order)}
                         >
@@ -206,14 +206,14 @@ export default function SellerOrders() {
                         {order.status === 'Pending' && (
                           <>
                             <button 
-                              className="action-btn accept-btn" 
+                              className="seller-action-btn accept-btn" 
                               title="Accept Order"
                               onClick={() => handleAction(order.id, 'Processing')}
                             >
                               <Check size={18} />
                             </button>
                             <button 
-                              className="action-btn reject-btn" 
+                              className="seller-action-btn reject-btn" 
                               title="Reject Order"
                               onClick={() => handleAction(order.id, 'Cancelled')}
                             >

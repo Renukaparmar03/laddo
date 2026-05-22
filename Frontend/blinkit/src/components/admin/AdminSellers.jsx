@@ -1,241 +1,345 @@
 import React, { useState } from 'react';
-import { 
-  Search, Filter, Eye, CheckCircle, Ban, Trash2, X, MapPin, 
-  ShoppingBag, Package, IndianRupee, Mail, Store, User
-} from 'lucide-react';
+import { Search, Filter, MoreVertical, Mail, Phone, ShoppingCart, IndianRupee, Shield, ShieldAlert, Star, MapPin, X, Calendar, Package, FileText, Briefcase, Eye, Edit, Ban, Trash2 } from 'lucide-react';
 import './AdminSellers.css';
 
 const MOCK_SELLERS = [
-  { id: 'SEL-101', shopName: 'RR Mart', ownerName: 'Rahul Sharma', email: 'contact@rrmart.com', products: 120, orders: 1245, revenue: '₹1.2M', status: 'Active', img: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=50&q=80', address: 'Ground Floor, Silicon Park, Andheri East, Mumbai' },
-  { id: 'SEL-102', shopName: 'Tech Store', ownerName: 'Priya Patel', email: 'sales@techstore.in', products: 45, orders: 856, revenue: '₹890K', status: 'Active', img: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=50&q=80', address: 'Shop 12, Phoenix Mall, Pune' },
-  { id: 'SEL-103', shopName: 'Fashion Hub', ownerName: 'Neha Gupta', email: 'info@fashionhub.com', products: 300, orders: 742, revenue: '₹650K', status: 'Pending', img: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=50&q=80', address: 'Sector 17 Market, Vashi, Navi Mumbai' },
-  { id: 'SEL-104', shopName: 'Fresh Foods', ownerName: 'Amit Kumar', email: 'amit@freshfoods.in', products: 80, orders: 1890, revenue: '₹420K', status: 'Active', img: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=50&q=80', address: 'Plot 4, APMC Market, Vashi, Navi Mumbai' },
-  { id: 'SEL-105', shopName: 'Gadget World', ownerName: 'Vikram Singh', email: 'support@gadgetworld.com', products: 15, orders: 4, revenue: '₹12K', status: 'Blocked', img: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=50&q=80', address: 'Linking Road, Bandra West, Mumbai' },
+  {
+    id: 'SLR-1001',
+    shopName: 'ElectroWorld',
+    ownerName: 'Rahul Sharma',
+    email: 'rahul@electroworld.com',
+    phone: '+91 9876543210',
+    gstStatus: 'Verified',
+    revenue: '₹4,250,000',
+    orders: 1245,
+    status: 'Active',
+    rating: 4.8,
+    image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&q=80',
+    address: '123 Tech Park, Sector 4, New Delhi, 110001',
+    category: 'Electronics',
+    fssai: 'Not Applicable',
+    gstin: '07AAPCE4332F1Z1',
+    pan: 'AAPCE4332F',
+    bankName: 'HDFC Bank',
+    accountNo: 'XXXX-XXXX-1234',
+    ifsc: 'HDFC0001234',
+    accountHolder: 'Rahul Sharma',
+    productsCount: 450,
+    joinDate: '12 Jan 2023',
+  },
+  {
+    id: 'SLR-1002',
+    shopName: 'Fresh Mart Grocery',
+    ownerName: 'Priya Patel',
+    email: 'priya.p@freshmart.in',
+    phone: '+91 9123456780',
+    gstStatus: 'Pending',
+    revenue: '₹3,800,000',
+    orders: 3412,
+    status: 'Active',
+    rating: 4.5,
+    image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&q=80',
+    address: '45 Green Avenue, Andheri West, Mumbai, 400053',
+    category: 'Groceries & Staples',
+    fssai: '11521014000456',
+    gstin: '27AABCP1234F1Z5',
+    pan: 'AABCP1234F',
+    bankName: 'ICICI Bank',
+    accountNo: 'XXXX-XXXX-5678',
+    ifsc: 'ICIC0005678',
+    accountHolder: 'Priya Patel',
+    productsCount: 1200,
+    joinDate: '05 Mar 2023',
+  },
+  {
+    id: 'SLR-1003',
+    shopName: 'Fashion Hub',
+    ownerName: 'Amit Kumar',
+    email: 'contact@fashionhub.com',
+    phone: '+91 9988776655',
+    gstStatus: 'Verified',
+    revenue: '₹2,900,000',
+    orders: 856,
+    status: 'Suspended',
+    rating: 3.2,
+    image: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=100&q=80',
+    address: 'Shop No 12, Fashion Street, Pune, 411001',
+    category: 'Apparel & Fashion',
+    fssai: 'Not Applicable',
+    gstin: '27AAICA9876C1Z2',
+    pan: 'AAICA9876C',
+    bankName: 'State Bank of India',
+    accountNo: 'XXXX-XXXX-9012',
+    ifsc: 'SBIN0009012',
+    accountHolder: 'Amit Kumar Fashion',
+    productsCount: 320,
+    joinDate: '22 Aug 2023',
+  },
+  {
+    id: 'SLR-1004',
+    shopName: 'Daily Needs',
+    ownerName: 'Vikram Singh',
+    email: 'vikram.s@dailyneeds.in',
+    phone: '+91 9876501234',
+    gstStatus: 'Unverified',
+    revenue: '₹850,000',
+    orders: 420,
+    status: 'Under Review',
+    rating: 0,
+    image: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=100&q=80',
+    address: 'Sector 18 Market, Noida, 201301',
+    category: 'Daily Essentials',
+    fssai: '12719055000321',
+    gstin: '09AABCU4321R1Z9',
+    pan: 'AABCU4321R',
+    bankName: 'Axis Bank',
+    accountNo: 'XXXX-XXXX-3456',
+    ifsc: 'UTIB0003456',
+    accountHolder: 'Vikram Singh',
+    productsCount: 85,
+    joinDate: '15 Oct 2023',
+  }
 ];
 
 export default function AdminSellers() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('All');
-  const [sellers, setSellers] = useState(MOCK_SELLERS);
-  
+  const [filterStatus, setFilterStatus] = useState('All');
   const [selectedSeller, setSelectedSeller] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const handleSearch = (e) => setSearchTerm(e.target.value);
-  const handleFilter = (e) => setStatusFilter(e.target.value);
-
-  const filteredSellers = sellers.filter(seller => {
+  const filteredSellers = MOCK_SELLERS.filter(seller => {
     const matchesSearch = seller.shopName.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          seller.ownerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          seller.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'All' || seller.status === statusFilter;
+                          seller.ownerName.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = filterStatus === 'All' || seller.status === filterStatus;
     return matchesSearch && matchesStatus;
   });
 
-  const openModal = (seller) => {
-    setSelectedSeller(seller);
-    setIsModalOpen(true);
-  };
-  
-  const closeModal = () => {
-    setIsModalOpen(false);
-    setSelectedSeller(null);
-  };
-
-  const getStatusClass = (status) => {
-    switch (status) {
-      case 'Active': return 'status-active';
-      case 'Blocked': return 'status-blocked';
-      case 'Pending': return 'status-pending';
-      default: return '';
-    }
-  };
-
   return (
-    <div className="admin-sellers-page">
-      {/* Header Section */}
-      <div className="sellers-header">
+    <div className="admin-all-sellers">
+      <div className="page-header">
         <div className="header-title">
-          <h1>Sellers</h1>
-          <p>Manage store vendors and their approvals</p>
+          <h2>Seller Management</h2>
+          <p>Manage and monitor all registered sellers on the platform</p>
         </div>
+        
         <div className="header-actions">
           <div className="search-box">
-            <Search size={18} className="icon" />
+            <Search size={18} className="search-icon" />
             <input 
               type="text" 
-              placeholder="Search by shop, owner or email..." 
+              placeholder="Search sellers by name or shop..." 
               value={searchTerm}
-              onChange={handleSearch}
+              onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
+          
           <div className="filter-dropdown">
-            <Filter size={18} className="icon" />
-            <select value={statusFilter} onChange={handleFilter}>
+            <Filter size={18} />
+            <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
               <option value="All">All Status</option>
               <option value="Active">Active</option>
-              <option value="Pending">Pending</option>
-              <option value="Blocked">Blocked</option>
+              <option value="Under Review">Under Review</option>
+              <option value="Suspended">Suspended</option>
             </select>
           </div>
         </div>
       </div>
 
-      {/* Sellers Table */}
-      <div className="sellers-card card">
-        <div className="table-responsive">
-          {filteredSellers.length === 0 ? (
-            <div className="empty-state">
-              <Store size={48} className="empty-icon" />
-              <h3>No Sellers Found</h3>
-              <p>Try adjusting your search or filter criteria.</p>
+      <div className="sellers-grid">
+        {filteredSellers.map((seller) => (
+          <div className="seller-card" key={seller.id}>
+            <div className="seller-card-header">
+              <img src={seller.image} alt={seller.ownerName} className="seller-image" />
+              <div className="seller-header-info">
+                <h3>{seller.shopName}</h3>
+                <p className="owner-name">{seller.ownerName}</p>
+              </div>
             </div>
-          ) : (
-            <table className="sellers-table">
-              <thead>
-                <tr>
-                  <th>Shop Info</th>
-                  <th>Owner & Contact</th>
-                  <th>Products</th>
-                  <th>Orders</th>
-                  <th>Revenue</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredSellers.map((seller) => (
-                  <tr key={seller.id}>
-                    <td>
-                      <div className="seller-cell">
-                        <img src={seller.img} alt={seller.shopName} />
-                        <div>
-                          <p className="shop-name">{seller.shopName}</p>
-                          <p className="seller-id">{seller.id}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td>
-                      <div className="contact-cell">
-                        <p className="owner-name">{seller.ownerName}</p>
-                        <p className="email-text">{seller.email}</p>
-                      </div>
-                    </td>
-                    <td><span className="count-badge">{seller.products}</span></td>
-                    <td><span className="count-badge orders">{seller.orders}</span></td>
-                    <td><span className="revenue-text">{seller.revenue}</span></td>
-                    <td>
-                      <span className={`status-badge ${getStatusClass(seller.status)}`}>
-                        {seller.status}
-                      </span>
-                    </td>
-                    <td>
-                      <div className="action-buttons">
-                        <button className="btn-icon view" title="View Details" onClick={() => openModal(seller)}>
-                          <Eye size={18} />
-                        </button>
-                        {seller.status === 'Pending' && (
-                          <button className="btn-icon approve" title="Approve Seller">
-                            <CheckCircle size={18} />
-                          </button>
-                        )}
-                        <button className="btn-icon block" title="Block Seller">
-                          <Ban size={18} />
-                        </button>
-                        <button className="btn-icon delete" title="Delete Seller">
-                          <Trash2 size={18} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
+
+            <div className="seller-status-row">
+              <span className={`status-badge ${seller.status.toLowerCase().replace(' ', '-')}`}>
+                {seller.status}
+              </span>
+              <div className={`gst-status ${seller.gstStatus.toLowerCase()}`}>
+                {seller.gstStatus === 'Verified' ? <Shield size={14} /> : <ShieldAlert size={14} />}
+                <span>GST {seller.gstStatus}</span>
+              </div>
+            </div>
+
+            <div className="seller-contact-info">
+              <div className="contact-item">
+                <Mail size={14} />
+                <span>{seller.email}</span>
+              </div>
+              <div className="contact-item">
+                <Phone size={14} />
+                <span>{seller.phone}</span>
+              </div>
+            </div>
+
+            <div className="seller-stats-grid">
+              <div className="stat-box">
+                <div className="stat-icon-small bg-green">
+                  <IndianRupee size={16} />
+                </div>
+                <div className="stat-data">
+                  <span>Revenue</span>
+                  <strong>{seller.revenue}</strong>
+                </div>
+              </div>
+              
+              <div className="stat-box">
+                <div className="stat-icon-small bg-blue">
+                  <ShoppingCart size={16} />
+                </div>
+                <div className="stat-data">
+                  <span>Orders</span>
+                  <strong>{seller.orders}</strong>
+                </div>
+              </div>
+            </div>
+
+            <div className="seller-card-actions">
+              <button className="btn-action view" onClick={() => setSelectedSeller(seller)}>
+                <Eye size={16} /> View Full Detail
+              </button>
+              <div className="action-row">
+                <button className="btn-action block flex-1">
+                  <Ban size={16} /> Block Seller
+                </button>
+                <button className="btn-action delete flex-1">
+                  <Trash2 size={16} /> Delete Seller
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
 
-      {/* Seller Details Modal */}
-      {isModalOpen && selectedSeller && (
-        <div className="modal-overlay" onClick={closeModal}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+      {/* Seller Full Profile Modal */}
+      {selectedSeller && (
+        <div className="seller-modal-overlay" onClick={() => setSelectedSeller(null)}>
+          <div className="seller-modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2>Seller Profile</h2>
-              <button className="close-btn" onClick={closeModal}><X size={24} /></button>
+              <button className="close-modal-btn" onClick={() => setSelectedSeller(null)}>
+                <X size={24} />
+              </button>
             </div>
-            
+
             <div className="modal-body">
-              <div className="modal-profile-header">
-                <img src={selectedSeller.img} alt={selectedSeller.shopName} className="modal-seller-img" />
-                <div className="modal-seller-title">
-                  <h3>{selectedSeller.shopName}</h3>
-                  <p>{selectedSeller.id}</p>
-                  <span className={`status-badge mt-2 ${getStatusClass(selectedSeller.status)}`}>
+              <div className="profile-hero">
+                <img src={selectedSeller.image} alt={selectedSeller.ownerName} className="profile-hero-img" />
+                <div className="profile-hero-info">
+                  <h2>{selectedSeller.ownerName}</h2>
+                  <p className="profile-id">ID: {selectedSeller.id}</p>
+                  <span className={`status-badge ${selectedSeller.status.toLowerCase().replace(' ', '-')}`} style={{ alignSelf: 'flex-start', marginTop: '8px' }}>
                     {selectedSeller.status}
                   </span>
                 </div>
               </div>
 
-              <div className="modal-info-grid">
-                <div className="info-item">
-                  <div className="info-icon bg-blue"><User size={16} /></div>
-                  <div className="info-text">
-                    <label>Owner Name</label>
-                    <p>{selectedSeller.ownerName}</p>
+              <div className="profile-details-grid">
+                {/* Shop Information */}
+                <div className="detail-section">
+                  <h3><Store size={18} /> Shop Information</h3>
+                  <div className="detail-row">
+                    <span className="detail-label">Shop Name</span>
+                    <span className="detail-value">{selectedSeller.shopName}</span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="detail-label">Address</span>
+                    <span className="detail-value"><MapPin size={14} className="inline-icon" /> {selectedSeller.address}</span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="detail-label">Email</span>
+                    <span className="detail-value"><Mail size={14} className="inline-icon" /> {selectedSeller.email}</span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="detail-label">Phone</span>
+                    <span className="detail-value"><Phone size={14} className="inline-icon" /> {selectedSeller.phone}</span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="detail-label">Category</span>
+                    <span className="detail-value">{selectedSeller.category}</span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="detail-label">GST Status</span>
+                    <span className="detail-value">{selectedSeller.gstStatus} ({selectedSeller.gstin})</span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="detail-label">FSSAI Number</span>
+                    <span className="detail-value">{selectedSeller.fssai}</span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="detail-label">Joined On</span>
+                    <span className="detail-value"><Calendar size={14} className="inline-icon" /> {selectedSeller.joinDate}</span>
                   </div>
                 </div>
-                <div className="info-item">
-                  <div className="info-icon bg-green"><Mail size={16} /></div>
-                  <div className="info-text">
-                    <label>Email Address</label>
-                    <p>{selectedSeller.email}</p>
-                  </div>
-                </div>
-                <div className="info-item">
-                  <div className="info-icon bg-purple"><Package size={16} /></div>
-                  <div className="info-text">
-                    <label>Total Products</label>
-                    <p>{selectedSeller.products} items</p>
-                  </div>
-                </div>
-                <div className="info-item">
-                  <div className="info-icon bg-orange"><ShoppingBag size={16} /></div>
-                  <div className="info-text">
-                    <label>Total Orders</label>
-                    <p>{selectedSeller.orders} completed</p>
-                  </div>
-                </div>
-                <div className="info-item">
-                  <div className="info-icon bg-green-light"><IndianRupee size={16} /></div>
-                  <div className="info-text">
-                    <label>Total Revenue</label>
-                    <p>{selectedSeller.revenue}</p>
-                  </div>
-                </div>
-                <div className="info-item full-width">
-                  <div className="info-icon bg-gray"><MapPin size={16} /></div>
-                  <div className="info-text">
-                    <label>Shop Address</label>
-                    <p>{selectedSeller.address}</p>
-                  </div>
-                </div>
-              </div>
 
-              <div className="modal-actions">
-                {selectedSeller.status === 'Pending' && (
-                  <button className="btn-success">
-                    <CheckCircle size={18} /> Approve Seller
-                  </button>
-                )}
-                {selectedSeller.status !== 'Blocked' && (
-                  <button className="btn-outline-danger">
-                    <Ban size={18} /> Block Seller
-                  </button>
-                )}
-                <button className="btn-primary" onClick={closeModal}>
-                  Close
-                </button>
+                {/* Business Information */}
+                <div className="detail-section">
+                  <h3><Briefcase size={18} /> Business Information</h3>
+                  <div className="detail-row">
+                    <span className="detail-label">PAN Number</span>
+                    <span className="detail-value">{selectedSeller.pan}</span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="detail-label">Bank Name</span>
+                    <span className="detail-value">{selectedSeller.bankName}</span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="detail-label">Account Number</span>
+                    <span className="detail-value">{selectedSeller.accountNo}</span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="detail-label">IFSC Code</span>
+                    <span className="detail-value">{selectedSeller.ifsc}</span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="detail-label">Account Holder</span>
+                    <span className="detail-value">{selectedSeller.accountHolder}</span>
+                  </div>
+                </div>
+
+                {/* Statistics */}
+                <div className="detail-section full-width">
+                  <h3><TrendingUp size={18} /> Statistics</h3>
+                  <div className="stats-cards-mini">
+                    <div className="stat-card-mini">
+                      <Package size={20} className="text-purple" />
+                      <div>
+                        <p>Total Products</p>
+                        <h4>{selectedSeller.productsCount}</h4>
+                      </div>
+                    </div>
+                    <div className="stat-card-mini">
+                      <ShoppingCart size={20} className="text-blue" />
+                      <div>
+                        <p>Orders Completed</p>
+                        <h4>{selectedSeller.orders}</h4>
+                      </div>
+                    </div>
+                    <div className="stat-card-mini">
+                      <IndianRupee size={20} className="text-green" />
+                      <div>
+                        <p>Total Revenue</p>
+                        <h4>{selectedSeller.revenue}</h4>
+                      </div>
+                    </div>
+                    <div className="stat-card-mini">
+                      <Star size={20} className="text-yellow" />
+                      <div>
+                        <p>Seller Ratings</p>
+                        <h4>{selectedSeller.rating > 0 ? `${selectedSeller.rating} / 5.0` : 'No Ratings'}</h4>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
+            </div>
+
+            <div className="modal-footer">
+              <button className="btn-secondary" onClick={() => setSelectedSeller(null)}>Close</button>
             </div>
           </div>
         </div>

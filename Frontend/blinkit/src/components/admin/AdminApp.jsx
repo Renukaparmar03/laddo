@@ -3,11 +3,21 @@ import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-
 import { 
   LayoutDashboard, Users, Store, Package, ShoppingCart, 
   BarChart2, IndianRupee, FileText, Settings, LogOut,
-  Bell, Menu, X, Search, ChevronRight, CheckCircle, PlusCircle, ArrowUpRight, TrendingUp, Activity, Truck
+  Bell, Menu, X, Search, ChevronRight, CheckCircle, PlusCircle, ArrowUpRight, TrendingUp, Activity, Truck, Image as ImageIcon
 } from 'lucide-react';
 import './AdminApp.css';
 import AdminUsers from './AdminUsers';
+import AdminSellerOverview from './AdminSellerOverview';
 import AdminSellers from './AdminSellers';
+import AdminSellerRequests from './AdminSellerRequests';
+import AdminGSTVerification from './AdminGSTVerification';
+import AdminFundRelease from './AdminFundRelease';
+import AdminDeliveryOverview from './AdminDeliveryOverview';
+import AdminDeliveryPartners from './AdminDeliveryPartners';
+import AdminActiveDeliveries from './AdminActiveDeliveries';
+import AdminDeliveryEarnings from './AdminDeliveryEarnings';
+import AdminDeliveryRequests from './AdminDeliveryRequests';
+import AdminBanners from './AdminBanners';
 import AdminProducts from './AdminProducts';
 import AdminOrders from './AdminOrders';
 import AdminAnalytics from './AdminAnalytics';
@@ -15,7 +25,6 @@ import AdminRevenue from './AdminRevenue';
 import AdminReports from './AdminReports';
 import AdminSettings from './AdminSettings';
 import AdminProfile from './AdminProfile';
-import AdminDelivery from './AdminDelivery';
 
 // Placeholder Pages
 
@@ -225,16 +234,44 @@ const AdminDashboard = () => {
 
 export default function AdminApp() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [openMenus, setOpenMenus] = useState({ 'Seller Management': false, 'Delivery Management': false });
   const navigate = useNavigate();
   const location = useLocation();
 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
+  
+  const toggleMenu = (menuName) => {
+    setOpenMenus(prev => ({ ...prev, [menuName]: !prev[menuName] }));
+  };
 
   const menuItems = [
     { name: 'Dashboard', path: '/admin/home', icon: <LayoutDashboard size={20} /> },
     { name: 'Users', path: '/admin/users', icon: <Users size={20} /> },
-    { name: 'Sellers', path: '/admin/sellers', icon: <Store size={20} /> },
-    { name: 'Delivery', path: '/admin/delivery', icon: <Truck size={20} /> },
+    { 
+      name: 'Seller Management', 
+      icon: <Store size={20} />,
+      isDropdown: true,
+      subItems: [
+        { name: 'Seller Overview', path: '/admin/seller-overview' },
+        { name: 'All Sellers', path: '/admin/all-sellers' },
+        { name: 'Seller Requests', path: '/admin/seller-requests', badge: 3 },
+        { name: 'GST Verification', path: '/admin/gst-verification' },
+        { name: 'Fund Release', path: '/admin/fund-release' },
+      ]
+    },
+    { 
+      name: 'Delivery Management', 
+      icon: <Truck size={20} />,
+      isDropdown: true,
+      subItems: [
+        { name: 'Delivery Overview', path: '/admin/delivery-overview' },
+        { name: 'Delivery Requests', path: '/admin/delivery-requests', badge: 5 },
+        { name: 'Delivery Partners', path: '/admin/delivery-partners' },
+        { name: 'Active Deliveries', path: '/admin/active-deliveries' },
+        { name: 'Delivery Earnings & Bonuses', path: '/admin/delivery-earnings' },
+      ]
+    },
+    { name: 'Banners', path: '/admin/banners', icon: <ImageIcon size={20} /> },
     { name: 'Products', path: '/admin/products', icon: <Package size={20} /> },
     { name: 'Orders', path: '/admin/orders', icon: <ShoppingCart size={20} /> },
     { name: 'Analytics', path: '/admin/analytics', icon: <BarChart2 size={20} /> },
@@ -248,25 +285,82 @@ export default function AdminApp() {
       {/* Sidebar */}
       <aside className={`admin-sidebar ${sidebarOpen ? 'open' : ''}`}>
         <div className="sidebar-header">
-
+          <div className="admin-logo">
+            <div className="logo-icon">B</div>
+            <h2>Admin Panel</h2>
+          </div>
           <button className="close-btn md-hidden" onClick={toggleSidebar}>
             <X size={24} />
           </button>
         </div>
         <nav className="sidebar-nav">
-          {menuItems.map((item) => (
-            <button
-              key={item.name}
-              className={`nav-item ${location.pathname.includes(item.path) ? 'active' : ''}`}
-              onClick={() => {
-                navigate(item.path);
-                setSidebarOpen(false);
-              }}
-            >
-              {item.icon}
-              <span>{item.name}</span>
-            </button>
-          ))}
+          {menuItems.map((item) => {
+            if (item.isDropdown) {
+              const isChildActive = item.subItems.some(sub => location.pathname.includes(sub.path));
+              return (
+                <div key={item.name} className="nav-dropdown">
+                  <button
+                    className={`nav-item ${isChildActive ? 'active' : ''}`}
+                    onClick={() => toggleMenu(item.name)}
+                    style={{ justifyContent: 'space-between', width: '100%' }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      {item.icon}
+                      <span>{item.name}</span>
+                    </div>
+                    <ChevronRight 
+                      size={16} 
+                      style={{ 
+                        transform: openMenus[item.name] ? 'rotate(90deg)' : 'rotate(0deg)', 
+                        transition: 'transform 0.2s' 
+                      }} 
+                    />
+                  </button>
+                  {openMenus[item.name] && (
+                    <div className="dropdown-menu" style={{ display: 'flex', flexDirection: 'column', gap: '4px', paddingLeft: '40px', marginTop: '4px' }}>
+                      {item.subItems.map((subItem) => (
+                        <button
+                          key={subItem.name}
+                          className={`nav-item ${location.pathname.includes(subItem.path) ? 'active' : ''}`}
+                          onClick={() => {
+                            navigate(subItem.path);
+                            if (window.innerWidth <= 768) setSidebarOpen(false);
+                          }}
+                          style={{ padding: '10px 16px', fontSize: '0.9rem', justifyContent: 'space-between', display: 'flex', width: '100%' }}
+                        >
+                          <span>{subItem.name}</span>
+                          {subItem.badge && (
+                            <span style={{
+                              backgroundColor: '#ef4444', 
+                              color: 'white', 
+                              fontSize: '0.75rem', 
+                              padding: '2px 6px', 
+                              borderRadius: '10px',
+                              fontWeight: '600'
+                            }}>{subItem.badge}</span>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            }
+
+            return (
+              <button
+                key={item.name}
+                className={`nav-item ${location.pathname.includes(item.path) ? 'active' : ''}`}
+                onClick={() => {
+                  navigate(item.path);
+                  setSidebarOpen(false);
+                }}
+              >
+                {item.icon}
+                <span>{item.name}</span>
+              </button>
+            );
+          })}
         </nav>
         <div className="sidebar-footer">
           <button className="nav-item logout" onClick={() => navigate('/user/home')}>
@@ -309,8 +403,19 @@ export default function AdminApp() {
           <Routes>
             <Route path="home" element={<AdminDashboard />} />
             <Route path="users" element={<AdminUsers />} />
-            <Route path="sellers" element={<AdminSellers />} />
-            <Route path="delivery" element={<AdminDelivery />} />
+            {/* Seller routes will go here when implemented */}
+            <Route path="seller-overview" element={<AdminSellerOverview />} />
+            <Route path="all-sellers" element={<AdminSellers />} />
+            <Route path="seller-requests" element={<AdminSellerRequests />} />
+            <Route path="gst-verification" element={<AdminGSTVerification />} />
+            <Route path="fund-release" element={<AdminFundRelease />} />
+            {/* Delivery Management Routes */}
+            <Route path="delivery-overview" element={<AdminDeliveryOverview />} />
+            <Route path="delivery-requests" element={<AdminDeliveryRequests />} />
+            <Route path="delivery-partners" element={<AdminDeliveryPartners />} />
+            <Route path="active-deliveries" element={<AdminActiveDeliveries />} />
+            <Route path="delivery-earnings" element={<AdminDeliveryEarnings />} />
+            <Route path="banners" element={<AdminBanners />} />
             <Route path="products" element={<AdminProducts />} />
             <Route path="orders" element={<AdminOrders />} />
             <Route path="analytics" element={<AdminAnalytics />} />

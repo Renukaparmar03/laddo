@@ -217,7 +217,7 @@
 }
 
 /* Badges */
-.badge {
+.order-badge {
   padding: 4px 10px;
   border-radius: 20px;
   font-size: 0.75rem;
@@ -226,7 +226,7 @@
   white-space: nowrap;
 }
 
-.badge.large {
+.order-badge.large {
   padding: 6px 14px;
   font-size: 0.85rem;
 }

@@ -194,14 +194,14 @@ export default function AdminOrders() {
                     <td><span className="amount-text">{order.amount}</span></td>
                     <td>
                       <div className="payment-cell">
-                        <span className={`badge ${getPaymentClass(order.paymentStatus)}`}>
+                        <span className={`order-badge ${getPaymentClass(order.paymentStatus)}`}>
                           {order.paymentStatus}
                         </span>
                         <p className="method-text">{order.paymentMethod}</p>
                       </div>
                     </td>
                     <td>
-                      <span className={`badge ${getDeliveryClass(order.deliveryStatus)}`}>
+                      <span className={`order-badge ${getDeliveryClass(order.deliveryStatus)}`}>
                         {order.deliveryStatus}
                       </span>
                     </td>
@@ -247,10 +247,10 @@ export default function AdminOrders() {
                   <p className="modal-order-date">Placed on {selectedOrder.date}</p>
                 </div>
                 <div className="modal-status-badges">
-                  <span className={`badge large ${getPaymentClass(selectedOrder.paymentStatus)}`}>
+                  <span className={`order-badge large ${getPaymentClass(selectedOrder.paymentStatus)}`}>
                     Payment: {selectedOrder.paymentStatus}
                   </span>
-                  <span className={`badge large ${getDeliveryClass(selectedOrder.deliveryStatus)}`}>
+                  <span className={`order-badge large ${getDeliveryClass(selectedOrder.deliveryStatus)}`}>
                     Delivery: {selectedOrder.deliveryStatus}
                   </span>
                 </div>

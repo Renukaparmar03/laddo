@@ -260,7 +260,7 @@
   background-color: #fafafa;
 }
 
-.action-btn {
+.seller-action-btn {
   flex: 1;
   display: flex;
   justify-content: center;
@@ -273,7 +273,7 @@
   transition: all 0.2s ease;
 }
 
-.action-btn:not(:last-child) {
+.seller-action-btn:not(:last-child) {
   border-right: 1px solid var(--seller-border);
 }
 

@@ -236,13 +236,13 @@ export default function SellerProducts() {
               </div>
               
               <div className="product-actions">
-                <button className="action-btn view-btn" title="View Details">
+                <button className="seller-action-btn view-btn" title="View Details">
                   <Eye size={18} />
                 </button>
-                <button className="action-btn edit-btn" title="Edit Product">
+                <button className="seller-action-btn edit-btn" title="Edit Product">
                   <Edit size={18} />
                 </button>
-                <button className="action-btn delete-btn" title="Delete Product" onClick={() => setProducts(products.filter(p => p.id !== product.id))}>
+                <button className="seller-action-btn delete-btn" title="Delete Product" onClick={() => setProducts(products.filter(p => p.id !== product.id))}>
                   <Trash2 size={18} />
                 </button>
               </div>
