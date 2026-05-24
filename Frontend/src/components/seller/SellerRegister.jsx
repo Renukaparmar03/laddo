@@ -19,14 +19,40 @@ function SellerRegister() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleRegister = (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setTimeout(() => {
+    try {
+      const response = await fetch('http://localhost:5000/api/sellers', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          businessName: formData.storeName,
+          ownerName: formData.fullName,
+          email: formData.email,
+          phone: formData.phone,
+          password: formData.password,
+          address: 'Not Provided' // Default as not in UI
+        }),
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        localStorage.setItem('seller_logged_in', 'true');
+        localStorage.setItem('seller_info', JSON.stringify(data));
+        navigate('/seller/home');
+      } else {
+        alert(data.message || 'Registration failed');
+      }
+    } catch (error) {
+      console.error('Seller Registration error:', error);
+      alert('Server connection failed.');
+    } finally {
       setLoading(false);
-      localStorage.setItem('seller_logged_in', 'true');
-      navigate('/seller/home');
-    }, 1500);
+    }
   };
 
   return (
