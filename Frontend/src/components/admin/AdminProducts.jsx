@@ -5,19 +5,91 @@ import {
 } from 'lucide-react';
 import './AdminProducts.css';
 
-const MOCK_PRODUCTS = [
-  { id: 'PRD-1001', name: 'Premium Wireless Headphones', seller: 'Tech Store', category: 'Electronics', price: '₹2,999', stock: 120, status: 'Active', img: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=100&q=80', description: 'High-quality wireless headphones with noise cancellation and 24-hour battery life.' },
-  { id: 'PRD-1002', name: 'Organic Green Tea', seller: 'Fresh Foods', category: 'Groceries', price: '₹450', stock: 12, status: 'Low Stock', img: 'https://images.unsplash.com/photo-1627492275512-7a1db2f50f69?w=100&q=80', description: 'Pure organic green tea leaves sourced from the finest tea gardens in Assam.' },
-  { id: 'PRD-1003', name: 'Men\'s Running Shoes', seller: 'Fashion Hub', category: 'Fashion', price: '₹1,599', stock: 0, status: 'Out of Stock', img: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=100&q=80', description: 'Lightweight and breathable running shoes designed for ultimate comfort and performance.' },
-  { id: 'PRD-1004', name: 'Smart Fitness Band', seller: 'Gadget World', category: 'Electronics', price: '₹1,299', stock: 45, status: 'Hidden', img: 'https://images.unsplash.com/photo-1575311373937-040b8e1fd5b0?w=100&q=80', description: 'Track your daily activities, heart rate, and sleep patterns with this sleek fitness band.' },
-  { id: 'PRD-1005', name: 'Wooden Coffee Table', seller: 'RR Mart', category: 'Home & Furniture', price: '₹4,500', stock: 8, status: 'Low Stock', img: 'https://images.unsplash.com/photo-1533090481720-856c6e3c1fdc?w=100&q=80', description: 'Minimalist wooden coffee table perfect for modern living rooms.' },
-];
+
 
 export default function AdminProducts() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   const [categoryFilter, setCategoryFilter] = useState('All');
-  const [products, setProducts] = useState(MOCK_PRODUCTS);
+  const [products, setProducts] = useState([]);
+
+  React.useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const fetchProducts = async () => {
+    try {
+      // Fetch both products and sellers simultaneously for faster loading
+      const [productsRes, sellersRes] = await Promise.all([
+        fetch('http://localhost:5000/api/products'),
+        fetch('http://localhost:5000/api/sellers')
+      ]);
+      
+      const data = await productsRes.json();
+      const sellersData = await sellersRes.json();
+      
+      // Create a dictionary map to easily look up seller names by ID
+      const sellerMap = {};
+      if (Array.isArray(sellersData)) {
+        sellersData.forEach(s => {
+          sellerMap[s._id] = s.businessName || s.ownerName || 'Unknown Shop';
+        });
+      }
+
+      const formatted = data.map(p => {
+        // Sometimes p.seller is an object, sometimes it's just the raw ID string
+        const sellerId = p.seller?._id || p.seller;
+        
+        return {
+          id: p._id,
+          name: p.title,
+          seller: sellerMap[sellerId] || p.seller?.businessName || 'Unknown',
+          category: p.category,
+          price: `₹${p.price}`,
+          stock: p.stock,
+          isApproved: p.isApproved,
+          status: !p.isApproved ? 'Pending Approval' : (p.stock === 0 ? 'Out of Stock' : p.stock < 10 ? 'Low Stock' : 'Active'),
+          img: p.image,
+          description: p.description
+        };
+      });
+      setProducts(formatted);
+    } catch(err) {
+      console.error(err);
+    }
+  };
+
+  const handleDeleteProduct = async (id) => {
+    // Add delete API logic if backend has it. For now, just update state:
+    setProducts(products.filter(p => p.id !== id));
+    if (selectedProduct?.id === id) {
+      setIsModalOpen(false);
+    }
+  };
+
+  const handleApproveProduct = async (id) => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/products/${id}/approve`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isApproved: true })
+      });
+      if (res.ok) {
+        setProducts(products.map(p => 
+          p.id === id ? { ...p, isApproved: true, status: p.stock === 0 ? 'Out of Stock' : p.stock < 10 ? 'Low Stock' : 'Active' } : p
+        ));
+        if (selectedProduct?.id === id) {
+          setSelectedProduct(prev => ({
+             ...prev, 
+             isApproved: true, 
+             status: prev.stock === 0 ? 'Out of Stock' : prev.stock < 10 ? 'Low Stock' : 'Active'
+          }));
+        }
+      }
+    } catch (error) {
+      console.error('Error approving product:', error);
+    }
+  };
   
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -51,6 +123,7 @@ export default function AdminProducts() {
       case 'Low Stock': return 'status-low';
       case 'Out of Stock': return 'status-out';
       case 'Hidden': return 'status-hidden';
+      case 'Pending Approval': return 'status-pending';
       default: return '';
     }
   };
@@ -58,7 +131,7 @@ export default function AdminProducts() {
   const stats = {
     total: products.length,
     active: products.filter(p => p.status === 'Active').length,
-    lowStock: products.filter(p => p.status === 'Low Stock').length,
+    pending: products.filter(p => p.status === 'Pending Approval').length,
     outOfStock: products.filter(p => p.status === 'Out of Stock').length,
   };
 
@@ -84,16 +157,22 @@ export default function AdminProducts() {
             <Layers size={18} className="icon" />
             <select value={categoryFilter} onChange={handleCategoryFilter}>
               <option value="All">All Categories</option>
-              <option value="Electronics">Electronics</option>
-              <option value="Groceries">Groceries</option>
+              <option value="Grocery & Kitchen">Grocery & Kitchen</option>
+              <option value="Snacks & Drinks">Snacks & Drinks</option>
+              <option value="Beauty & Personal Care">Beauty & Personal Care</option>
               <option value="Fashion">Fashion</option>
-              <option value="Home & Furniture">Home & Furniture</option>
+              <option value="Electronics">Electronics</option>
+              <option value="Mobiles">Mobiles</option>
+              <option value="Furniture">Furniture</option>
+              <option value="Shoes">Shoes</option>
+              <option value="Toys">Toys</option>
             </select>
           </div>
           <div className="filter-dropdown">
             <Filter size={18} className="icon" />
             <select value={statusFilter} onChange={handleStatusFilter}>
               <option value="All">All Status</option>
+              <option value="Pending Approval">Pending Approval</option>
               <option value="Active">Active</option>
               <option value="Low Stock">Low Stock</option>
               <option value="Out of Stock">Out of Stock</option>
@@ -128,8 +207,8 @@ export default function AdminProducts() {
             <AlertCircle size={24} />
           </div>
           <div className="stat-info">
-            <p className="stat-label">Low Stock</p>
-            <h3 className="stat-value">{stats.lowStock}</h3>
+            <p className="stat-label">Pending Approval</p>
+            <h3 className="stat-value">{stats.pending}</h3>
           </div>
         </div>
         <div className="stat-card">
@@ -192,6 +271,11 @@ export default function AdminProducts() {
                     </td>
                     <td>
                       <div className="action-buttons">
+                        {!product.isApproved && (
+                          <button className="btn-icon approve" style={{ color: 'green' }} title="Approve Product" onClick={() => handleApproveProduct(product.id)}>
+                            <CheckCircle size={18} />
+                          </button>
+                        )}
                         <button className="btn-icon view" title="View Details" onClick={() => openModal(product)}>
                           <Eye size={18} />
                         </button>
@@ -207,7 +291,7 @@ export default function AdminProducts() {
                              <Eye size={18} />
                            </button>
                         )}
-                        <button className="btn-icon delete" title="Delete Product">
+                        <button className="btn-icon delete" title="Delete Product" onClick={() => handleDeleteProduct(product.id)}>
                           <Trash2 size={18} />
                         </button>
                       </div>
@@ -279,10 +363,15 @@ export default function AdminProducts() {
               </div>
 
               <div className="modal-actions">
-                <button className="btn-outline-danger">
-                  <Trash2 size={18} /> Delete Product
+                <button className="btn-outline-danger" onClick={() => handleDeleteProduct(selectedProduct.id)}>
+                   <Trash2 size={18} /> Delete Product
                 </button>
                 <div className="right-actions">
+                  {!selectedProduct.isApproved && (
+                    <button className="btn-primary" style={{ backgroundColor: 'green', borderColor: 'green', marginRight: '10px' }} onClick={() => handleApproveProduct(selectedProduct.id)}>
+                      <CheckCircle size={18} /> Approve
+                    </button>
+                  )}
                   <button className="btn-outline">
                     <Edit size={18} /> Edit Details
                   </button>

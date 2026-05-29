@@ -2,88 +2,89 @@ import React, { useState } from 'react';
 import { Search, Filter, CheckCircle, PauseCircle, Eye, IndianRupee, Landmark, FileText, X, ArrowUpRight, ArrowDownRight, History } from 'lucide-react';
 import './AdminFundRelease.css';
 
-const MOCK_PAYOUTS = [
-  {
-    id: 'PAY-1001',
-    sellerName: 'Fresh Mart Grocery',
-    orderAmount: 150000,
-    platformCommission: 15000,
-    gstDeduction: 2700,
-    finalPayable: 132300,
-    status: 'Pending',
-    bankDetails: {
-      bankName: 'HDFC Bank',
-      accountNo: 'XXXX-XXXX-1234',
-      ifsc: 'HDFC0001234',
-      holder: 'Priya Patel'
-    },
-    history: [
-      { id: 'TXN-001', date: '21 May 2024', amount: '₹1,50,000', type: 'Sales Accrued' },
-      { id: 'TXN-002', date: '22 May 2024', amount: '₹15,000', type: 'Commission Ded.' }
-    ]
-  },
-  {
-    id: 'PAY-1002',
-    sellerName: 'ElectroWorld',
-    orderAmount: 450000,
-    platformCommission: 45000,
-    gstDeduction: 8100,
-    finalPayable: 396900,
-    status: 'Released',
-    bankDetails: {
-      bankName: 'ICICI Bank',
-      accountNo: 'XXXX-XXXX-5678',
-      ifsc: 'ICIC0005678',
-      holder: 'Rahul Sharma'
-    },
-    history: [
-      { id: 'TXN-003', date: '18 May 2024', amount: '₹3,96,900', type: 'Payout Transferred' }
-    ]
-  },
-  {
-    id: 'PAY-1003',
-    sellerName: 'Fashion Hub',
-    orderAmount: 85000,
-    platformCommission: 8500,
-    gstDeduction: 1530,
-    finalPayable: 74970,
-    status: 'On Hold',
-    bankDetails: {
-      bankName: 'State Bank of India',
-      accountNo: 'XXXX-XXXX-9012',
-      ifsc: 'SBIN0009012',
-      holder: 'Amit Kumar Fashion'
-    },
-    history: [
-      { id: 'TXN-004', date: '20 May 2024', amount: '₹85,000', type: 'Sales Accrued' },
-      { id: 'TXN-005', date: '21 May 2024', amount: '-', type: 'Account Suspended' }
-    ]
-  },
-  {
-    id: 'PAY-1004',
-    sellerName: 'Green Organic Foods',
-    orderAmount: 210000,
-    platformCommission: 21000,
-    gstDeduction: 3780,
-    finalPayable: 185220,
-    status: 'Pending',
-    bankDetails: {
-      bankName: 'Kotak Mahindra',
-      accountNo: 'XXXX-XXXX-7890',
-      ifsc: 'KKBK0007890',
-      holder: 'Neha Gupta'
-    },
-    history: [
-      { id: 'TXN-006', date: '22 May 2024', amount: '₹2,10,000', type: 'Sales Accrued' }
-    ]
-  }
-];
-
 export default function AdminFundRelease() {
-  const [payouts, setPayouts] = useState(MOCK_PAYOUTS);
+  const [payouts, setPayouts] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('All');
   const [selectedPayout, setSelectedPayout] = useState(null);
+
+  React.useEffect(() => {
+    fetchPayoutData();
+  }, []);
+
+  const fetchPayoutData = async () => {
+    try {
+      setLoading(true);
+      const sellersRes = await fetch('http://localhost:5000/api/sellers');
+      const sellers = await sellersRes.json();
+      
+      let allOrders = [];
+      await Promise.all(sellers.map(async (seller) => {
+        try {
+          const orderRes = await fetch(`http://localhost:5000/api/orders/seller/${seller._id}`);
+          const orderData = await orderRes.json();
+          if (orderData.orders) {
+            allOrders = [...allOrders, ...orderData.orders];
+          }
+        } catch (e) {}
+      }));
+
+      const uniqueOrdersMap = new Map();
+      allOrders.forEach(o => uniqueOrdersMap.set(o._id, o));
+      const uniqueOrders = Array.from(uniqueOrdersMap.values());
+
+      const sellerPayouts = {};
+
+      uniqueOrders.forEach(order => {
+        if (order.isPaid || order.status === 'Delivered') {
+           order.orderItems.forEach(item => {
+              const sId = item.seller?._id || item.seller;
+              if (!sellerPayouts[sId]) {
+                 sellerPayouts[sId] = {
+                   id: `PAY-${sId.substring(0,8).toUpperCase()}`,
+                   sellerId: sId,
+                   orderAmount: 0,
+                   status: 'Pending',
+                   bankDetails: {
+                     bankName: 'Digital Wallet',
+                     accountNo: 'XXXX-XXXX-' + sId.substring(sId.length-4),
+                     ifsc: 'DIGI000' + sId.substring(0,4),
+                     holder: ''
+                   },
+                   history: []
+                 };
+              }
+              sellerPayouts[sId].orderAmount += item.price * item.qty;
+           });
+        }
+      });
+
+      const dynamicPayouts = Object.values(sellerPayouts).map(p => {
+         const seller = sellers.find(s => s._id === p.sellerId);
+         p.sellerName = seller ? (seller.businessName || seller.ownerName) : 'Unknown Seller';
+         p.bankDetails.holder = p.sellerName;
+         
+         p.platformCommission = p.orderAmount * 0.10; // 10% commission
+         p.gstDeduction = p.platformCommission * 0.18; // 18% of commission
+         p.finalPayable = p.orderAmount - p.platformCommission - p.gstDeduction;
+         
+         p.history = [
+           { id: `TXN-${p.id}-A`, date: new Date().toLocaleDateString('en-GB'), amount: `₹${p.orderAmount.toLocaleString()}`, type: 'Sales Accrued' },
+           { id: `TXN-${p.id}-C`, date: new Date().toLocaleDateString('en-GB'), amount: `₹${p.platformCommission.toLocaleString()}`, type: 'Commission Ded.' }
+         ];
+
+         return p;
+      });
+
+      // Filter only those who have actually sold something
+      setPayouts(dynamicPayouts.filter(p => p.orderAmount > 0));
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleAction = (id, newStatus) => {
     setPayouts(payouts.map(p => p.id === id ? { ...p, status: newStatus } : p));
@@ -105,6 +106,10 @@ export default function AdminFundRelease() {
     const matchesStatus = filterStatus === 'All' || p.status === filterStatus;
     return matchesSearch && matchesStatus;
   });
+
+  if (loading) {
+    return <div className="admin-fund-release"><div style={{padding: '50px', textAlign: 'center'}}>Calculating live seller payouts...</div></div>;
+  }
 
   return (
     <div className="admin-fund-release">

@@ -2,63 +2,82 @@ import React, { useState } from 'react';
 import { Search, Filter, IndianRupee, Clock, CheckCircle, AlertTriangle, Eye, CreditCard, TrendingUp, Gift } from 'lucide-react';
 import './AdminDeliveryEarnings.css';
 
-const MOCK_EARNINGS = [
-  {
-    id: 'ERN-1001',
-    riderName: 'Ramesh Singh',
-    image: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=100&h=100&fit=crop',
-    deliveries: 145,
-    earnings: 12500,
-    bonus: 2000,
-    totalPayment: 14500,
-    status: 'Pending'
-  },
-  {
-    id: 'ERN-1002',
-    riderName: 'Suresh Kumar',
-    image: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop',
-    deliveries: 132,
-    earnings: 11800,
-    bonus: 1500,
-    totalPayment: 13300,
-    status: 'Paid'
-  },
-  {
-    id: 'ERN-1003',
-    riderName: 'Abdul Rahman',
-    image: 'https://images.unsplash.com/photo-1527980965255-d3b416303d12?w=100&h=100&fit=crop',
-    deliveries: 128,
-    earnings: 11000,
-    bonus: 1000,
-    totalPayment: 12000,
-    status: 'Paid'
-  },
-  {
-    id: 'ERN-1004',
-    riderName: 'Vikram Mehta',
-    image: 'https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=100&h=100&fit=crop',
-    deliveries: 45,
-    earnings: 3500,
-    bonus: 0,
-    totalPayment: 3500,
-    status: 'Failed'
-  },
-  {
-    id: 'ERN-1005',
-    riderName: 'David Lee',
-    image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop',
-    deliveries: 160,
-    earnings: 14000,
-    bonus: 3500,
-    totalPayment: 17500,
-    status: 'Pending'
-  }
-];
-
 export default function AdminDeliveryEarnings() {
-  const [earningsList, setEarningsList] = useState(MOCK_EARNINGS);
+  const [earningsList, setEarningsList] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('All');
+
+  React.useEffect(() => {
+    fetchDeliveryEarnings();
+  }, []);
+
+  const fetchDeliveryEarnings = async () => {
+    try {
+      setLoading(true);
+      const [delRes, sellersRes] = await Promise.all([
+        fetch('http://localhost:5000/api/delivery'),
+        fetch('http://localhost:5000/api/sellers')
+      ]);
+
+      const riders = await delRes.json();
+      const sellers = await sellersRes.json();
+
+      let allOrders = [];
+      await Promise.all(sellers.map(async (seller) => {
+        try {
+          const orderRes = await fetch(`http://localhost:5000/api/orders/seller/${seller._id}`);
+          const orderData = await orderRes.json();
+          if (orderData.orders) {
+            allOrders = [...allOrders, ...orderData.orders];
+          }
+        } catch (e) {}
+      }));
+
+      const uniqueOrdersMap = new Map();
+      allOrders.forEach(o => uniqueOrdersMap.set(o._id, o));
+      const uniqueOrders = Array.from(uniqueOrdersMap.values());
+
+      const riderStats = {};
+      riders.forEach(r => {
+        // Show earnings for all approved riders even if 0 deliveries
+        if (r.status === 'approved' || r.status === 'active') {
+           riderStats[r._id] = { ...r, deliveries: 0 };
+        }
+      });
+
+      uniqueOrders.forEach(order => {
+        if (order.status === 'Delivered') {
+          const dBoyId = order.deliveryBoy?._id || order.deliveryBoy;
+          if (dBoyId && riderStats[dBoyId]) {
+            riderStats[dBoyId].deliveries++;
+          }
+        }
+      });
+
+      const dynamicEarnings = Object.values(riderStats).map(r => {
+        const deliveries = r.deliveries;
+        const earnings = deliveries * 50; // ₹50 per delivery
+        const bonus = deliveries >= 10 ? (Math.floor(deliveries / 10) * 150) : 0; // ₹150 bonus per 10 deliveries
+        return {
+          id: `ERN-${r._id.substring(0, 8).toUpperCase()}`,
+          riderName: r.fullName || r.name || 'Rider',
+          image: 'https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=100&h=100&fit=crop', // default avatar
+          deliveries,
+          earnings,
+          bonus,
+          totalPayment: earnings + bonus,
+          status: 'Pending'
+        };
+      });
+
+      setEarningsList(dynamicEarnings);
+    } catch(err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleReleasePayment = (id) => {
     setEarningsList(earningsList.map(item => 
@@ -85,6 +104,10 @@ export default function AdminDeliveryEarnings() {
   const totalBonuses = earningsList.reduce((sum, item) => sum + item.bonus, 0);
   const pendingPayments = earningsList.filter(i => i.status === 'Pending').reduce((sum, item) => sum + item.totalPayment, 0);
   const paidPayments = earningsList.filter(i => i.status === 'Paid').reduce((sum, item) => sum + item.totalPayment, 0);
+
+  if (loading) {
+    return <div className="admin-delivery-earnings"><div style={{padding: '50px', textAlign: 'center'}}>Calculating live rider earnings...</div></div>;
+  }
 
   return (
     <div className="admin-delivery-earnings">

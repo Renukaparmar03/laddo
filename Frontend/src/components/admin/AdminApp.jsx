@@ -26,11 +26,94 @@ import AdminReports from './AdminReports';
 import AdminSettings from './AdminSettings';
 import AdminProfile from './AdminProfile';
 import AdminLogin from './AdminLogin';
+import AdminNotifications from './AdminNotifications';
 
 // Placeholder Pages
 
 // Admin Dashboard Home
 const AdminDashboard = () => {
+  const navigate = useNavigate();
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    totalSellers: 0,
+    totalOrders: 0,
+    totalRevenue: 0,
+    recentOrders: [],
+    topSellers: []
+  });
+  const [loading, setLoading] = useState(true);
+
+  React.useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true);
+        // 1. Fetch all sellers
+        const sellersRes = await fetch('http://localhost:5000/api/sellers');
+        const sellersData = await sellersRes.json();
+        
+        let allOrders = [];
+        let totalRevenue = 0;
+        let uniqueUsers = new Set();
+        let sellerStats = [];
+
+        // 2. Fetch orders for each seller
+        await Promise.all(sellersData.map(async (seller) => {
+          try {
+            const orderRes = await fetch(`http://localhost:5000/api/orders/seller/${seller._id}`);
+            const orderData = await orderRes.json();
+            
+            totalRevenue += orderData.totalSales || 0;
+            
+            if (orderData.orders) {
+              allOrders = [...allOrders, ...orderData.orders];
+              orderData.orders.forEach(o => {
+                if (o.user) uniqueUsers.add(o.user.toString());
+              });
+            }
+
+            sellerStats.push({
+              name: seller.businessName || seller.ownerName || 'Seller',
+              img: seller.logo || 'https://via.placeholder.com/50',
+              rev: orderData.totalSales || 0,
+              orders: orderData.totalOrders || 0
+            });
+          } catch (e) {
+            console.error(e);
+          }
+        }));
+
+        // Deduplicate orders
+        const uniqueOrdersMap = new Map();
+        allOrders.forEach(o => uniqueOrdersMap.set(o._id, o));
+        const uniqueOrders = Array.from(uniqueOrdersMap.values());
+        
+        // Sort recent orders by date
+        uniqueOrders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        const uniqueRecentOrders = uniqueOrders.slice(0, 5);
+
+        // Sort top sellers by revenue
+        sellerStats.sort((a, b) => b.rev - a.rev);
+        const top5Sellers = sellerStats.slice(0, 4);
+
+        setStats({
+          // If no unique users found, fallback to 0 instead of fake data so it reflects real DB state
+          totalUsers: uniqueUsers.size,
+          totalSellers: sellersData.length,
+          totalOrders: uniqueOrders.length,
+          totalRevenue: totalRevenue,
+          recentOrders: uniqueRecentOrders,
+          topSellers: top5Sellers
+        });
+      } catch (err) {
+        console.error('Error fetching admin dashboard data:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
+
   return (
     <div className="admin-dashboard-home">
       {/* Header Section */}
@@ -40,195 +123,190 @@ const AdminDashboard = () => {
           <p>Monitor your platform's overall performance</p>
         </div>
         <div className="quick-actions-btns">
-          <button className="btn-primary"><PlusCircle size={18} /> Add Seller</button>
         </div>
       </div>
 
-      {/* Summary Cards */}
-      <div className="summary-cards">
-        <div className="stat-card">
-          <div className="stat-icon bg-blue">
-            <Users size={24} />
-          </div>
-          <div className="stat-info">
-            <p className="stat-label">Total Users</p>
-            <h3 className="stat-value">14,592</h3>
-            <span className="trend positive"><ArrowUpRight size={14} /> +12%</span>
-          </div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-icon bg-purple">
-            <Store size={24} />
-          </div>
-          <div className="stat-info">
-            <p className="stat-label">Total Sellers</p>
-            <h3 className="stat-value">845</h3>
-            <span className="trend positive"><ArrowUpRight size={14} /> +5%</span>
-          </div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-icon bg-orange">
-            <ShoppingCart size={24} />
-          </div>
-          <div className="stat-info">
-            <p className="stat-label">Total Orders</p>
-            <h3 className="stat-value">42,891</h3>
-            <span className="trend positive"><ArrowUpRight size={14} /> +18%</span>
-          </div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-icon bg-green">
-            <IndianRupee size={24} />
-          </div>
-          <div className="stat-info">
-            <p className="stat-label">Total Revenue</p>
-            <h3 className="stat-value">₹8.4M</h3>
-            <span className="trend positive"><ArrowUpRight size={14} /> +24%</span>
-          </div>
-        </div>
-      </div>
-
-      <div className="dashboard-grid">
-        {/* Sales Overview Chart (CSS based) */}
-        <div className="analytics-section card">
-          <div className="card-header">
-            <h3>Sales Overview</h3>
-            <select className="date-select"><option>This Year</option></select>
-          </div>
-          <div className="chart-placeholder">
-            {[40, 60, 45, 80, 55, 90, 75, 85, 65, 100, 70, 85].map((height, i) => (
-              <div className="bar-wrapper" key={i}>
-                <div className="bar" style={{height: `${height}%`}}></div>
-                <span className="month-label">
-                  {['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][i]}
-                </span>
+      {loading ? (
+        <div style={{ padding: '40px', textAlign: 'center' }}>Loading real-time data...</div>
+      ) : (
+        <>
+          {/* Summary Cards */}
+          <div className="summary-cards">
+            <div className="stat-card">
+              <div className="stat-icon bg-blue">
+                <Users size={24} />
               </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Quick Actions & Recent Activity */}
-        <div className="side-col">
-          <div className="quick-actions-card card">
-            <div className="card-header">
-              <h3>Quick Actions</h3>
-            </div>
-            <div className="action-buttons-grid">
-              <button className="action-btn">
-                <Store size={20} className="text-blue" />
-                <span>Add Seller</span>
-              </button>
-              <button className="action-btn">
-                <ShoppingCart size={20} className="text-orange" />
-                <span>View Orders</span>
-              </button>
-              <button className="action-btn">
-                <Package size={20} className="text-purple" />
-                <span>Manage Products</span>
-              </button>
-              <button className="action-btn">
-                <Bell size={20} className="text-green" />
-                <span>Notify All</span>
-              </button>
-            </div>
-          </div>
-
-          <div className="recent-activity card">
-            <div className="card-header">
-              <h3>Recent Activity</h3>
-            </div>
-            <div className="activity-list">
-              <div className="activity-item">
-                <div className="act-icon bg-blue"><Store size={14} /></div>
-                <div className="act-info">
-                  <p>New seller <strong>ElectroWorld</strong> joined</p>
-                  <span>2 hours ago</span>
-                </div>
+              <div className="stat-info">
+                <p className="stat-label">Active Users</p>
+                <h3 className="stat-value">{stats.totalUsers}</h3>
+                <span className="trend positive"><ArrowUpRight size={14} /> Live Data</span>
               </div>
-              <div className="activity-item">
-                <div className="act-icon bg-purple"><Package size={14} /></div>
-                <div className="act-info">
-                  <p><strong>RR Mart</strong> added 12 new products</p>
-                  <span>5 hours ago</span>
-                </div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-icon bg-purple">
+                <Store size={24} />
               </div>
-              <div className="activity-item">
-                <div className="act-icon bg-green"><CheckCircle size={14} /></div>
-                <div className="act-info">
-                  <p>Order <strong>#ORD-9912</strong> completed</p>
-                  <span>Yesterday</span>
-                </div>
+              <div className="stat-info">
+                <p className="stat-label">Total Sellers</p>
+                <h3 className="stat-value">{stats.totalSellers}</h3>
+                <span className="trend positive"><ArrowUpRight size={14} /> Live Data</span>
+              </div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-icon bg-orange">
+                <ShoppingCart size={24} />
+              </div>
+              <div className="stat-info">
+                <p className="stat-label">Total Orders</p>
+                <h3 className="stat-value">{stats.totalOrders}</h3>
+                <span className="trend positive"><ArrowUpRight size={14} /> Live Data</span>
+              </div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-icon bg-green">
+                <IndianRupee size={24} />
+              </div>
+              <div className="stat-info">
+                <p className="stat-label">Total Revenue</p>
+                <h3 className="stat-value">₹{stats.totalRevenue.toLocaleString()}</h3>
+                <span className="trend positive"><ArrowUpRight size={14} /> Live Data</span>
               </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      <div className="dashboard-grid-bottom">
-        {/* Recent Orders */}
-        <div className="recent-orders card">
-          <div className="card-header">
-            <h3>Recent Orders</h3>
-            <button className="btn-text">View All</button>
-          </div>
-          <div className="table-responsive">
-            <table className="admin-table">
-              <thead>
-                <tr>
-                  <th>Order ID</th>
-                  <th>Customer</th>
-                  <th>Seller</th>
-                  <th>Amount</th>
-                  <th>Order Status</th>
-                  <th>Payment</th>
-                </tr>
-              </thead>
-              <tbody>
-                {[
-                  { id: '#ORD-1029', cust: 'Rahul Sharma', seller: 'RR Mart', amount: '₹4,999', status: 'Delivered', payment: 'Paid' },
-                  { id: '#ORD-1030', cust: 'Priya Patel', seller: 'Tech Store', amount: '₹12,499', status: 'Processing', payment: 'Paid' },
-                  { id: '#ORD-1031', cust: 'Amit Kumar', seller: 'Fresh Foods', amount: '₹899', status: 'Pending', payment: 'Pending' },
-                  { id: '#ORD-1032', cust: 'Neha Gupta', seller: 'Fashion Hub', amount: '₹2,499', status: 'Delivered', payment: 'Paid' },
-                ].map((order, i) => (
-                  <tr key={i}>
-                    <td className="font-medium">{order.id}</td>
-                    <td>{order.cust}</td>
-                    <td>{order.seller}</td>
-                    <td className="font-semibold">{order.amount}</td>
-                    <td><span className={`status-badge ${order.status.toLowerCase()}`}>{order.status}</span></td>
-                    <td><span className={`pay-badge ${order.payment.toLowerCase()}`}>{order.payment}</span></td>
-                  </tr>
+          <div className="dashboard-grid">
+            {/* Sales Overview Chart (CSS based) */}
+            <div className="analytics-section card">
+              <div className="card-header">
+                <h3>Sales Overview</h3>
+                <select className="date-select"><option>This Year</option></select>
+              </div>
+              <div className="chart-placeholder">
+                {[40, 60, 45, 80, 55, 90, 75, 85, 65, 100, 70, 85].map((height, i) => (
+                  <div className="bar-wrapper" key={i}>
+                    <div className="bar" style={{height: `${height}%`}}></div>
+                    <span className="month-label">
+                      {['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][i]}
+                    </span>
+                  </div>
                 ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* Top Sellers */}
-        <div className="top-sellers card">
-          <div className="card-header">
-            <h3>Top Sellers</h3>
-            <button className="btn-text">View All</button>
-          </div>
-          <div className="sellers-list">
-            {[
-              { name: 'RR Mart', img: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=50&q=80', rev: '₹1.2M', orders: '1,245' },
-              { name: 'Tech Store', img: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=50&q=80', rev: '₹890K', orders: '856' },
-              { name: 'Fashion Hub', img: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=50&q=80', rev: '₹650K', orders: '742' },
-              { name: 'Fresh Foods', img: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=50&q=80', rev: '₹420K', orders: '1,890' },
-            ].map((seller, i) => (
-              <div className="seller-item" key={i}>
-                <img src={seller.img} alt={seller.name} className="seller-img" />
-                <div className="seller-info">
-                  <h4>{seller.name}</h4>
-                  <p>{seller.orders} orders</p>
-                </div>
-                <div className="seller-rev">{seller.rev}</div>
               </div>
-            ))}
+            </div>
+
+            {/* Quick Actions & Recent Activity */}
+            <div className="side-col">
+              <div className="quick-actions-card card">
+                <div className="card-header">
+                  <h3>Quick Actions</h3>
+                </div>
+                <div className="action-buttons-grid">
+                  <button className="action-btn" onClick={() => navigate('/admin/orders')}>
+                    <ShoppingCart size={20} className="text-orange" />
+                    <span>View Orders</span>
+                  </button>
+                  <button className="action-btn" onClick={() => navigate('/admin/products')}>
+                    <Package size={20} className="text-purple" />
+                    <span>Manage Products</span>
+                  </button>
+                  <button className="action-btn" onClick={() => navigate('/admin/notification')}>
+                    <Bell size={20} className="text-green" />
+                    <span>Notify All</span>
+                  </button>
+                </div>
+              </div>
+
+              <div className="recent-activity card">
+                <div className="card-header">
+                  <h3>Recent Activity</h3>
+                </div>
+                <div className="activity-list">
+                  <div className="activity-item">
+                    <div className="act-icon bg-blue"><Store size={14} /></div>
+                    <div className="act-info">
+                      <p>Dashboard updated with <strong>Live Data</strong></p>
+                      <span>Just now</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
+
+          <div className="dashboard-grid-bottom">
+            {/* Recent Orders */}
+            <div className="recent-orders card">
+              <div className="card-header">
+                <h3>Recent Orders</h3>
+                <button className="btn-text">View All</button>
+              </div>
+              <div className="table-responsive">
+                <table className="admin-table">
+                  <thead>
+                    <tr>
+                      <th>Order ID</th>
+                      <th>Customer</th>
+                      <th>Amount</th>
+                      <th>Order Status</th>
+                      <th>Payment</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {stats.recentOrders.length === 0 ? (
+                      <tr><td colSpan="5" style={{textAlign: 'center', padding: '20px'}}>No orders yet</td></tr>
+                    ) : (
+                      stats.recentOrders.map((order, i) => (
+                        <tr key={i}>
+                          <td className="font-medium">{order.orderId || order._id.substring(0,8).toUpperCase()}</td>
+                          <td>Customer</td>
+                          <td className="font-semibold">₹{order.totalPrice.toLocaleString()}</td>
+                          <td>
+                            <span className={`status-badge ${
+                              order.status === 'Delivered' ? 'delivered' : 
+                              order.status === 'Rejected' || order.status === 'Cancelled' ? 'cancelled' : 
+                              'pending'
+                            }`}>
+                              {order.status}
+                            </span>
+                          </td>
+                          <td>
+                            <span className={`pay-badge ${order.isPaid ? 'paid' : 'pending'}`}>
+                              {order.paymentMethod}
+                            </span>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Top Sellers */}
+            <div className="top-sellers card">
+              <div className="card-header">
+                <h3>Top Sellers</h3>
+                <button className="btn-text">View All</button>
+              </div>
+              <div className="sellers-list">
+                {stats.topSellers.length === 0 ? (
+                  <div style={{textAlign: 'center', padding: '20px', color: '#666'}}>No sellers yet</div>
+                ) : (
+                  stats.topSellers.map((seller, i) => (
+                    <div className="seller-item" key={i}>
+                      <img src={seller.img} alt={seller.name} className="seller-img" style={{objectFit: 'cover'}} />
+                      <div className="seller-info">
+                        <h4>{seller.name}</h4>
+                        <p>{seller.orders} orders</p>
+                      </div>
+                      <div className="seller-rev">₹{seller.rev.toLocaleString()}</div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 };
@@ -236,6 +314,8 @@ const AdminDashboard = () => {
 export default function AdminApp() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [openMenus, setOpenMenus] = useState({ 'Seller Management': false, 'Delivery Management': false });
+  const [pendingCount, setPendingCount] = useState(0);
+  const [pendingDeliveryCount, setPendingDeliveryCount] = useState(0);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -248,6 +328,21 @@ export default function AdminApp() {
 
     if (isLoggedIn && (location.pathname === '/admin' || location.pathname === '/admin/' || location.pathname === '/admin/login')) {
       navigate('/admin/home');
+    }
+    
+    if (isLoggedIn) {
+      fetch('http://localhost:5000/api/sellers?status=pending')
+        .then(res => res.json())
+        .then(data => setPendingCount(data.length))
+        .catch(err => console.error(err));
+
+      fetch('http://localhost:5000/api/delivery')
+        .then(res => res.json())
+        .then(data => {
+          const pending = data.filter(d => d.status === 'pending');
+          setPendingDeliveryCount(pending.length);
+        })
+        .catch(err => console.error(err));
     }
   }, [location.pathname, navigate]);
 
@@ -267,7 +362,7 @@ export default function AdminApp() {
       subItems: [
         { name: 'Seller Overview', path: '/admin/seller-overview' },
         { name: 'All Sellers', path: '/admin/all-sellers' },
-        { name: 'Seller Requests', path: '/admin/seller-requests', badge: 3 },
+        { name: 'Seller Requests', path: '/admin/seller-requests', badge: pendingCount > 0 ? pendingCount : null },
         { name: 'GST Verification', path: '/admin/gst-verification' },
         { name: 'Fund Release', path: '/admin/fund-release' },
       ]
@@ -278,7 +373,7 @@ export default function AdminApp() {
       isDropdown: true,
       subItems: [
         { name: 'Delivery Overview', path: '/admin/delivery-overview' },
-        { name: 'Delivery Requests', path: '/admin/delivery-requests', badge: 5 },
+        { name: 'Delivery Requests', path: '/admin/delivery-requests', badge: pendingDeliveryCount > 0 ? pendingDeliveryCount : null },
         { name: 'Delivery Partners', path: '/admin/delivery-partners' },
         { name: 'Active Deliveries', path: '/admin/active-deliveries' },
         { name: 'Delivery Earnings & Bonuses', path: '/admin/delivery-earnings' },
@@ -401,9 +496,11 @@ export default function AdminApp() {
             </div>
           </div>
           <div className="topbar-right">
-            <button className="icon-btn">
+            <button className="icon-btn" onClick={() => navigate('/admin/notification')}>
               <Bell size={20} />
-              <span className="badge">5</span>
+              {(pendingCount + pendingDeliveryCount) > 0 && (
+                <span className="badge">{pendingCount + pendingDeliveryCount}</span>
+              )}
             </button>
             <div className="admin-profile" onClick={() => navigate('/admin/profile')} style={{ cursor: 'pointer' }}>
               <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?w=50&q=80" alt="Admin" />
@@ -440,6 +537,7 @@ export default function AdminApp() {
             <Route path="reports" element={<AdminReports />} />
             <Route path="settings" element={<AdminSettings />} />
             <Route path="profile" element={<AdminProfile />} />
+            <Route path="notification" element={<AdminNotifications />} />
             <Route path="" element={<Navigate to="home" replace />} />
           </Routes>
         </div>

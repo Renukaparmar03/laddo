@@ -24,6 +24,14 @@ function SellerLogin() {
       const data = await response.json();
       
       if (response.ok) {
+        if (data.status === 'pending') {
+          alert('Your account is still pending admin approval. Please wait for activation.');
+          return;
+        }
+        if (data.status === 'suspended') {
+          alert('Your account has been suspended by the admin.');
+          return;
+        }
         localStorage.setItem('seller_logged_in', 'true');
         localStorage.setItem('seller_info', JSON.stringify(data));
         navigate('/seller/home');

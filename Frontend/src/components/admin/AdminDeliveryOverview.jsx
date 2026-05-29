@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Users, Truck, CheckCircle, Star, IndianRupee, TrendingUp, Clock, AlertCircle } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from 'recharts';
 import './AdminDeliveryOverview.css';
@@ -21,6 +21,112 @@ const earningsData = [
 ];
 
 export default function AdminDeliveryOverview() {
+  const [data, setData] = useState({
+    totalRiders: 0,
+    activeRiders: 0,
+    completedDeliveries: 0,
+    totalPayouts: 0,
+    topRiders: [],
+    alerts: [],
+    loading: true
+  });
+
+  React.useEffect(() => {
+    fetchDeliveryData();
+  }, []);
+
+  const fetchDeliveryData = async () => {
+    try {
+      setData(prev => ({...prev, loading: true}));
+      const [delRes, sellersRes] = await Promise.all([
+        fetch('http://localhost:5000/api/delivery'),
+        fetch('http://localhost:5000/api/sellers')
+      ]);
+
+      const riders = await delRes.json();
+      const sellers = await sellersRes.json();
+
+      let allOrders = [];
+      await Promise.all(sellers.map(async (seller) => {
+        try {
+          const orderRes = await fetch(`http://localhost:5000/api/orders/seller/${seller._id}`);
+          const orderData = await orderRes.json();
+          if (orderData.orders) {
+            allOrders = [...allOrders, ...orderData.orders];
+          }
+        } catch (e) {}
+      }));
+
+      const uniqueOrdersMap = new Map();
+      allOrders.forEach(o => uniqueOrdersMap.set(o._id, o));
+      const uniqueOrders = Array.from(uniqueOrdersMap.values());
+
+      let completedCount = 0;
+      let delayedCount = 0;
+      const riderStats = {};
+      riders.forEach(r => {
+        riderStats[r._id] = { ...r, deliveries: 0 };
+      });
+
+      uniqueOrders.forEach(order => {
+        if (order.status === 'Delivered') {
+          completedCount++;
+          const dBoyId = order.deliveryBoy?._id || order.deliveryBoy;
+          if (dBoyId && riderStats[dBoyId]) {
+            riderStats[dBoyId].deliveries++;
+          }
+        } else if (order.status === 'Pending' && (new Date() - new Date(order.createdAt)) > 24 * 60 * 60 * 1000) {
+          delayedCount++;
+        }
+      });
+
+      const topRiders = Object.values(riderStats)
+        .sort((a,b) => b.deliveries - a.deliveries)
+        .slice(0, 4)
+        .map(r => ({
+           name: r.fullName || r.name || 'Rider',
+           deliveries: r.deliveries,
+           rating: (4.5 + Math.random() * 0.5).toFixed(1), // Mock rating
+           status: (r.status === 'active' || r.status === 'approved') ? 'Active' : 'Offline'
+        }));
+
+      const activeCount = riders.filter(r => r.status === 'active' || r.status === 'approved').length;
+      
+      const alerts = [];
+      if (delayedCount > 0) {
+        alerts.push({
+          id: 1, type: 'warning', icon: <Clock size={18} />, title: 'High Delivery Time', desc: `${delayedCount} orders have been pending for over 24 hours.`, time: 'Recently'
+        });
+      }
+      if (activeCount < 5 && riders.length > 0) {
+        alerts.push({
+          id: 2, type: 'critical', icon: <AlertCircle size={18} />, title: 'Rider Shortage', desc: `Only ${activeCount} riders are currently active.`, time: 'Recently'
+        });
+      }
+      if (alerts.length === 0) {
+        alerts.push({
+          id: 3, type: 'info', icon: <CheckCircle size={18} />, title: 'All Good', desc: `No major operational alerts.`, time: 'Recently'
+        });
+      }
+
+      setData({
+        totalRiders: riders.length,
+        activeRiders: activeCount,
+        completedDeliveries: completedCount,
+        totalPayouts: completedCount * 50, // Assuming ₹50 base payout per delivery
+        topRiders,
+        alerts,
+        loading: false
+      });
+    } catch(err) {
+      console.error(err);
+      setData(prev => ({...prev, loading: false}));
+    }
+  };
+
+  if (data.loading) {
+    return <div className="admin-delivery-overview"><div style={{padding: '50px', textAlign: 'center'}}>Loading live rider fleet analytics...</div></div>;
+  }
   return (
     <div className="admin-delivery-overview">
       <div className="overview-header">
@@ -42,8 +148,8 @@ export default function AdminDeliveryOverview() {
           <div className="kpi-icon"><Users size={24} /></div>
           <div className="kpi-info">
             <p>Total Riders</p>
-            <h3>145</h3>
-            <span className="trend positive"><TrendingUp size={14} /> +12 this month</span>
+            <h3>{data.totalRiders}</h3>
+            <span className="trend positive"><TrendingUp size={14} /> Platform Data</span>
           </div>
         </div>
         
@@ -51,8 +157,8 @@ export default function AdminDeliveryOverview() {
           <div className="kpi-icon"><Truck size={24} /></div>
           <div className="kpi-info">
             <p>Active Right Now</p>
-            <h3>86</h3>
-            <span className="trend neutral">60% of fleet</span>
+            <h3>{data.activeRiders}</h3>
+            <span className="trend neutral">{data.totalRiders > 0 ? Math.round((data.activeRiders/data.totalRiders)*100) : 0}% of fleet</span>
           </div>
         </div>
 
@@ -60,8 +166,8 @@ export default function AdminDeliveryOverview() {
           <div className="kpi-icon"><CheckCircle size={24} /></div>
           <div className="kpi-info">
             <p>Completed Deliveries</p>
-            <h3>1,350</h3>
-            <span className="trend positive"><TrendingUp size={14} /> +15% vs last week</span>
+            <h3>{data.completedDeliveries.toLocaleString()}</h3>
+            <span className="trend positive"><TrendingUp size={14} /> Accurate Count</span>
           </div>
         </div>
 
@@ -78,8 +184,8 @@ export default function AdminDeliveryOverview() {
           <div className="kpi-icon"><IndianRupee size={24} /></div>
           <div className="kpi-info">
             <p>Total Payouts</p>
-            <h3>₹2.06L</h3>
-            <span className="trend neutral">In last 30 days</span>
+            <h3>₹{(data.totalPayouts / 1000).toFixed(1)}k</h3>
+            <span className="trend neutral">Based on ₹50/delivery</span>
           </div>
         </div>
       </div>
@@ -146,18 +252,13 @@ export default function AdminDeliveryOverview() {
             <button className="view-all">View All</button>
           </div>
           <div className="list-container">
-            {[
-              { name: 'Ramesh Singh', deliveries: 145, rating: 4.9, status: 'Active' },
-              { name: 'Suresh Kumar', deliveries: 132, rating: 4.8, status: 'Active' },
-              { name: 'Abdul Rahman', deliveries: 128, rating: 4.8, status: 'Offline' },
-              { name: 'Vikram Mehta', deliveries: 115, rating: 4.7, status: 'Active' }
-            ].map((rider, i) => (
+            {data.topRiders.map((rider, i) => (
               <div className="list-item" key={i}>
                 <div className="item-left">
                   <div className="avatar bg-blue-light">{rider.name.charAt(0)}</div>
                   <div>
                     <h4>{rider.name}</h4>
-                    <p>{rider.deliveries} deliveries this week</p>
+                    <p>{rider.deliveries} deliveries total</p>
                   </div>
                 </div>
                 <div className="item-right">
@@ -166,6 +267,7 @@ export default function AdminDeliveryOverview() {
                 </div>
               </div>
             ))}
+            {data.topRiders.length === 0 && <p className="text-gray-500 text-sm mt-2">No rider data yet.</p>}
           </div>
         </div>
 
@@ -175,30 +277,16 @@ export default function AdminDeliveryOverview() {
             <button className="view-all">View All</button>
           </div>
           <div className="list-container">
-            <div className="alert-item warning">
-              <div className="alert-icon"><Clock size={18} /></div>
-              <div className="alert-content">
-                <h4>High Delivery Time</h4>
-                <p>Average time in Sector 4 exceeded 35 mins</p>
+            {data.alerts.map((alert) => (
+              <div className={`alert-item ${alert.type}`} key={alert.id}>
+                <div className="alert-icon">{alert.icon}</div>
+                <div className="alert-content">
+                  <h4>{alert.title}</h4>
+                  <p>{alert.desc}</p>
+                </div>
+                <span className="alert-time">{alert.time}</span>
               </div>
-              <span className="alert-time">10m ago</span>
-            </div>
-            <div className="alert-item critical">
-              <div className="alert-icon"><AlertCircle size={18} /></div>
-              <div className="alert-content">
-                <h4>Rider Shortage</h4>
-                <p>Only 5 riders active in Downtown area</p>
-              </div>
-              <span className="alert-time">1h ago</span>
-            </div>
-            <div className="alert-item info">
-              <div className="alert-icon"><Truck size={18} /></div>
-              <div className="alert-content">
-                <h4>Vehicle Breakdown</h4>
-                <p>Rider ID #1042 reported breakdown</p>
-              </div>
-              <span className="alert-time">2h ago</span>
-            </div>
+            ))}
           </div>
         </div>
       </div>

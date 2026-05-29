@@ -8,32 +8,143 @@ import './AdminAnalytics.css';
 export default function AdminAnalytics() {
   const [dateRange, setDateRange] = useState('This Month');
 
-  // MOCK DATA
-  const topProducts = [
-    { id: 1, name: 'Premium Wireless Headphones', sold: 450, revenue: '₹1.3M', img: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=50&q=80' },
-    { id: 2, name: 'Smart Fitness Band', sold: 320, revenue: '₹415K', img: 'https://images.unsplash.com/photo-1575311373937-040b8e1fd5b0?w=50&q=80' },
-    { id: 3, name: 'Men\'s Running Shoes', sold: 210, revenue: '₹335K', img: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=50&q=80' },
-  ];
+  const [analyticsData, setAnalyticsData] = useState({
+    totalRevenue: 0,
+    totalOrders: 0,
+    totalUsers: 0,
+    topProducts: [],
+    topSellers: [],
+    categories: [],
+    activities: [],
+    loading: true
+  });
 
-  const topSellers = [
-    { id: 1, shop: 'RR Mart', orders: 1245, revenue: '₹1.2M', img: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=50&q=80' },
-    { id: 2, shop: 'Tech Store', orders: 856, revenue: '₹890K', img: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=50&q=80' },
-    { id: 3, shop: 'Fashion Hub', orders: 742, revenue: '₹650K', img: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=50&q=80' },
-  ];
+  React.useEffect(() => {
+    fetchAnalyticsData();
+  }, []);
 
-  const categories = [
-    { name: 'Electronics', percent: 45, color: '#3b82f6' },
-    { name: 'Fashion', percent: 25, color: '#a855f7' },
-    { name: 'Groceries', percent: 18, color: '#16a34a' },
-    { name: 'Home & Furniture', percent: 12, color: '#f97316' },
-  ];
+  const fetchAnalyticsData = async () => {
+    try {
+      const [usersRes, sellersRes, productsRes] = await Promise.all([
+        fetch('http://localhost:5000/api/users'),
+        fetch('http://localhost:5000/api/sellers'),
+        fetch('http://localhost:5000/api/products')
+      ]);
 
-  const activities = [
-    { id: 1, text: 'New seller "Tech Store" joined', time: '10 mins ago', type: 'store' },
-    { id: 2, text: 'Payment of ₹12,500 received', time: '1 hour ago', type: 'payment' },
-    { id: 3, text: 'Order #ORD-102 completed', time: '3 hours ago', type: 'order' },
-    { id: 4, text: 'New product "Smart Watch" added', time: '5 hours ago', type: 'product' },
-  ];
+      const users = await usersRes.json();
+      const sellers = await sellersRes.json();
+      const products = await productsRes.json();
+
+      let allOrders = [];
+      await Promise.all(sellers.map(async (seller) => {
+        try {
+          const orderRes = await fetch(`http://localhost:5000/api/orders/seller/${seller._id}`);
+          const orderData = await orderRes.json();
+          if (orderData.orders) {
+            allOrders = [...allOrders, ...orderData.orders];
+          }
+        } catch (e) {}
+      }));
+
+      // Deduplicate orders
+      const uniqueOrdersMap = new Map();
+      allOrders.forEach(o => uniqueOrdersMap.set(o._id, o));
+      const uniqueOrders = Array.from(uniqueOrdersMap.values());
+
+      // 1. Totals
+      const totalOrders = uniqueOrders.length;
+      const totalRevenue = uniqueOrders.filter(o => o.isPaid || o.status === 'Delivered').reduce((sum, o) => sum + o.totalPrice, 0);
+
+      // 2. Top Products
+      const productSales = {};
+      uniqueOrders.forEach(order => {
+        order.orderItems.forEach(item => {
+          if (!productSales[item.title]) {
+            productSales[item.title] = { id: item.product, name: item.title, sold: 0, revenue: 0, img: item.image };
+          }
+          productSales[item.title].sold += item.qty;
+          productSales[item.title].revenue += item.price * item.qty;
+        });
+      });
+      const topProducts = Object.values(productSales)
+        .sort((a, b) => b.revenue - a.revenue)
+        .slice(0, 4)
+        .map(p => ({ ...p, revenue: `₹${p.revenue.toLocaleString()}` }));
+
+      // 3. Top Sellers
+      const sellerSales = {};
+      const sellerMap = {};
+      sellers.forEach(s => sellerMap[s._id] = s);
+      
+      uniqueOrders.forEach(order => {
+        order.orderItems.forEach(item => {
+          const sId = item.seller?._id || item.seller;
+          if (!sellerSales[sId]) {
+            const sName = sellerMap[sId]?.businessName || 'Unknown Shop';
+            sellerSales[sId] = { id: sId, shop: sName, orders: 0, revenue: 0, img: sellerMap[sId]?.profileImage || `https://api.dicebear.com/7.x/initials/svg?seed=${sName}` };
+          }
+          sellerSales[sId].revenue += item.price * item.qty;
+        });
+        const orderSellers = new Set(order.orderItems.map(i => i.seller?._id || i.seller));
+        orderSellers.forEach(sId => {
+          if (sellerSales[sId]) sellerSales[sId].orders += 1;
+        });
+      });
+      const topSellers = Object.values(sellerSales)
+        .sort((a, b) => b.revenue - a.revenue)
+        .slice(0, 4)
+        .map(s => ({ ...s, revenue: `₹${s.revenue.toLocaleString()}` }));
+
+      // 4. Categories Distribution
+      const catCount = {};
+      products.forEach(p => {
+        catCount[p.category] = (catCount[p.category] || 0) + 1;
+      });
+      const totalProds = products.length || 1;
+      const colors = ['#3b82f6', '#a855f7', '#16a34a', '#f97316', '#eab308'];
+      const categories = Object.entries(catCount)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 4)
+        .map((entry, idx) => ({
+          name: entry[0],
+          percent: Math.round((entry[1] / totalProds) * 100),
+          color: colors[idx % colors.length]
+        }));
+
+      // 5. Recent Activity
+      const activitiesList = [];
+      users.slice(0, 2).forEach(u => activitiesList.push({ id: `u-${u._id}`, timeObj: new Date(u.createdAt), text: `New user "${u.name}" joined`, type: 'store' }));
+      sellers.slice(0, 2).forEach(s => activitiesList.push({ id: `s-${s._id}`, timeObj: new Date(s.createdAt), text: `New seller "${s.businessName}" joined`, type: 'store' }));
+      uniqueOrders.slice(0, 3).forEach(o => activitiesList.push({ id: `o-${o._id}`, timeObj: new Date(o.createdAt), text: `Order ${o._id.substring(0,8)} placed for ₹${o.totalPrice}`, type: 'order' }));
+      
+      const activities = activitiesList
+        .sort((a, b) => b.timeObj - a.timeObj)
+        .slice(0, 5)
+        .map(a => {
+           const hours = Math.floor((new Date() - a.timeObj) / (1000 * 60 * 60));
+           const timeStr = hours < 24 ? `${hours} hours ago` : `${Math.floor(hours/24)} days ago`;
+           return { ...a, time: timeStr };
+        });
+
+      setAnalyticsData({
+        totalRevenue,
+        totalOrders,
+        totalUsers: users.length,
+        topProducts,
+        topSellers,
+        categories,
+        activities,
+        loading: false
+      });
+    } catch (error) {
+      console.error(error);
+      setAnalyticsData(prev => ({ ...prev, loading: false }));
+    }
+  };
+
+  if (analyticsData.loading) {
+    return <div className="admin-analytics-page"><div style={{padding: '50px', textAlign: 'center'}}>Loading real-time analytics...</div></div>;
+  }
 
   return (
     <div className="admin-analytics-page">
@@ -68,7 +179,7 @@ export default function AdminAnalytics() {
             </div>
           </div>
           <p className="stat-label">Total Revenue</p>
-          <h3 className="stat-value">₹4.2M</h3>
+          <h3 className="stat-value">₹{analyticsData.totalRevenue.toLocaleString()}</h3>
         </div>
         
         <div className="analytics-stat-card">
@@ -77,11 +188,11 @@ export default function AdminAnalytics() {
               <ShoppingBag size={22} className="text-green" />
             </div>
             <div className="trend-badge positive">
-              <TrendingUp size={14} /> <span>+8.2%</span>
+              <TrendingUp size={14} /> <span>Live</span>
             </div>
           </div>
           <p className="stat-label">Total Orders</p>
-          <h3 className="stat-value">12,450</h3>
+          <h3 className="stat-value">{analyticsData.totalOrders.toLocaleString()}</h3>
         </div>
 
         <div className="analytics-stat-card">
@@ -90,11 +201,11 @@ export default function AdminAnalytics() {
               <Users size={22} className="text-purple" />
             </div>
             <div className="trend-badge positive">
-              <TrendingUp size={14} /> <span>+22.4%</span>
+              <TrendingUp size={14} /> <span>Live</span>
             </div>
           </div>
-          <p className="stat-label">User Growth</p>
-          <h3 className="stat-value">48.2K</h3>
+          <p className="stat-label">Total Users</p>
+          <h3 className="stat-value">{analyticsData.totalUsers.toLocaleString()}</h3>
         </div>
 
         <div className="analytics-stat-card">
@@ -102,12 +213,12 @@ export default function AdminAnalytics() {
             <div className="stat-icon-wrapper bg-orange-light">
               <Activity size={22} className="text-orange" />
             </div>
-            <div className="trend-badge negative">
-              <TrendingDown size={14} /> <span>-2.1%</span>
+            <div className="trend-badge positive">
+              <TrendingUp size={14} /> <span>Live</span>
             </div>
           </div>
-          <p className="stat-label">Sales Growth</p>
-          <h3 className="stat-value">8.4%</h3>
+          <p className="stat-label">Sales Health</p>
+          <h3 className="stat-value">Good</h3>
         </div>
       </div>
 
@@ -139,14 +250,14 @@ export default function AdminAnalytics() {
               <div className="growth-dot bg-blue"></div>
               <div className="growth-info">
                 <p>New Users</p>
-                <h4>12,450</h4>
+                <h4>{analyticsData.totalUsers}</h4>
               </div>
             </div>
             <div className="growth-item">
               <div className="growth-dot bg-green"></div>
               <div className="growth-info">
-                <p>Active Users</p>
-                <h4>38,200</h4>
+                <p>Total Orders</p>
+                <h4>{analyticsData.totalOrders}</h4>
               </div>
             </div>
             <div className="growth-item">
@@ -162,7 +273,7 @@ export default function AdminAnalytics() {
             <h3>Top Categories</h3>
           </div>
           <div className="categories-list">
-            {categories.map((cat, idx) => (
+            {analyticsData.categories.map((cat, idx) => (
               <div className="category-progress-item" key={idx}>
                 <div className="cat-info">
                   <span>{cat.name}</span>
@@ -185,7 +296,7 @@ export default function AdminAnalytics() {
             <h3>Top Selling Products</h3>
           </div>
           <div className="list-container">
-            {topProducts.map((prod) => (
+            {analyticsData.topProducts.map((prod) => (
               <div className="list-item" key={prod.id}>
                 <img src={prod.img} alt={prod.name} />
                 <div className="item-details">
@@ -197,6 +308,7 @@ export default function AdminAnalytics() {
                 </div>
               </div>
             ))}
+            {analyticsData.topProducts.length === 0 && <p className="text-gray-500 text-sm">No product data available yet.</p>}
           </div>
         </div>
 
@@ -206,7 +318,7 @@ export default function AdminAnalytics() {
             <h3>Top Sellers</h3>
           </div>
           <div className="list-container">
-            {topSellers.map((seller) => (
+            {analyticsData.topSellers.map((seller) => (
               <div className="list-item" key={seller.id}>
                 <img src={seller.img} alt={seller.shop} className="rounded-full" />
                 <div className="item-details">
@@ -218,6 +330,7 @@ export default function AdminAnalytics() {
                 </div>
               </div>
             ))}
+            {analyticsData.topSellers.length === 0 && <p className="text-gray-500 text-sm">No seller data available yet.</p>}
           </div>
         </div>
 
@@ -227,7 +340,7 @@ export default function AdminAnalytics() {
             <h3>Recent Activity</h3>
           </div>
           <div className="activity-timeline">
-            {activities.map((act) => (
+            {analyticsData.activities.map((act) => (
               <div className="activity-item" key={act.id}>
                 <div className={`activity-icon ${act.type}`}>
                   {act.type === 'store' && <Store size={14} />}
@@ -241,6 +354,7 @@ export default function AdminAnalytics() {
                 </div>
               </div>
             ))}
+            {analyticsData.activities.length === 0 && <p className="text-gray-500 text-sm">No recent activities found.</p>}
           </div>
         </div>
       </div>

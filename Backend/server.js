@@ -2,16 +2,54 @@ import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
+import http from 'http';
+import { Server } from 'socket.io';
 import connectDB from './config/db.js';
 import userRoutes from './routes/userRoutes.js';
 import sellerRoutes from './routes/sellerRoutes.js';
 import productRoutes from './routes/productRoutes.js';
+import bannerRoutes from './routes/bannerRoutes.js';
+import deliveryRoutes from './routes/deliveryRoutes.js';
+import settingsRoutes from './routes/settingsRoutes.js';
+import orderRoutes from './routes/orderRoutes.js';
 
 dotenv.config();
 
 connectDB();
 
 const app = express();
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: 'http://localhost:5173',
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    credentials: true
+  }
+});
+
+app.set('io', io);
+
+io.on('connection', (socket) => {
+  console.log(`User connected: ${socket.id}`);
+
+  socket.on('joinRoom', ({ role, id }) => {
+    if (role && id) {
+      const room = `${role}_${id}`;
+      socket.join(room);
+      console.log(`Socket ${socket.id} joined room ${room}`);
+    }
+  });
+  
+  // Delivery boys can join a general 'delivery_boys' room for broad notifications
+  socket.on('joinDeliveryRoom', () => {
+    socket.join('delivery_boys');
+    console.log(`Socket ${socket.id} joined room delivery_boys`);
+  });
+
+  socket.on('disconnect', () => {
+    console.log(`User disconnected: ${socket.id}`);
+  });
+});
 
 // Middleware
 app.use(cors({
@@ -26,6 +64,10 @@ app.use(cookieParser());
 app.use('/api/users', userRoutes);
 app.use('/api/sellers', sellerRoutes);
 app.use('/api/products', productRoutes);
+app.use('/api/banners', bannerRoutes);
+app.use('/api/delivery', deliveryRoutes);
+app.use('/api/settings', settingsRoutes);
+app.use('/api/orders', orderRoutes);
 
 app.get('/', (req, res) => {
   res.send('API is running...');
@@ -33,6 +75,6 @@ app.get('/', (req, res) => {
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
 });

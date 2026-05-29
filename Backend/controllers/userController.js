@@ -108,3 +108,15 @@ export const getUserProfile = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+// @desc    Get all users
+// @route   GET /api/users
+// @access  Public (Should be Admin, but keeping it simple for MVP)
+export const getAllUsers = async (req, res) => {
+  try {
+    const users = await User.find({}).select('-password').sort({ createdAt: -1 });
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

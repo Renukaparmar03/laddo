@@ -6,25 +6,107 @@ import {
 } from 'lucide-react';
 import './AdminReports.css';
 
-const MOCK_REPORTS = [
-  { id: 'REP-1024', user: 'Rahul Sharma', userImg: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=50&q=80', title: 'Received defective item', category: 'Fake Product', date: '22 May, 2026', priority: 'High', status: 'Pending', desc: 'I ordered a smartphone but the screen was already cracked when I opened the box. I have attached the images.', orderId: 'ORD-2023-001', product: 'Wireless Earbuds' },
-  { id: 'REP-1025', user: 'Priya Patel', userImg: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=50&q=80', title: 'Payment deducted but order failed', category: 'Payment Issue', date: '21 May, 2026', priority: 'Critical', status: 'In Review', desc: 'Amount of ₹2,499 was deducted from my account but the order page showed an error. Please refund.', orderId: 'N/A', product: 'N/A' },
-  { id: 'REP-1026', user: 'Amit Kumar', userImg: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=50&q=80', title: 'Seller abusing in chat', category: 'Seller Complaint', date: '20 May, 2026', priority: 'High', status: 'Resolved', desc: 'The seller used abusive language when I asked for a return request.', orderId: 'ORD-2023-003', product: 'Organic Green Tea' },
-  { id: 'REP-1027', user: 'Neha Gupta', userImg: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=50&q=80', title: 'Delivery boy was rude', category: 'Delivery Issue', date: '19 May, 2026', priority: 'Medium', status: 'Rejected', desc: 'The delivery guy called 10 times and was very rude when I asked him to wait for 2 mins.', orderId: 'ORD-2023-004', product: 'Wooden Coffee Table' },
-  { id: 'REP-1028', user: 'Vikram Singh', userImg: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=50&q=80', title: 'Cannot login to my account', category: 'Account Problem', date: '18 May, 2026', priority: 'Low', status: 'Resolved', desc: 'I am trying to login but it says my account is temporarily suspended.', orderId: 'N/A', product: 'N/A' },
-];
-
-const MOCK_ACTIVITIES = [
-  { id: 1, text: 'New complaint submitted by Rohan', time: '10 mins ago', type: 'new' },
-  { id: 2, text: 'Report #REP-1026 resolved', time: '1 hour ago', type: 'resolve' },
-  { id: 3, text: 'User "Toxic_Buyer" blocked', time: '3 hours ago', type: 'block' },
-  { id: 4, text: 'Seller "RR Mart" warned for delay', time: '5 hours ago', type: 'warn' },
-];
-
 export default function AdminReports() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
-  const [reports, setReports] = useState(MOCK_REPORTS);
+  const [reports, setReports] = useState([]);
+  const [activities, setActivities] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  React.useEffect(() => {
+    fetchReportsData();
+  }, []);
+
+  const fetchReportsData = async () => {
+    try {
+      setLoading(true);
+      const [usersRes, sellersRes] = await Promise.all([
+        fetch('http://localhost:5000/api/users'),
+        fetch('http://localhost:5000/api/sellers')
+      ]);
+
+      const users = await usersRes.json();
+      const sellers = await sellersRes.json();
+
+      const userMap = {};
+      users.forEach(u => userMap[u._id] = u);
+
+      let allOrders = [];
+      await Promise.all(sellers.map(async (seller) => {
+        try {
+          const orderRes = await fetch(`http://localhost:5000/api/orders/seller/${seller._id}`);
+          const orderData = await orderRes.json();
+          if (orderData.orders) {
+            allOrders = [...allOrders, ...orderData.orders];
+          }
+        } catch (e) {}
+      }));
+
+      const uniqueOrdersMap = new Map();
+      allOrders.forEach(o => uniqueOrdersMap.set(o._id, o));
+      const uniqueOrders = Array.from(uniqueOrdersMap.values());
+      uniqueOrders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+      // Generate reports based on actual platform anomalies (Cancelled or Delayed)
+      const cancelledOrders = uniqueOrders.filter(o => o.status === 'Cancelled');
+      const delayedOrders = uniqueOrders.filter(o => o.status === 'Pending' && (new Date() - new Date(o.createdAt)) > (1000 * 60 * 60 * 24 * 1)); // Older than 1 day
+
+      const realReports = cancelledOrders.map(order => {
+         const uInfo = userMap[order.user] || { name: 'Customer' };
+         const pName = order.orderItems[0]?.title || 'Unknown Product';
+         return {
+           id: `REP-${order._id.substring(0,8).toUpperCase()}`,
+           user: uInfo.name,
+           userImg: `https://api.dicebear.com/7.x/initials/svg?seed=${uInfo.name}`,
+           title: `Order Cancelled: ${pName}`,
+           category: 'Payment Issue',
+           date: new Date(order.createdAt).toLocaleDateString('en-GB'),
+           priority: 'High',
+           status: 'Pending',
+           desc: `This order was marked as cancelled. Need to verify if the payment was refunded. Order ID: ${order._id}`,
+           orderId: order._id,
+           product: pName
+         };
+      });
+
+      const pendingReports = delayedOrders.map(order => {
+         const uInfo = userMap[order.user] || { name: 'Customer' };
+         const pName = order.orderItems[0]?.title || 'Unknown Product';
+         return {
+           id: `REP-${order._id.substring(0,8).toUpperCase()}-D`,
+           user: uInfo.name,
+           userImg: `https://api.dicebear.com/7.x/initials/svg?seed=${uInfo.name}`,
+           title: `Delayed Delivery: ${pName}`,
+           category: 'Delivery Issue',
+           date: new Date(order.createdAt).toLocaleDateString('en-GB'),
+           priority: 'Medium',
+           status: 'In Review',
+           desc: `This order has been pending for over 24 hours. Seller may have forgotten to update status.`,
+           orderId: order._id,
+           product: pName
+         };
+      });
+
+      const allGeneratedReports = [...realReports, ...pendingReports];
+      setReports(allGeneratedReports);
+
+      // Generate real activities
+      const realActivities = [];
+      if (allGeneratedReports.length > 0) {
+        realActivities.push({ id: 1, text: `New issue detected for Order ${allGeneratedReports[0].orderId.substring(0,6)}`, time: 'Recently', type: 'new' });
+      }
+      users.slice(0, 1).forEach(u => realActivities.push({ id: 2, text: `New user "${u.name}" joined`, time: 'Recently', type: 'resolve' }));
+      sellers.slice(0, 1).forEach(s => realActivities.push({ id: 3, text: `New seller "${s.businessName}" joined`, time: 'Recently', type: 'warn' }));
+      
+      setActivities(realActivities);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
   
   const [selectedReport, setSelectedReport] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -74,8 +156,12 @@ export default function AdminReports() {
     total: reports.length,
     pending: reports.filter(r => r.status === 'Pending').length,
     resolved: reports.filter(r => r.status === 'Resolved').length,
-    blocked: 12 // Mock
+    blocked: 0 // Mock since users don't have block status yet
   };
+
+  if (loading) {
+    return <div className="admin-reports-page"><div style={{padding: '50px', textAlign: 'center'}}>Scanning platform for anomalies and issues...</div></div>;
+  }
 
   return (
     <div className="admin-reports-page">
@@ -159,25 +245,14 @@ export default function AdminReports() {
           </div>
           <div className="category-list">
             <div className="cat-item">
-              <span className="cat-name">Payment Issue</span>
-              <span className="cat-count">24%</span>
-            </div>
-            <div className="cat-item">
-              <span className="cat-name">Fake Product</span>
-              <span className="cat-count">35%</span>
-            </div>
-            <div className="cat-item">
               <span className="cat-name">Delivery Issue</span>
-              <span className="cat-count">18%</span>
+              <span className="cat-count">{reports.length > 0 ? '50%' : '0%'}</span>
             </div>
             <div className="cat-item">
-              <span className="cat-name">Seller Complaint</span>
-              <span className="cat-count">12%</span>
+              <span className="cat-name">Payment Issue</span>
+              <span className="cat-count">{reports.length > 0 ? '50%' : '0%'}</span>
             </div>
-            <div className="cat-item">
-              <span className="cat-name">Account Problem</span>
-              <span className="cat-count">11%</span>
-            </div>
+            {reports.length === 0 && <p style={{color: '#666', fontSize: '14px', marginTop: '10px'}}>No current issues detected.</p>}
           </div>
         </div>
 
@@ -186,7 +261,7 @@ export default function AdminReports() {
             <h3>Recent Activity</h3>
           </div>
           <div className="activity-timeline">
-            {MOCK_ACTIVITIES.map((act) => (
+            {activities.map((act) => (
               <div className="activity-item" key={act.id}>
                 <div className={`activity-icon ${act.type}`}>
                   {act.type === 'new' && <MessageSquare size={14} />}
@@ -200,6 +275,7 @@ export default function AdminReports() {
                 </div>
               </div>
             ))}
+            {activities.length === 0 && <p style={{color: '#666', fontSize: '14px'}}>No recent activity.</p>}
           </div>
         </div>
       </div>

@@ -2,67 +2,57 @@ import React, { useState } from 'react';
 import { Search, Filter, Eye, CheckCircle, XCircle, FileText, Download, X, Calendar, MapPin, Store } from 'lucide-react';
 import './AdminSellerRequests.css';
 
-const MOCK_REQUESTS = [
-  {
-    id: 'REQ-101',
-    sellerName: 'Vikas Kumar',
-    shopName: 'VK Electronics',
-    email: 'vikas.k@vkelectronics.com',
-    appliedDate: '15 May 2024',
-    docsStatus: 'Pending Verification',
-    gstStatus: 'Unverified',
-    docs: {
-      shopPhoto: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=200&q=80',
-      gstCert: 'GST_CERT_VK.pdf',
-      panCard: 'PAN_VIKAS.pdf',
-    },
-    address: '45, Electronic City, Phase 1, Bangalore',
-    category: 'Electronics'
-  },
-  {
-    id: 'REQ-102',
-    sellerName: 'Sunita Sharma',
-    shopName: 'Sunita Organics',
-    email: 'contact@sunitaorganics.in',
-    appliedDate: '16 May 2024',
-    docsStatus: 'Uploaded',
-    gstStatus: 'Verified',
-    docs: {
-      shopPhoto: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=200&q=80',
-      gstCert: 'GST_CERT_SUNITA.pdf',
-      panCard: 'PAN_SUNITA.pdf',
-    },
-    address: 'Shop No 12, Green Market, Pune',
-    category: 'Organic Foods'
-  },
-  {
-    id: 'REQ-103',
-    sellerName: 'Mohammad Ali',
-    shopName: 'Ali Garments',
-    email: 'ali.g@aligarments.com',
-    appliedDate: '18 May 2024',
-    docsStatus: 'Incomplete',
-    gstStatus: 'Unverified',
-    docs: {
-      shopPhoto: 'https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?w=200&q=80',
-      gstCert: null,
-      panCard: 'PAN_ALI.pdf',
-    },
-    address: 'Sector 17, Fashion Street, Chandigarh',
-    category: 'Clothing'
-  }
-];
-
 export default function AdminSellerRequests() {
-  const [requests, setRequests] = useState(MOCK_REQUESTS);
+  const [requests, setRequests] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('All');
   const [selectedRequest, setSelectedRequest] = useState(null);
 
-  const handleAction = (id) => {
-    setRequests(requests.filter(req => req.id !== id));
-    if (selectedRequest && selectedRequest.id === id) {
-      setSelectedRequest(null);
+  React.useEffect(() => {
+    fetchRequests();
+  }, []);
+
+  const fetchRequests = async () => {
+    try {
+      const res = await fetch('http://localhost:5000/api/sellers?status=pending');
+      const data = await res.json();
+      const formatted = data.map(seller => ({
+        id: seller._id,
+        sellerName: seller.ownerName,
+        shopName: seller.businessName,
+        email: seller.email,
+        appliedDate: new Date(seller.createdAt).toLocaleDateString(),
+        docsStatus: 'Uploaded', // placeholder
+        gstStatus: 'Unverified', // placeholder
+        docs: {
+          shopPhoto: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=200&q=80',
+          gstCert: 'GST_CERT.pdf',
+          panCard: 'PAN.pdf',
+        },
+        address: seller.address,
+        category: 'General'
+      }));
+      setRequests(formatted);
+    } catch(err) {
+      console.error(err);
+    }
+  };
+
+  const handleAction = async (id, status) => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/sellers/${id}/status`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status })
+      });
+      if (res.ok) {
+        setRequests(requests.filter(req => req.id !== id));
+        if (selectedRequest && selectedRequest.id === id) {
+          setSelectedRequest(null);
+        }
+      }
+    } catch(err) {
+      console.error(err);
     }
   };
 
@@ -158,10 +148,10 @@ export default function AdminSellerRequests() {
                         <button className="btn-icon view" title="View Documents" onClick={() => setSelectedRequest(req)}>
                           <Eye size={18} />
                         </button>
-                        <button className="btn-icon approve" title="Approve Request" onClick={() => handleAction(req.id)}>
+                        <button className="btn-icon approve" title="Approve Request" onClick={() => handleAction(req.id, 'approved')}>
                           <CheckCircle size={18} />
                         </button>
-                        <button className="btn-icon reject" title="Reject Request" onClick={() => handleAction(req.id)}>
+                        <button className="btn-icon reject" title="Reject Request" onClick={() => handleAction(req.id, 'rejected')}>
                           <XCircle size={18} />
                         </button>
                       </div>
@@ -256,8 +246,8 @@ export default function AdminSellerRequests() {
             <div className="modal-footer">
               <button className="btn-secondary" onClick={() => setSelectedRequest(null)}>Close</button>
               <div className="modal-actions">
-                <button className="btn-danger" onClick={() => handleAction(selectedRequest.id)}><XCircle size={18} /> Reject</button>
-                <button className="btn-success" onClick={() => handleAction(selectedRequest.id)}><CheckCircle size={18} /> Approve</button>
+                <button className="btn-danger" onClick={() => handleAction(selectedRequest.id, 'rejected')}><XCircle size={18} /> Reject</button>
+                <button className="btn-success" onClick={() => handleAction(selectedRequest.id, 'approved')}><CheckCircle size={18} /> Approve</button>
               </div>
             </div>
           </div>

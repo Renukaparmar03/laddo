@@ -24,6 +24,19 @@ export const authSeller = async (req, res) => {
     const seller = await Seller.findOne({ email });
 
     if (seller && (await seller.matchPassword(password))) {
+      if (seller.status === 'pending') {
+        res.status(403).json({ status: 'pending', message: 'Your account is still pending admin approval. Please wait for activation.' });
+        return;
+      }
+      if (seller.status === 'rejected') {
+        res.status(403).json({ status: 'rejected', message: 'Your seller account is not approved yet' });
+        return;
+      }
+      if (seller.status === 'suspended') {
+        res.status(403).json({ status: 'suspended', message: 'Your account has been suspended by the admin.' });
+        return;
+      }
+
       generateToken(res, seller._id);
       res.status(200).json({
         _id: seller._id,
@@ -64,7 +77,6 @@ export const registerSeller = async (req, res) => {
     });
 
     if (seller) {
-      generateToken(res, seller._id);
       res.status(201).json({
         _id: seller._id,
         businessName: seller.businessName,
@@ -109,6 +121,42 @@ export const getSellerProfile = async (req, res) => {
         address: seller.address,
         status: seller.status,
       });
+    } else {
+      res.status(404).json({ message: 'Seller not found' });
+    }
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Get all sellers
+// @route   GET /api/sellers
+// @access  Public/Admin
+export const getAllSellers = async (req, res) => {
+  try {
+    const query = {};
+    if (req.query.status) {
+      query.status = req.query.status;
+    }
+    const sellers = await Seller.find(query);
+    res.json(sellers);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Update seller status
+// @route   PUT /api/sellers/:id/status
+// @access  Public/Admin
+export const updateSellerStatus = async (req, res) => {
+  try {
+    const { status } = req.body;
+    const seller = await Seller.findById(req.params.id);
+
+    if (seller) {
+      seller.status = status;
+      const updatedSeller = await seller.save();
+      res.json(updatedSeller);
     } else {
       res.status(404).json({ message: 'Seller not found' });
     }

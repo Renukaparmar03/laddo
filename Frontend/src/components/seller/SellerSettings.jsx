@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   User, Bell, Store, Palette, Shield, 
   HelpCircle, ChevronRight, Check
@@ -7,15 +7,31 @@ import './SellerSettings.css';
 
 export default function SellerSettings() {
   // Notification States
-  const [orderNotifs, setOrderNotifs] = useState(true);
-  const [emailNotifs, setEmailNotifs] = useState(false);
-  const [stockAlerts, setStockAlerts] = useState(true);
+  const [orderNotifs, setOrderNotifs] = useState(() => JSON.parse(localStorage.getItem('seller_order_notifs') ?? 'true'));
+  const [emailNotifs, setEmailNotifs] = useState(() => JSON.parse(localStorage.getItem('seller_email_notifs') ?? 'false'));
+  const [stockAlerts, setStockAlerts] = useState(() => JSON.parse(localStorage.getItem('seller_stock_alerts') ?? 'true'));
   
   // Appearance States
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(() => JSON.parse(localStorage.getItem('seller_dark_mode') ?? 'false'));
   
   // Security States
-  const [twoFactor, setTwoFactor] = useState(false);
+  const [twoFactor, setTwoFactor] = useState(() => JSON.parse(localStorage.getItem('seller_two_factor') ?? 'false'));
+
+  // Persist settings
+  useEffect(() => {
+    localStorage.setItem('seller_order_notifs', JSON.stringify(orderNotifs));
+    localStorage.setItem('seller_email_notifs', JSON.stringify(emailNotifs));
+    localStorage.setItem('seller_stock_alerts', JSON.stringify(stockAlerts));
+    localStorage.setItem('seller_two_factor', JSON.stringify(twoFactor));
+    localStorage.setItem('seller_dark_mode', JSON.stringify(isDarkMode));
+
+    // Apply dark mode to body
+    if (isDarkMode) {
+      document.body.classList.add('seller-dark-theme');
+    } else {
+      document.body.classList.remove('seller-dark-theme');
+    }
+  }, [orderNotifs, emailNotifs, stockAlerts, twoFactor, isDarkMode]);
 
   return (
     <div className="seller-settings-page">

@@ -224,6 +224,7 @@
 .status-low { background-color: #ffedd5; color: #ea580c; }
 .status-out { background-color: #fee2e2; color: #ef4444; }
 .status-hidden { background-color: #f1f5f9; color: #64748b; }
+.status-pending { background-color: #fff3cd; color: #856404; }
 
 /* Action Buttons */
 .action-buttons {
@@ -245,6 +246,9 @@
 
 .btn-icon.view { color: var(--admin-primary, #3b82f6); background-color: #eff6ff; }
 .btn-icon.view:hover { background-color: #dbeafe; }
+
+.btn-icon.approve { color: #16a34a; background-color: #dcfce7; }
+.btn-icon.approve:hover { background-color: #bbf7d0; }
 
 .btn-icon.edit { color: #10b981; background-color: #d1fae5; }
 .btn-icon.edit:hover { background-color: #a7f3d0; }

@@ -9,6 +9,7 @@ function DeliveryRegister() {
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
+    password: '',
     city: 'Mumbai',
     vehicle: 'bike', // bike, bicycle, electric
     licenseNo: '',
@@ -24,15 +25,29 @@ function DeliveryRegister() {
     setFormData(prev => ({ ...prev, vehicle: type }));
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (step < 4) {
       setStep(prev => prev + 1);
     } else {
-      // Mock save to storage
-      localStorage.setItem('rider_registered', 'true');
-      localStorage.setItem('rider_name', formData.name);
-      localStorage.setItem('rider_vehicle', formData.vehicle);
-      navigate('/delivery/home');
+      try {
+        const res = await fetch('http://localhost:5000/api/delivery/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData)
+        });
+
+        const data = await res.json();
+        
+        if (res.ok) {
+          alert('Registration successful! Please wait for admin approval.');
+          navigate('/delivery/login');
+        } else {
+          alert(data.message || 'Registration failed');
+        }
+      } catch (error) {
+        console.error('Registration error:', error);
+        alert('Server error. Please try again.');
+      }
     }
   };
 
@@ -110,6 +125,21 @@ function DeliveryRegister() {
 
               <div className="del-input-group">
                 <label className="del-flex-between">
+                  <span>Password</span>
+                  <Phone size={16} />
+                </label>
+                <input 
+                  type="password" 
+                  name="password"
+                  placeholder="Create a password" 
+                  className="del-input" 
+                  value={formData.password}
+                  onChange={handleChange}
+                />
+              </div>
+
+              <div className="del-input-group">
+                <label className="del-flex-between">
                   <span>Working City</span>
                   <MapPin size={16} />
                 </label>
@@ -131,8 +161,8 @@ function DeliveryRegister() {
             <button 
               className="del-btn del-btn-primary del-mt-4" 
               onClick={handleNext}
-              disabled={!formData.name || !formData.phone}
-              style={{ opacity: (!formData.name || !formData.phone) ? 0.6 : 1 }}
+              disabled={!formData.name || !formData.phone || !formData.password}
+              style={{ opacity: (!formData.name || !formData.phone || !formData.password) ? 0.6 : 1 }}
             >
               <span>Continue</span>
               <ArrowRight size={18} />

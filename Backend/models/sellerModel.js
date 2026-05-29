@@ -30,7 +30,7 @@ const sellerSchema = mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['pending', 'active', 'suspended'],
+      enum: ['pending', 'approved', 'rejected'],
       default: 'pending',
     },
   },
@@ -43,9 +43,9 @@ sellerSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
-sellerSchema.pre('save', async function (next) {
+sellerSchema.pre('save', async function () {
   if (!this.isModified('password')) {
-    next();
+    return;
   }
 
   const salt = await bcrypt.genSalt(10);

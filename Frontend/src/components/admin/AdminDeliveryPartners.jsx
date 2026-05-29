@@ -2,66 +2,42 @@ import React, { useState } from 'react';
 import { Search, Filter, Eye, Ban, MapPin, Phone, Star, Bike, Navigation } from 'lucide-react';
 import './AdminDeliveryPartners.css';
 
-const MOCK_PARTNERS = [
-  {
-    id: 'RID-101',
-    name: 'Ramesh Singh',
-    phone: '+91 9876543210',
-    vehicleNo: 'MH-12-AB-1234',
-    vehicleType: 'Two Wheeler (Bike)',
-    rating: 4.9,
-    deliveries: 1245,
-    status: 'Active',
-    image: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=100&h=100&fit=crop',
-    location: 'Sector 4, Rohini',
-    joinDate: '12 Jan 2023'
-  },
-  {
-    id: 'RID-102',
-    name: 'Suresh Kumar',
-    phone: '+91 9876543211',
-    vehicleNo: 'MH-14-CD-5678',
-    vehicleType: 'Electric Scooter',
-    rating: 4.8,
-    deliveries: 890,
-    status: 'Active',
-    image: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop',
-    location: 'Andheri West',
-    joinDate: '05 Mar 2023'
-  },
-  {
-    id: 'RID-103',
-    name: 'Abdul Rahman',
-    phone: '+91 9876543212',
-    vehicleNo: 'DL-01-XY-9012',
-    vehicleType: 'Two Wheeler (Bike)',
-    rating: 4.6,
-    deliveries: 156,
-    status: 'Offline',
-    image: 'https://images.unsplash.com/photo-1527980965255-d3b416303d12?w=100&h=100&fit=crop',
-    location: 'Koramangala',
-    joinDate: '20 Apr 2024'
-  },
-  {
-    id: 'RID-104',
-    name: 'Vikram Mehta',
-    phone: '+91 9876543213',
-    vehicleNo: 'KA-05-PQ-3456',
-    vehicleType: 'Bicycle',
-    rating: 4.2,
-    deliveries: 45,
-    status: 'Suspended',
-    image: 'https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=100&h=100&fit=crop',
-    location: 'HSR Layout',
-    joinDate: '10 May 2024'
-  }
-];
-
 export default function AdminDeliveryPartners() {
-  const [partners, setPartners] = useState(MOCK_PARTNERS);
+  const [partners, setPartners] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('All');
   const [selectedPartner, setSelectedPartner] = useState(null);
+
+  React.useEffect(() => {
+    fetchPartners();
+  }, []);
+
+  const fetchPartners = async () => {
+    try {
+      const res = await fetch('http://localhost:5000/api/delivery');
+      const data = await res.json();
+      
+      const approvedPartners = data
+        .filter(p => p.status === 'approved')
+        .map(p => ({
+          id: p._id,
+          name: p.name,
+          phone: p.phone,
+          vehicleNo: p.licenseNo || 'N/A',
+          vehicleType: p.vehicle,
+          rating: 4.5, // Default rating
+          deliveries: 0, // Default deliveries
+          status: 'Active', // Default status for approved partners
+          image: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=100&h=100&fit=crop',
+          location: p.city,
+          joinDate: new Date(p.createdAt).toLocaleDateString()
+        }));
+        
+      setPartners(approvedPartners);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const filteredPartners = partners.filter(p => {
     const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 

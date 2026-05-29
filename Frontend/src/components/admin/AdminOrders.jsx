@@ -5,19 +5,83 @@ import {
 } from 'lucide-react';
 import './AdminOrders.css';
 
-const MOCK_ORDERS = [
-  { id: 'ORD-2023-001', customer: 'Rahul Sharma', seller: 'Tech Store', product: 'Wireless Earbuds', img: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=50&q=80', amount: '₹1,999', paymentMethod: 'UPI', paymentStatus: 'Paid', deliveryStatus: 'Delivered', date: '21 May, 2026', qty: 1, address: 'B-42, Silicon Valley Appt, Andheri West, Mumbai' },
-  { id: 'ORD-2023-002', customer: 'Priya Patel', seller: 'Fashion Hub', product: 'Running Shoes', img: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=50&q=80', amount: '₹2,499', paymentMethod: 'Credit Card', paymentStatus: 'Paid', deliveryStatus: 'Processing', date: '20 May, 2026', qty: 1, address: '45, MG Road, Camp, Pune' },
-  { id: 'ORD-2023-003', customer: 'Amit Kumar', seller: 'Fresh Foods', product: 'Organic Green Tea', img: 'https://images.unsplash.com/photo-1627492275512-7a1db2f50f69?w=50&q=80', amount: '₹900', paymentMethod: 'Cash on Delivery', paymentStatus: 'Pending', deliveryStatus: 'Pending', date: '19 May, 2026', qty: 2, address: 'Plot 4, APMC Market, Vashi' },
-  { id: 'ORD-2023-004', customer: 'Neha Gupta', seller: 'RR Mart', product: 'Wooden Coffee Table', img: 'https://images.unsplash.com/photo-1533090481720-856c6e3c1fdc?w=50&q=80', amount: '₹4,500', paymentMethod: 'Debit Card', paymentStatus: 'Failed', deliveryStatus: 'Cancelled', date: '18 May, 2026', qty: 1, address: '12/A, Link Road, Malad West, Mumbai' },
-  { id: 'ORD-2023-005', customer: 'Vikram Singh', seller: 'Gadget World', product: 'Fitness Band', img: 'https://images.unsplash.com/photo-1575311373937-040b8e1fd5b0?w=50&q=80', amount: '₹1,299', paymentMethod: 'Wallet', paymentStatus: 'Paid', deliveryStatus: 'Delivered', date: '17 May, 2026', qty: 1, address: 'Plot 88, Sector 17, Vashi, Navi Mumbai' },
-];
-
 export default function AdminOrders() {
   const [searchTerm, setSearchTerm] = useState('');
   const [deliveryFilter, setDeliveryFilter] = useState('All');
   const [paymentFilter, setPaymentFilter] = useState('All');
-  const [orders, setOrders] = useState(MOCK_ORDERS);
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  React.useEffect(() => {
+    fetchAllOrders();
+  }, []);
+
+  const fetchAllOrders = async () => {
+    try {
+      setLoading(true);
+      const sellersRes = await fetch('http://localhost:5000/api/sellers');
+      const sellersData = await sellersRes.json();
+      
+      const sellerMap = {};
+      if (Array.isArray(sellersData)) {
+        sellersData.forEach(s => {
+          sellerMap[s._id] = s.businessName || s.ownerName || 'Unknown Seller';
+        });
+      }
+
+      let allOrders = [];
+      await Promise.all(sellersData.map(async (seller) => {
+        try {
+          const orderRes = await fetch(`http://localhost:5000/api/orders/seller/${seller._id}`);
+          const orderData = await orderRes.json();
+          if (orderData.orders) {
+            allOrders = [...allOrders, ...orderData.orders];
+          }
+        } catch (e) {
+          console.error(e);
+        }
+      }));
+
+      // Deduplicate orders
+      const uniqueOrdersMap = new Map();
+      allOrders.forEach(o => uniqueOrdersMap.set(o._id, o));
+      const uniqueOrders = Array.from(uniqueOrdersMap.values());
+      
+      // Sort by newest
+      uniqueOrders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+      const formattedOrders = uniqueOrders.map(order => {
+        const firstItem = order.orderItems && order.orderItems[0];
+        const sellerId = firstItem ? (firstItem.seller?._id || firstItem.seller) : null;
+        
+        return {
+          id: order._id,
+          customer: order.user?.name || 'Customer', // Populated user data
+          seller: sellerMap[sellerId] || 'Multiple/Unknown',
+          product: order.orderItems?.length > 1 
+            ? `${firstItem?.title} + ${order.orderItems.length - 1} more` 
+            : firstItem?.title || 'Unknown Product',
+          img: firstItem?.image || 'https://via.placeholder.com/50',
+          amount: `₹${order.totalPrice}`,
+          paymentMethod: order.paymentMethod || 'UPI',
+          paymentStatus: order.isPaid ? 'Paid' : 'Pending',
+          deliveryStatus: order.status || 'Pending',
+          date: new Date(order.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }),
+          qty: order.orderItems?.reduce((acc, item) => acc + item.qty, 0) || 1,
+          address: order.shippingAddress 
+            ? `${order.shippingAddress.address}, ${order.shippingAddress.city}, ${order.shippingAddress.postalCode}`
+            : 'Not Provided',
+          rawOrder: order
+        };
+      });
+
+      setOrders(formattedOrders);
+    } catch (err) {
+      console.error('Error fetching admin orders:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
   
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -67,8 +131,8 @@ export default function AdminOrders() {
   const stats = {
     total: orders.length,
     delivered: orders.filter(o => o.deliveryStatus === 'Delivered').length,
-    pending: orders.filter(o => o.deliveryStatus === 'Pending').length,
-    revenue: '₹11,197' // Mock calculated
+    pending: orders.filter(o => o.deliveryStatus === 'Pending' || o.deliveryStatus === 'Preparing').length,
+    revenue: `₹${orders.filter(o => o.paymentStatus === 'Paid' || o.deliveryStatus === 'Delivered').reduce((sum, o) => sum + Number(o.amount.replace(/[^0-9.-]+/g,"")), 0).toLocaleString()}`
   };
 
   return (
@@ -154,7 +218,11 @@ export default function AdminOrders() {
       {/* Orders Table */}
       <div className="orders-card card">
         <div className="table-responsive">
-          {filteredOrders.length === 0 ? (
+          {loading ? (
+            <div className="empty-state">
+              <div style={{ padding: '40px', color: '#666' }}>Loading real-time orders...</div>
+            </div>
+          ) : filteredOrders.length === 0 ? (
             <div className="empty-state">
               <ShoppingBag size={48} className="empty-icon" />
               <h3>No Orders Found</h3>

@@ -26,6 +26,15 @@
   --seller-radius-sm: 8px;
 }
 
+body.seller-dark-theme {
+  --seller-bg: #0f172a;
+  --seller-card: #1e293b;
+  --seller-text: #f8fafc;
+  --seller-text-muted: #94a3b8;
+  --seller-border: #334155;
+  --seller-primary: #818cf8;
+  --seller-primary-hover: #6366f1;
+}
 .seller-layout {
   font-family: 'Roboto', sans-serif;
   display: flex;

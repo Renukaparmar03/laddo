@@ -7,43 +7,34 @@ function DeliveryHistory() {
   const [activeTab, setActiveTab] = useState('Daily');
 
   useEffect(() => {
-    // Load from local storage, fallback to pre-loaded mock trips
-    const localTrips = localStorage.getItem('rider_trips');
-    if (localTrips) {
-      setTrips(JSON.parse(localTrips));
-    } else {
-      const mockTrips = [
-        {
-          id: '#ORD-7811',
-          date: 'Today',
-          time: '08:14 PM',
-          store: 'Blinkit Dark Store - Sector 62',
-          destination: 'Rohan Joshi (Sector 62, Flat 12A)',
-          payout: '₹38.00',
-          itemsCount: 4
-        },
-        {
-          id: '#ORD-6902',
-          date: 'Yesterday',
-          time: '02:40 PM',
-          store: 'Blinkit Dark Store - Sector 62',
-          destination: 'Megha Gupta (Sector 63, B-90)',
-          payout: '₹48.50',
-          itemsCount: 8
-        },
-        {
-          id: '#ORD-5801',
-          date: '15 May 2026',
-          time: '12:10 PM',
-          store: 'Blinkit Dark Store - Sector 62',
-          destination: 'Vijay Sinha (Sector 59, Flat 501)',
-          payout: '₹32.00',
-          itemsCount: 2
+    const fetchHistory = async () => {
+      try {
+        const deliveryInfo = JSON.parse(localStorage.getItem('delivery_info') || '{}');
+        const deliveryBoyId = deliveryInfo._id || deliveryInfo.id;
+        if (!deliveryBoyId) return;
+
+        const res = await fetch(`http://localhost:5000/api/orders/delivery-boy/${deliveryBoyId}`);
+        if (res.ok) {
+          const data = await res.json();
+          // Map DB orders to trip format
+          const mappedTrips = data.map(order => ({
+            id: order._id,
+            dateRaw: new Date(order.createdAt),
+            date: new Date(order.createdAt).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }),
+            time: new Date(order.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+            store: order.orderItems[0]?.seller?.businessName || 'Seller Store',
+            destination: order.shippingAddress?.address + ', ' + order.shippingAddress?.city,
+            payout: '₹' + (order.shippingPrice || 25),
+            itemsCount: order.orderItems.length,
+            status: order.status
+          }));
+          setTrips(mappedTrips);
         }
-      ];
-      setTrips(mockTrips);
-      localStorage.setItem('rider_trips', JSON.stringify(mockTrips));
-    }
+      } catch (err) {
+        console.error('Error fetching delivery history:', err);
+      }
+    };
+    fetchHistory();
   }, []);
 
   const handleClearHistory = () => {
@@ -53,13 +44,21 @@ function DeliveryHistory() {
   };
 
   const getFilteredTrips = () => {
+    const today = new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
+    const yesterdayDate = new Date();
+    yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+    const yesterday = yesterdayDate.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
+
     if (activeTab === 'Daily') {
-      return trips.filter(t => t.date === 'Today');
+      return trips.filter(t => t.date === today);
     }
     if (activeTab === 'Weekly') {
-      return trips.filter(t => t.date === 'Today' || t.date === 'Yesterday');
+      // Simplistic weekly check (last 7 days could be better, but we match the mock style)
+      const oneWeekAgo = new Date();
+      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+      return trips.filter(t => t.dateRaw >= oneWeekAgo);
     }
-    return trips; // Monthly
+    return trips; // Monthly / All Time
   };
 
   const filteredTrips = getFilteredTrips();
@@ -71,7 +70,7 @@ function DeliveryHistory() {
       <div className="del-flex-between" style={{ marginBottom: '4px' }}>
         <div>
           <h2 className="del-font-extrabold" style={{ margin: 0, fontSize: '22px' }}>Trips History</h2>
-          <p style={{ color: 'var(--del-text-muted)', fontSize: '13px', margin: 0 }}>List of completed deliveries.</p>
+          <p style={{ color: 'var(--del-text-muted)', fontSize: '13px', margin: 0 }}>List of your deliveries.</p>
         </div>
         
         {trips.length > 0 && (
@@ -133,8 +132,13 @@ function DeliveryHistory() {
                   <Calendar size={14} style={{ color: 'var(--del-primary)' }} />
                   <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--del-text-muted)' }}>{trip.date} • {trip.time}</span>
                 </div>
-                <span style={{ fontSize: '11px', background: 'rgba(12,131,31,0.1)', color: 'var(--del-primary)', padding: '2px 8px', borderRadius: '6px', fontWeight: 700 }}>
-                  COMPLETED
+                <span style={{ 
+                  fontSize: '11px', 
+                  background: trip.status === 'Delivered' ? 'rgba(12,131,31,0.1)' : 'rgba(59,130,246,0.1)', 
+                  color: trip.status === 'Delivered' ? 'var(--del-primary)' : '#3b82f6', 
+                  padding: '2px 8px', borderRadius: '6px', fontWeight: 700 
+                }}>
+                  {trip.status.toUpperCase()}
                 </span>
               </div>
 

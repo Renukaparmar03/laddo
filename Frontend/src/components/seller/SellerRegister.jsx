@@ -41,9 +41,8 @@ function SellerRegister() {
       const data = await response.json();
       
       if (response.ok) {
-        localStorage.setItem('seller_logged_in', 'true');
-        localStorage.setItem('seller_info', JSON.stringify(data));
-        navigate('/seller/home');
+        alert('Registration submitted successfully! Your account is pending admin approval.');
+        navigate('/seller/login');
       } else {
         alert(data.message || 'Registration failed');
       }

@@ -8,26 +8,147 @@ import './AdminRevenue.css';
 export default function AdminRevenue() {
   const [dateRange, setDateRange] = useState('This Month');
 
-  // MOCK DATA
-  const transactions = [
-    { id: 'TXN-001', customer: 'Rahul Sharma', seller: 'RR Mart', amount: '₹1,250', method: 'UPI', status: 'Paid', date: '22 May, 2026 - 14:30' },
-    { id: 'TXN-002', customer: 'Priya Patel', seller: 'Tech Store', amount: '₹8,999', method: 'Credit Card', status: 'Paid', date: '22 May, 2026 - 11:15' },
-    { id: 'TXN-003', customer: 'Amit Kumar', seller: 'Fresh Foods', amount: '₹450', method: 'Wallet', status: 'Refunded', date: '21 May, 2026 - 09:45' },
-    { id: 'TXN-004', customer: 'Neha Gupta', seller: 'Fashion Hub', amount: '₹2,499', method: 'Debit Card', status: 'Failed', date: '21 May, 2026 - 18:20' },
-    { id: 'TXN-005', customer: 'Vikram Singh', seller: 'Gadget World', amount: '₹14,500', method: 'UPI', status: 'Pending', date: '20 May, 2026 - 16:10' },
-  ];
+  const [revenueData, setRevenueData] = useState({
+    totalRevenue: 0,
+    monthlyRevenue: 0,
+    commission: 0,
+    totalTransactions: 0,
+    aov: 0,
+    topCategories: [],
+    transactions: [],
+    recentPayments: [],
+    loading: true
+  });
 
-  const recentPayments = [
-    { name: 'Rahul Sharma', img: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=50&q=80', amount: '+₹1,250', time: '10 mins ago' },
-    { name: 'Priya Patel', img: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=50&q=80', amount: '+₹8,999', time: '2 hours ago' },
-    { name: 'Amit Kumar', img: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=50&q=80', amount: '+₹450', time: '5 hours ago' },
-  ];
+  React.useEffect(() => {
+    fetchRevenueData();
+  }, []);
 
-  const topCategories = [
-    { name: 'Electronics', amount: '₹1.8M', percent: 65 },
-    { name: 'Fashion', amount: '₹850K', percent: 25 },
-    { name: 'Groceries', amount: '₹340K', percent: 10 },
-  ];
+  const fetchRevenueData = async () => {
+    try {
+      const [usersRes, sellersRes, productsRes] = await Promise.all([
+        fetch('http://localhost:5000/api/users'),
+        fetch('http://localhost:5000/api/sellers'),
+        fetch('http://localhost:5000/api/products')
+      ]);
+
+      const users = await usersRes.json();
+      const sellers = await sellersRes.json();
+      const products = await productsRes.json();
+
+      const userMap = {};
+      users.forEach(u => userMap[u._id] = u);
+
+      const sellerMap = {};
+      sellers.forEach(s => sellerMap[s._id] = s);
+
+      const categoryMap = {}; 
+      products.forEach(p => categoryMap[p._id] = p.category);
+
+      let allOrders = [];
+      await Promise.all(sellers.map(async (seller) => {
+        try {
+          const orderRes = await fetch(`http://localhost:5000/api/orders/seller/${seller._id}`);
+          const orderData = await orderRes.json();
+          if (orderData.orders) {
+            allOrders = [...allOrders, ...orderData.orders];
+          }
+        } catch (e) {}
+      }));
+
+      // Deduplicate orders
+      const uniqueOrdersMap = new Map();
+      allOrders.forEach(o => uniqueOrdersMap.set(o._id, o));
+      const uniqueOrders = Array.from(uniqueOrdersMap.values());
+      uniqueOrders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+      let totalRevenue = 0;
+      let monthlyRevenue = 0;
+      let totalTransactions = 0;
+      const categoryRevenue = {};
+      
+      const currentMonth = new Date().getMonth();
+      const currentYear = new Date().getFullYear();
+
+      uniqueOrders.forEach(order => {
+        if (order.isPaid || order.status === 'Delivered') {
+          totalRevenue += order.totalPrice;
+          totalTransactions += 1;
+          
+          const orderDate = new Date(order.createdAt);
+          if (orderDate.getMonth() === currentMonth && orderDate.getFullYear() === currentYear) {
+             monthlyRevenue += order.totalPrice;
+          }
+
+          order.orderItems.forEach(item => {
+             const cat = categoryMap[item.product] || 'Other';
+             categoryRevenue[cat] = (categoryRevenue[cat] || 0) + (item.price * item.qty);
+          });
+        }
+      });
+
+      const commission = totalRevenue * 0.05;
+      const aov = totalTransactions > 0 ? totalRevenue / totalTransactions : 0;
+
+      const catTotal = Object.values(categoryRevenue).reduce((sum, val) => sum + val, 0) || 1;
+      const topCategories = Object.entries(categoryRevenue)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 3)
+        .map(entry => ({
+           name: entry[0],
+           amount: `₹${entry[1].toLocaleString()}`,
+           percent: Math.round((entry[1] / catTotal) * 100)
+        }));
+
+      const transactionsList = uniqueOrders.map(order => {
+         const firstItem = order.orderItems && order.orderItems[0];
+         const sId = firstItem ? (firstItem.seller?._id || firstItem.seller) : null;
+         return {
+           id: order.orderId || order._id.substring(0, 10).toUpperCase(),
+           customer: order.user?.name || userMap[order.user]?.name || 'Customer',
+           seller: sellerMap[sId]?.businessName || 'Multiple Shops',
+           amount: `₹${order.totalPrice.toLocaleString()}`,
+           method: order.paymentMethod || 'COD',
+           status: order.isPaid ? 'Paid' : (order.status === 'Cancelled' ? 'Failed' : 'Pending'),
+           date: new Date(order.createdAt).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+         };
+      });
+
+      const recentPayments = uniqueOrders
+        .filter(o => o.isPaid || o.status === 'Delivered')
+        .slice(0, 4)
+        .map(order => {
+           const cName = order.user?.name || userMap[order.user]?.name || 'Customer';
+           const hours = Math.floor((new Date() - new Date(order.createdAt)) / (1000 * 60 * 60));
+           const timeStr = hours < 1 ? 'Just now' : (hours < 24 ? `${hours} hours ago` : `${Math.floor(hours/24)} days ago`);
+           return {
+             name: cName,
+             img: `https://api.dicebear.com/7.x/initials/svg?seed=${cName}`,
+             amount: `+₹${order.totalPrice.toLocaleString()}`,
+             time: timeStr
+           };
+        });
+
+      setRevenueData({
+        totalRevenue,
+        monthlyRevenue,
+        commission,
+        totalTransactions,
+        aov,
+        topCategories,
+        transactions: transactionsList,
+        recentPayments,
+        loading: false
+      });
+    } catch (error) {
+      console.error(error);
+      setRevenueData(prev => ({ ...prev, loading: false }));
+    }
+  };
+
+  if (revenueData.loading) {
+    return <div className="admin-revenue-page"><div style={{padding: '50px', textAlign: 'center'}}>Loading real-time revenue data...</div></div>;
+  }
 
   const getStatusClass = (status) => {
     switch (status) {
@@ -75,7 +196,7 @@ export default function AdminRevenue() {
             </div>
           </div>
           <p className="stat-label">Total Revenue</p>
-          <h3 className="stat-value">₹8.4M</h3>
+          <h3 className="stat-value">₹{revenueData.totalRevenue.toLocaleString()}</h3>
         </div>
         
         <div className="revenue-stat-card">
@@ -84,11 +205,11 @@ export default function AdminRevenue() {
               <Activity size={22} className="text-green" />
             </div>
             <div className="trend-badge positive">
-              <TrendingUp size={14} /> <span>+12.2%</span>
+              <TrendingUp size={14} /> <span>Live</span>
             </div>
           </div>
           <p className="stat-label">Monthly Revenue</p>
-          <h3 className="stat-value">₹1.2M</h3>
+          <h3 className="stat-value">₹{revenueData.monthlyRevenue.toLocaleString()}</h3>
         </div>
 
         <div className="revenue-stat-card">
@@ -97,11 +218,11 @@ export default function AdminRevenue() {
               <PieChart size={22} className="text-purple" />
             </div>
             <div className="trend-badge positive">
-              <TrendingUp size={14} /> <span>+8.4%</span>
+              <TrendingUp size={14} /> <span>Live</span>
             </div>
           </div>
           <p className="stat-label">Platform Commission (5%)</p>
-          <h3 className="stat-value">₹420K</h3>
+          <h3 className="stat-value">₹{revenueData.commission.toLocaleString(undefined, {maximumFractionDigits:0})}</h3>
         </div>
 
         <div className="revenue-stat-card">
@@ -109,12 +230,12 @@ export default function AdminRevenue() {
             <div className="stat-icon-wrapper bg-orange-light">
               <CreditCard size={22} className="text-orange" />
             </div>
-            <div className="trend-badge negative">
-              <TrendingDown size={14} /> <span>-1.2%</span>
+            <div className="trend-badge positive">
+              <TrendingUp size={14} /> <span>Live</span>
             </div>
           </div>
           <p className="stat-label">Total Transactions</p>
-          <h3 className="stat-value">45,280</h3>
+          <h3 className="stat-value">{revenueData.totalTransactions.toLocaleString()}</h3>
         </div>
       </div>
 
@@ -176,7 +297,7 @@ export default function AdminRevenue() {
           <div className="insights-grid">
             <div className="insight-box">
               <p>Average Order Value</p>
-              <h4>₹850</h4>
+              <h4>₹{Math.round(revenueData.aov).toLocaleString()}</h4>
             </div>
             <div className="insight-box">
               <p>Highest Earning Day</p>
@@ -192,7 +313,7 @@ export default function AdminRevenue() {
             <h3>Top Revenue Sources</h3>
           </div>
           <div className="sources-list">
-            {topCategories.map((cat, idx) => (
+            {revenueData.topCategories.map((cat, idx) => (
               <div className="source-item" key={idx}>
                 <div className="source-info">
                   <span>{cat.name}</span>
@@ -203,6 +324,7 @@ export default function AdminRevenue() {
                 </div>
               </div>
             ))}
+            {revenueData.topCategories.length === 0 && <p className="text-gray-500 text-sm">No category revenue data available.</p>}
           </div>
         </div>
       </div>
@@ -216,7 +338,7 @@ export default function AdminRevenue() {
             <button className="btn-link">View All</button>
           </div>
           <div className="table-responsive">
-            {transactions.length === 0 ? (
+            {revenueData.transactions.length === 0 ? (
               <div className="empty-state">
                 <DollarSign size={48} className="empty-icon" />
                 <h3>No Revenue Data Available</h3>
@@ -234,7 +356,7 @@ export default function AdminRevenue() {
                   </tr>
                 </thead>
                 <tbody>
-                  {transactions.map((txn) => (
+                  {revenueData.transactions.slice(0, 10).map((txn) => (
                     <tr key={txn.id}>
                       <td className="font-bold">{txn.id}</td>
                       <td>
@@ -265,7 +387,7 @@ export default function AdminRevenue() {
             <h3>Live Payments</h3>
           </div>
           <div className="payments-list">
-            {recentPayments.map((payment, idx) => (
+            {revenueData.recentPayments.map((payment, idx) => (
               <div className="payment-item" key={idx}>
                 <img src={payment.img} alt={payment.name} />
                 <div className="payment-info">
@@ -277,6 +399,7 @@ export default function AdminRevenue() {
                 </div>
               </div>
             ))}
+            {revenueData.recentPayments.length === 0 && <p className="text-gray-500 text-sm">No recent payments.</p>}
           </div>
           <button className="btn-full-width mt-4">
             <Wallet size={16} /> View Settlement Hub

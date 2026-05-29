@@ -1,7 +1,7 @@
 export const CATEGORIES = [
   { id: 1, name: 'All', icon: 'Store' },
   { id: 2, name: 'Grocery & Kitchen', icon: 'ShoppingBasket', color: '#FFFDD0', image: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=120&q=80' },
-  { id: 3, name: 'Snacks & Drinks', icon: 'Cookie', color: '#FFF0F5', image: 'https://images.unsplash.com/photo-1534080391025-09795d197a5b?w=120&q=80' },
+  { id: 3, name: 'Snacks & Drinks', icon: 'Cookie', color: '#FFF0F5', image: 'https://images.unsplash.com/photo-1566478989037-eec170784d0b?w=120&q=80' },
   { id: 4, name: 'Beauty & Personal Care', icon: 'Sparkles', color: '#F3E5F5', image: 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=120&q=80' },
   { id: 5, name: 'Fashion', icon: 'Shirt', color: '#E3F2FD', image: 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=120&q=80' },
   { id: 6, name: 'Electronics', icon: 'Laptop', color: '#E6E6FA', image: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=120&q=80' },

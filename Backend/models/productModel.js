@@ -7,7 +7,7 @@ const productSchema = mongoose.Schema(
       required: true,
       ref: 'Seller',
     },
-    name: {
+    title: {
       type: String,
       required: true,
     },
@@ -15,10 +15,11 @@ const productSchema = mongoose.Schema(
       type: String,
       required: true,
     },
-    brand: {
-      type: String,
-      required: true,
-    },
+    images: [
+      {
+        url: { type: String, required: true }
+      }
+    ],
     category: {
       type: String,
       required: true,
@@ -35,14 +36,34 @@ const productSchema = mongoose.Schema(
     discountPrice: {
       type: Number,
     },
-    countInStock: {
+    stock: {
       type: Number,
       required: true,
       default: 0,
     },
-    weight: {
+    brand: {
       type: String,
-      required: true,
+    },
+    originalPrice: {
+      type: Number,
+    },
+    status: {
+      type: String,
+      default: 'Active'
+    },
+    dynamicFields: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {}
+    },
+    customAttributes: [
+      {
+        key: { type: String },
+        value: { type: String }
+      }
+    ],
+    isApproved: {
+      type: Boolean,
+      default: false,
     }
   },
   {

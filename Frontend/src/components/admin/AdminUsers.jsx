@@ -5,18 +5,95 @@ import {
 } from 'lucide-react';
 import './AdminUsers.css';
 
-const MOCK_USERS = [
-  { id: 'USR-001', name: 'Rahul Sharma', email: 'rahul.s@example.com', phone: '+91 9876543210', orders: 24, joinDate: 'Jan 12, 2023', status: 'Active', img: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=50&q=80', address: 'B-42, Silicon Valley Appt, Andheri West, Mumbai' },
-  { id: 'USR-002', name: 'Priya Patel', email: 'priya.p@example.com', phone: '+91 9876543211', orders: 12, joinDate: 'Feb 05, 2023', status: 'Active', img: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=50&q=80', address: '45, MG Road, Camp, Pune' },
-  { id: 'USR-003', name: 'Amit Kumar', email: 'amit.k@example.com', phone: '+91 9876543212', orders: 0, joinDate: 'Oct 20, 2023', status: 'Pending', img: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=50&q=80', address: 'Not provided yet' },
-  { id: 'USR-004', name: 'Neha Gupta', email: 'neha.g@example.com', phone: '+91 9876543213', orders: 56, joinDate: 'Nov 11, 2022', status: 'Blocked', img: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=50&q=80', address: '12/A, Link Road, Malad West, Mumbai' },
-  { id: 'USR-005', name: 'Vikram Singh', email: 'vikram.s@example.com', phone: '+91 9876543214', orders: 8, joinDate: 'Sep 30, 2023', status: 'Active', img: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=50&q=80', address: 'Plot 88, Sector 17, Vashi, Navi Mumbai' },
-];
-
 export default function AdminUsers() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
-  const [users, setUsers] = useState(MOCK_USERS);
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  React.useEffect(() => {
+    fetchActiveUsers();
+  }, []);
+
+  const fetchActiveUsers = async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch both real users and sellers (to get orders)
+      const [usersRes, sellersRes] = await Promise.all([
+        fetch('http://localhost:5000/api/users'),
+        fetch('http://localhost:5000/api/sellers')
+      ]);
+      
+      const usersData = await usersRes.json();
+      const sellersData = await sellersRes.json();
+
+      let allOrders = [];
+      // Fetch orders for every seller
+      await Promise.all(sellersData.map(async (seller) => {
+        try {
+          const orderRes = await fetch(`http://localhost:5000/api/orders/seller/${seller._id}`);
+          const orderData = await orderRes.json();
+          if (orderData.orders) {
+            allOrders = [...allOrders, ...orderData.orders];
+          }
+        } catch (e) {
+          console.error(e);
+        }
+      }));
+
+      // Group orders by user ID to get their total order count and most recent address
+      const userOrdersMap = new Map();
+      
+      allOrders.forEach(order => {
+        const userId = order.user;
+        if (!userId) return;
+
+        if (!userOrdersMap.has(userId)) {
+          userOrdersMap.set(userId, {
+            orders: 0,
+            latestOrderDate: new Date(0),
+            address: 'Not provided'
+          });
+        }
+        
+        const userData = userOrdersMap.get(userId);
+        userData.orders += 1;
+        
+        // Keep the newest address
+        if (new Date(order.createdAt) > userData.latestOrderDate) {
+            userData.latestOrderDate = new Date(order.createdAt);
+            userData.address = order.shippingAddress 
+              ? `${order.shippingAddress.address}, ${order.shippingAddress.city}, ${order.shippingAddress.postalCode}`
+              : userData.address;
+        }
+      });
+
+      // Combine real user profile data with their order statistics
+      const formattedUsers = usersData.map(u => {
+        const orderStats = userOrdersMap.get(u._id) || { orders: 0, address: 'Not provided yet' };
+        
+        return {
+          id: u._id,
+          name: u.name || 'Customer',
+          email: u.email || 'No email',
+          phone: u.phone || 'Not provided',
+          orders: orderStats.orders,
+          joinDate: new Date(u.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }),
+          status: 'Active', 
+          img: `https://api.dicebear.com/7.x/initials/svg?seed=${u.name || u._id}`,
+          address: orderStats.address
+        };
+      });
+
+      // Sort by newest registered user
+      setUsers(formattedUsers);
+    } catch (err) {
+      console.error('Error fetching users:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
   
   const [selectedUser, setSelectedUser] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -83,11 +160,15 @@ export default function AdminUsers() {
       {/* Users Table */}
       <div className="users-card card">
         <div className="table-responsive">
-          {filteredUsers.length === 0 ? (
+          {loading ? (
+            <div className="empty-state">
+              <div style={{ padding: '40px', color: '#666' }}>Loading real-time active users...</div>
+            </div>
+          ) : filteredUsers.length === 0 ? (
             <div className="empty-state">
               <User size={48} className="empty-icon" />
               <h3>No Users Found</h3>
-              <p>Try adjusting your search or filter criteria.</p>
+              <p>No customer data found from recent orders.</p>
             </div>
           ) : (
             <table className="users-table">

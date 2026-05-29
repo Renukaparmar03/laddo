@@ -1,41 +1,69 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 
-const BANNERS = [
+const FALLBACK_BANNERS = [
   {
-    id: 1,
+    _id: '1',
     image: "https://images.unsplash.com/photo-1542838132-92c53300491e?w=1200&q=80",
     title: "Get 50% OFF",
     desc: "On your first grocery order",
     btnText: "Shop Now",
     gradient: "linear-gradient(90deg, rgba(0,0,0,0.7) 0%, transparent 75%)"
-  },
-  {
-    id: 2,
-    image: "https://i1-c.pinimg.com/1200x/83/ba/38/83ba38494db43b20a71c3863801f06cf.jpg",
-    title: "Super Fast Delivery",
-    desc: "Fresh essentials in 10 minutes",
-    btnText: "Order Now",
-    gradient: "linear-gradient(90deg, rgba(0,0,0,0.75) 0%, transparent 75%)"
-  },
-  {
-    id: 3,
-    image: "https://images.unsplash.com/photo-1498837167922-ddd27525d352?w=1200&q=80",
-    title: "Fresh Farm Produce",
-    desc: "Up to 30% OFF on fresh vegetables",
-    btnText: "Explore Fresh",
-    gradient: "linear-gradient(90deg, rgba(0,0,0,0.75) 0%, transparent 75%)"
   }
 ];
 
 const HeroBanner = () => {
+  const [banners, setBanners] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
+    const fetchBanners = async () => {
+      try {
+        const res = await axios.get('http://localhost:5000/api/banners/active');
+        if (res.data && res.data.length > 0) {
+          const homeBanners = res.data.filter(b => b.location === 'Home Page Top' || !b.location);
+          
+          // Flatten all images into individual slides
+          const flattenedSlides = [];
+          homeBanners.forEach(b => {
+            if (b.images && b.images.length > 0) {
+              b.images.forEach(imgUrl => {
+                if (imgUrl.trim() !== '') {
+                  flattenedSlides.push({ ...b, image: imgUrl });
+                }
+              });
+            } else if (b.image) {
+              flattenedSlides.push(b);
+            }
+          });
+          
+          setBanners(flattenedSlides.length > 0 ? flattenedSlides : FALLBACK_BANNERS);
+        } else {
+          setBanners(FALLBACK_BANNERS);
+        }
+      } catch (error) {
+        console.error('Error fetching active banners:', error);
+        setBanners(FALLBACK_BANNERS);
+      }
+    };
+    
+    // Fetch immediately on mount
+    fetchBanners();
+
+    // Auto-refresh banners every 30 seconds to reflect admin changes instantly
+    const refreshInterval = setInterval(fetchBanners, 30000);
+    return () => clearInterval(refreshInterval);
+  }, []);
+
+  useEffect(() => {
+    if (banners.length <= 1) return;
     const timer = setInterval(() => {
-      setCurrentIndex((prevIndex) => (prevIndex + 1) % BANNERS.length);
+      setCurrentIndex((prevIndex) => (prevIndex + 1) % banners.length);
     }, 3500); // Auto-slide every 3.5 seconds
     return () => clearInterval(timer);
-  }, []);
+  }, [banners.length]);
+
+  if (banners.length === 0) return null;
 
   return (
     <div className="hero-banner">
@@ -44,33 +72,35 @@ const HeroBanner = () => {
           className="banner-slider-track"
           style={{ transform: `translateX(-${currentIndex * 100}%)` }}
         >
-          {BANNERS.map((banner) => (
-            <div key={banner.id} className="banner-slide">
+          {banners.map((banner, idx) => (
+            <div key={`${banner._id}-${idx}`} className="banner-slide">
               <img
                 src={banner.image}
                 alt={banner.title}
                 className="banner-img"
               />
-              <div className="banner-overlay" style={{ background: banner.gradient }}>
+              <div className="banner-overlay" style={{ background: banner.gradient || "linear-gradient(90deg, rgba(0,0,0,0.7) 0%, transparent 75%)" }}>
                 <h2>{banner.title}</h2>
-                <p>{banner.desc}</p>
-                <button className="banner-btn">{banner.btnText}</button>
+                {banner.desc && <p>{banner.desc}</p>}
+                <button className="banner-btn">{banner.btnText || 'Shop Now'}</button>
               </div>
             </div>
           ))}
         </div>
 
         {/* Slider Indicators / Dots */}
-        <div className="banner-dots">
-          {BANNERS.map((_, idx) => (
-            <button
-              key={idx}
-              className={`banner-dot ${idx === currentIndex ? 'active' : ''}`}
-              onClick={() => setCurrentIndex(idx)}
-              aria-label={`Slide ${idx + 1}`}
-            />
-          ))}
-        </div>
+        {banners.length > 1 && (
+          <div className="banner-dots">
+            {banners.map((_, idx) => (
+              <button
+                key={idx}
+                className={`banner-dot ${idx === currentIndex ? 'active' : ''}`}
+                onClick={() => setCurrentIndex(idx)}
+                aria-label={`Slide ${idx + 1}`}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

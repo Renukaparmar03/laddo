@@ -2,111 +2,48 @@ import React, { useState } from 'react';
 import { Search, Filter, MoreVertical, Mail, Phone, ShoppingCart, IndianRupee, Shield, ShieldAlert, Star, MapPin, X, Calendar, Package, FileText, Briefcase, Eye, Edit, Ban, Trash2, Store, TrendingUp } from 'lucide-react';
 import './AdminSellers.css';
 
-const MOCK_SELLERS = [
-  {
-    id: 'SLR-1001',
-    shopName: 'ElectroWorld',
-    ownerName: 'Rahul Sharma',
-    email: 'rahul@electroworld.com',
-    phone: '+91 9876543210',
-    gstStatus: 'Verified',
-    revenue: '₹4,250,000',
-    orders: 1245,
-    status: 'Active',
-    rating: 4.8,
-    image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&q=80',
-    address: '123 Tech Park, Sector 4, New Delhi, 110001',
-    category: 'Electronics',
-    fssai: 'Not Applicable',
-    gstin: '07AAPCE4332F1Z1',
-    pan: 'AAPCE4332F',
-    bankName: 'HDFC Bank',
-    accountNo: 'XXXX-XXXX-1234',
-    ifsc: 'HDFC0001234',
-    accountHolder: 'Rahul Sharma',
-    productsCount: 450,
-    joinDate: '12 Jan 2023',
-  },
-  {
-    id: 'SLR-1002',
-    shopName: 'Fresh Mart Grocery',
-    ownerName: 'Priya Patel',
-    email: 'priya.p@freshmart.in',
-    phone: '+91 9123456780',
-    gstStatus: 'Pending',
-    revenue: '₹3,800,000',
-    orders: 3412,
-    status: 'Active',
-    rating: 4.5,
-    image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&q=80',
-    address: '45 Green Avenue, Andheri West, Mumbai, 400053',
-    category: 'Groceries & Staples',
-    fssai: '11521014000456',
-    gstin: '27AABCP1234F1Z5',
-    pan: 'AABCP1234F',
-    bankName: 'ICICI Bank',
-    accountNo: 'XXXX-XXXX-5678',
-    ifsc: 'ICIC0005678',
-    accountHolder: 'Priya Patel',
-    productsCount: 1200,
-    joinDate: '05 Mar 2023',
-  },
-  {
-    id: 'SLR-1003',
-    shopName: 'Fashion Hub',
-    ownerName: 'Amit Kumar',
-    email: 'contact@fashionhub.com',
-    phone: '+91 9988776655',
-    gstStatus: 'Verified',
-    revenue: '₹2,900,000',
-    orders: 856,
-    status: 'Suspended',
-    rating: 3.2,
-    image: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=100&q=80',
-    address: 'Shop No 12, Fashion Street, Pune, 411001',
-    category: 'Apparel & Fashion',
-    fssai: 'Not Applicable',
-    gstin: '27AAICA9876C1Z2',
-    pan: 'AAICA9876C',
-    bankName: 'State Bank of India',
-    accountNo: 'XXXX-XXXX-9012',
-    ifsc: 'SBIN0009012',
-    accountHolder: 'Amit Kumar Fashion',
-    productsCount: 320,
-    joinDate: '22 Aug 2023',
-  },
-  {
-    id: 'SLR-1004',
-    shopName: 'Daily Needs',
-    ownerName: 'Vikram Singh',
-    email: 'vikram.s@dailyneeds.in',
-    phone: '+91 9876501234',
-    gstStatus: 'Unverified',
-    revenue: '₹850,000',
-    orders: 420,
-    status: 'Under Review',
-    rating: 0,
-    image: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=100&q=80',
-    address: 'Sector 18 Market, Noida, 201301',
-    category: 'Daily Essentials',
-    fssai: '12719055000321',
-    gstin: '09AABCU4321R1Z9',
-    pan: 'AABCU4321R',
-    bankName: 'Axis Bank',
-    accountNo: 'XXXX-XXXX-3456',
-    ifsc: 'UTIB0003456',
-    accountHolder: 'Vikram Singh',
-    productsCount: 85,
-    joinDate: '15 Oct 2023',
-  }
-];
-
 export default function AdminSellers() {
+  const [sellers, setSellers] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('All');
   const [selectedSeller, setSelectedSeller] = useState(null);
 
-  const filteredSellers = MOCK_SELLERS.filter(seller => {
+  React.useEffect(() => {
+    fetchSellers();
+  }, []);
+
+  const fetchSellers = async () => {
+    try {
+      const res = await fetch('http://localhost:5000/api/sellers?status=approved');
+      const data = await res.json();
+      const formatted = data.map(seller => ({
+        id: seller._id,
+        shopName: seller.businessName,
+        ownerName: seller.ownerName,
+        email: seller.email,
+        phone: seller.phone,
+        gstStatus: 'Verified',
+        revenue: '₹0',
+        orders: 0,
+        status: seller.status === 'approved' ? 'Active' : seller.status,
+        rating: 0,
+        image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&q=80',
+        address: seller.address,
+        category: 'General',
+        joinDate: new Date(seller.createdAt).toLocaleDateString()
+      }));
+      setSellers(formatted);
+    } catch(err) {
+      console.error(err);
+    }
+  };
+
+  const handleDeleteSeller = async (id) => {
+    // You can also add backend DELETE route, for now we just remove from UI
+    setSellers(sellers.filter(s => s.id !== id));
+  };
+
+  const filteredSellers = sellers.filter(seller => {
     const matchesSearch = seller.shopName.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           seller.ownerName.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = filterStatus === 'All' || seller.status === filterStatus;
@@ -199,7 +136,7 @@ export default function AdminSellers() {
                     <button style={{ padding: '6px', borderRadius: '6px', backgroundColor: '#fff7ed', color: '#f97316', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Block">
                       <Ban size={16} />
                     </button>
-                    <button style={{ padding: '6px', borderRadius: '6px', backgroundColor: '#fef2f2', color: '#ef4444', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Delete">
+                    <button onClick={() => handleDeleteSeller(seller.id)} style={{ padding: '6px', borderRadius: '6px', backgroundColor: '#fef2f2', color: '#ef4444', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Delete">
                       <Trash2 size={16} />
                     </button>
                   </div>

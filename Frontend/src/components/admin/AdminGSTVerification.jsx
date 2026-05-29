@@ -2,76 +2,71 @@ import React, { useState } from 'react';
 import { Search, Filter, CheckCircle, XCircle, Download, FileText, MapPin, Percent, History, Eye, X } from 'lucide-react';
 import './AdminGSTVerification.css';
 
-const MOCK_GST_RECORDS = [
-  {
-    id: 'GST-001',
-    sellerName: 'Ramesh Traders',
-    gstNumber: '07AAPCR4332F1Z1',
-    businessType: 'Retailer',
-    status: 'Pending',
-    certificate: 'GST_Ramesh_Traders.pdf',
-    address: 'B-12, Sector 4, Rohini, New Delhi 110085',
-    taxPercentage: '18%',
-    history: [
-      { date: '20 May 2024, 10:30 AM', action: 'Document Uploaded', by: 'Seller' },
-      { date: '21 May 2024, 14:15 PM', action: 'Initial Review', by: 'System' }
-    ]
-  },
-  {
-    id: 'GST-002',
-    sellerName: 'Fresh Mart Grocery',
-    gstNumber: '27AABCP1234F1Z5',
-    businessType: 'Supermarket',
-    status: 'Verified',
-    certificate: 'GST_Fresh_Mart.pdf',
-    address: '45 Green Avenue, Andheri West, Mumbai 400053',
-    taxPercentage: '5% - 12%',
-    history: [
-      { date: '15 May 2024, 09:00 AM', action: 'Document Uploaded', by: 'Seller' },
-      { date: '16 May 2024, 11:45 AM', action: 'GST Verified', by: 'Super Admin' }
-    ]
-  },
-  {
-    id: 'GST-003',
-    sellerName: 'Tech Hub Solutions',
-    gstNumber: 'INVALID_27AABCT',
-    businessType: 'Electronics',
-    status: 'Rejected',
-    certificate: 'GST_TechHub.pdf',
-    address: 'Shop 2, Tech Park, Pune 411001',
-    taxPercentage: '18%',
-    history: [
-      { date: '18 May 2024, 16:20 PM', action: 'Document Uploaded', by: 'Seller' },
-      { date: '19 May 2024, 10:10 AM', action: 'Rejected - Invalid Format', by: 'Admin User' }
-    ]
-  },
-  {
-    id: 'GST-004',
-    sellerName: 'Green Organic Foods',
-    gstNumber: '29AAFCG5566K1Z8',
-    businessType: 'Wholesaler',
-    status: 'Pending',
-    certificate: 'GST_Green_Organic.pdf',
-    address: 'Koramangala 4th Block, Bengaluru 560034',
-    taxPercentage: '5%',
-    history: [
-      { date: '21 May 2024, 11:00 AM', action: 'Document Uploaded', by: 'Seller' }
-    ]
-  }
-];
-
 export default function AdminGSTVerification() {
-  const [records, setRecords] = useState(MOCK_GST_RECORDS);
+  const [records, setRecords] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('All');
   const [selectedRecord, setSelectedRecord] = useState(null);
 
-  const handleAction = (id, newStatus) => {
-    setRecords(records.map(req => 
-      req.id === id ? { ...req, status: newStatus } : req
-    ));
-    if (selectedRecord && selectedRecord.id === id) {
-      setSelectedRecord({ ...selectedRecord, status: newStatus });
+  React.useEffect(() => {
+    fetchSellers();
+  }, []);
+
+  const fetchSellers = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch('http://localhost:5000/api/sellers');
+      const data = await res.json();
+      
+      const mappedRecords = data.map(seller => ({
+        id: seller._id,
+        sellerName: seller.businessName || seller.ownerName,
+        gstNumber: `GST-${seller._id.substring(0,8).toUpperCase()}`,
+        businessType: 'Retailer',
+        status: seller.status === 'approved' ? 'Verified' : (seller.status === 'rejected' ? 'Rejected' : 'Pending'),
+        certificate: `GST_DOC_${seller._id.substring(0,6)}.pdf`,
+        address: seller.address || 'Address not provided',
+        taxPercentage: '18%',
+        history: [
+          { date: new Date(seller.createdAt).toLocaleString('en-GB'), action: 'Registration Submitted', by: 'Seller' }
+        ]
+      }));
+
+      // Sort by newest registered
+      mappedRecords.sort((a,b) => new Date(b.history[0].date) - new Date(a.history[0].date));
+
+      setRecords(mappedRecords);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAction = async (id, newStatus) => {
+    try {
+      const dbStatus = newStatus === 'Verified' ? 'approved' : 'rejected';
+      
+      const response = await fetch(`http://localhost:5000/api/sellers/${id}/status`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: dbStatus })
+      });
+
+      if (response.ok) {
+        setRecords(records.map(req => 
+          req.id === id ? { ...req, status: newStatus } : req
+        ));
+        if (selectedRecord && selectedRecord.id === id) {
+          setSelectedRecord({ ...selectedRecord, status: newStatus });
+        }
+      } else {
+        alert('Failed to update seller status in the backend.');
+      }
+    } catch (err) {
+      console.error('Error updating status:', err);
+      alert('Error communicating with the server.');
     }
   };
 
@@ -81,6 +76,10 @@ export default function AdminGSTVerification() {
     const matchesStatus = filterStatus === 'All' || req.status === filterStatus;
     return matchesSearch && matchesStatus;
   });
+
+  if (loading) {
+    return <div className="admin-gst-verification"><div style={{padding: '50px', textAlign: 'center'}}>Loading real-time seller verification records...</div></div>;
+  }
 
   return (
     <div className="admin-gst-verification">

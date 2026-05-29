@@ -2,22 +2,106 @@ import React, { useState } from 'react';
 import { Calendar, IndianRupee, ShoppingCart, TrendingUp, Package, ArrowUpRight, ArrowDownRight, MoreVertical } from 'lucide-react';
 import './SellerEarnings.css';
 
-const TRANSACTIONS = [
-  { id: 'TRX-10294', customerName: 'Rahul Sharma', amount: 4999, date: 'Oct 24, 2023', status: 'Paid' },
-  { id: 'TRX-10293', customerName: 'Priya Patel', amount: 2998, date: 'Oct 23, 2023', status: 'Pending' },
-  { id: 'TRX-10292', customerName: 'Amit Kumar', amount: 2499, date: 'Oct 20, 2023', status: 'Paid' },
-  { id: 'TRX-10291', customerName: 'Neha Gupta', amount: 3897, date: 'Oct 19, 2023', status: 'Refunded' },
-  { id: 'TRX-10290', customerName: 'Vikram Singh', amount: 2250, date: 'Oct 18, 2023', status: 'Paid' },
-];
-
-const TOP_PRODUCTS = [
-  { name: 'Wireless Noise Cancelling Headphones', sold: 124, revenue: 619876, image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=100&q=80' },
-  { name: 'Smart Watch Series 5', sold: 89, revenue: 133411, image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=100&q=80' },
-  { name: 'Men\'s Running Shoes', sold: 67, revenue: 167433, image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=100&q=80' },
-];
-
 export default function SellerEarnings() {
   const [dateRange, setDateRange] = useState('This Month');
+  const [loading, setLoading] = useState(true);
+  const [hasEarnings, setHasEarnings] = useState(false);
+  
+  const [stats, setStats] = useState({
+    totalRevenue: 0,
+    totalOrders: 0,
+    monthlyProfit: 0,
+    productsSold: 0
+  });
+  
+  const [topProducts, setTopProducts] = useState([]);
+  const [transactions, setTransactions] = useState([]);
+
+  React.useEffect(() => {
+    fetchEarningsData();
+  }, []);
+
+  const fetchEarningsData = async () => {
+    try {
+      setLoading(true);
+      const storedSeller = localStorage.getItem('seller_info');
+      if (storedSeller) {
+        const parsed = JSON.parse(storedSeller);
+        const sellerId = parsed._id || parsed.id;
+        
+        if (sellerId) {
+          const res = await fetch(`http://localhost:5000/api/orders/seller/${sellerId}`);
+          const data = await res.json();
+          
+          if (data.orders && data.orders.length > 0) {
+            let totalRevenue = 0;
+            let productsSold = 0;
+            const topProductsMap = new Map();
+            const txns = [];
+
+            data.orders.forEach(order => {
+              let isPaidStatus = 'Pending';
+              if (order.isPaid || order.status === 'Delivered') isPaidStatus = 'Paid';
+              else if (order.status === 'Cancelled' || order.status === 'Rejected') isPaidStatus = 'Refunded';
+
+              txns.push({
+                id: order.orderId || order._id.substring(0, 8),
+                customerName: order.user && order.user.name ? order.user.name : 'Customer',
+                amount: order.totalPrice || 0,
+                date: new Date(order.createdAt).toLocaleDateString('en-GB'),
+                status: isPaidStatus,
+                timestamp: new Date(order.createdAt).getTime()
+              });
+
+              if (order.isPaid || order.status === 'Delivered') {
+                order.orderItems.forEach(item => {
+                  totalRevenue += (item.price * item.qty);
+                  productsSold += item.qty;
+                  
+                  const pId = item.product;
+                  if (!topProductsMap.has(pId)) {
+                    topProductsMap.set(pId, {
+                      name: item.title,
+                      sold: 0,
+                      revenue: 0,
+                      image: item.image || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=100&q=80'
+                    });
+                  }
+                  const pStats = topProductsMap.get(pId);
+                  pStats.sold += item.qty;
+                  pStats.revenue += (item.price * item.qty);
+                });
+              }
+            });
+
+            const topProductsList = Array.from(topProductsMap.values())
+              .sort((a,b) => b.sold - a.sold)
+              .slice(0, 3);
+            
+            txns.sort((a,b) => b.timestamp - a.timestamp);
+            const recentTxns = txns.slice(0, 5);
+
+            setStats({
+              totalRevenue,
+              totalOrders: data.totalOrders || 0,
+              monthlyProfit: totalRevenue * 0.9, // Standard 10% platform commission assumption
+              productsSold
+            });
+            
+            setTopProducts(topProductsList);
+            setTransactions(recentTxns);
+            setHasEarnings(true);
+          } else {
+            setHasEarnings(false);
+          }
+        }
+      }
+    } catch(err) {
+      console.error('Error fetching earnings data:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getStatusClass = (status) => {
     switch (status) {
@@ -28,7 +112,9 @@ export default function SellerEarnings() {
     }
   };
 
-  const hasEarnings = true; // For demo purpose. Toggle this to test empty state.
+  if (loading) {
+    return <div className="seller-earnings-page"><div style={{padding: '50px', textAlign: 'center'}}>Calculating financials...</div></div>;
+  }
 
   if (!hasEarnings) {
     return (
@@ -78,15 +164,15 @@ export default function SellerEarnings() {
           <div className="card-top">
             <div>
               <p className="stat-label">Total Revenue</p>
-              <h3 className="stat-value">₹1,24,500</h3>
+              <h3 className="stat-value">₹{stats.totalRevenue.toLocaleString()}</h3>
             </div>
             <div className="stat-icon bg-green">
               <IndianRupee size={24} />
             </div>
           </div>
           <div className="card-bottom">
-            <span className="trend positive"><ArrowUpRight size={16} /> 12.5%</span>
-            <span className="trend-text">vs last month</span>
+            <span className="trend positive"><ArrowUpRight size={16} /> Live Data</span>
+            <span className="trend-text">from active sales</span>
           </div>
         </div>
 
@@ -94,15 +180,15 @@ export default function SellerEarnings() {
           <div className="card-top">
             <div>
               <p className="stat-label">Total Orders</p>
-              <h3 className="stat-value">342</h3>
+              <h3 className="stat-value">{stats.totalOrders}</h3>
             </div>
             <div className="stat-icon bg-blue">
               <ShoppingCart size={24} />
             </div>
           </div>
           <div className="card-bottom">
-            <span className="trend positive"><ArrowUpRight size={16} /> 8.2%</span>
-            <span className="trend-text">vs last month</span>
+            <span className="trend positive"><ArrowUpRight size={16} /> Live Data</span>
+            <span className="trend-text">from active sales</span>
           </div>
         </div>
 
@@ -110,15 +196,15 @@ export default function SellerEarnings() {
           <div className="card-top">
             <div>
               <p className="stat-label">Monthly Profit</p>
-              <h3 className="stat-value">₹42,800</h3>
+              <h3 className="stat-value">₹{stats.monthlyProfit.toLocaleString()}</h3>
             </div>
             <div className="stat-icon bg-purple">
               <TrendingUp size={24} />
             </div>
           </div>
           <div className="card-bottom">
-            <span className="trend positive"><ArrowUpRight size={16} /> 15.3%</span>
-            <span className="trend-text">vs last month</span>
+            <span className="trend positive"><ArrowUpRight size={16} /> Live Data</span>
+            <span className="trend-text">after comms.</span>
           </div>
         </div>
 
@@ -126,15 +212,15 @@ export default function SellerEarnings() {
           <div className="card-top">
             <div>
               <p className="stat-label">Products Sold</p>
-              <h3 className="stat-value">512</h3>
+              <h3 className="stat-value">{stats.productsSold}</h3>
             </div>
             <div className="stat-icon bg-orange">
               <Package size={24} />
             </div>
           </div>
           <div className="card-bottom">
-            <span className="trend negative"><ArrowDownRight size={16} /> 2.1%</span>
-            <span className="trend-text">vs last month</span>
+            <span className="trend positive"><ArrowUpRight size={16} /> Live Data</span>
+            <span className="trend-text">total volume</span>
           </div>
         </div>
       </div>
@@ -186,7 +272,7 @@ export default function SellerEarnings() {
             <button className="btn-text">View All</button>
           </div>
           <div className="top-products-list">
-            {TOP_PRODUCTS.map((product, i) => (
+            {topProducts.map((product, i) => (
               <div className="top-product-item" key={i}>
                 <img src={product.image} alt={product.name} />
                 <div className="product-info">
@@ -198,6 +284,7 @@ export default function SellerEarnings() {
                 </div>
               </div>
             ))}
+            {topProducts.length === 0 && <p className="text-gray-500 mt-2 text-sm">No products sold yet.</p>}
           </div>
         </div>
       </div>
@@ -221,7 +308,7 @@ export default function SellerEarnings() {
               </tr>
             </thead>
             <tbody>
-              {TRANSACTIONS.map((trx, i) => (
+              {transactions.map((trx, i) => (
                 <tr key={i}>
                   <td className="trx-id">{trx.id}</td>
                   <td className="trx-date">{trx.date}</td>
@@ -237,6 +324,11 @@ export default function SellerEarnings() {
                   </td>
                 </tr>
               ))}
+              {transactions.length === 0 && (
+                <tr>
+                  <td colSpan="6" style={{textAlign: 'center', padding: '20px'}}>No recent transactions</td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>

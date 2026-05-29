@@ -1,8 +1,31 @@
 import React, { useState } from 'react';
 import { Heart, Star, Clock, Check, ShoppingCart } from 'lucide-react';
 
-const ProductCard = ({ product, isOrderView, onCardClick }) => {
+const ProductCard = ({ product, isOrderView, onCardClick, cart = [], setCart, navigate }) => {
   const [isReordered, setIsReordered] = useState(false);
+
+  const cartItem = cart.find(item => item.id === product.id);
+  const isInCart = !!cartItem;
+
+  const handleAddToCart = (e) => {
+    e.stopPropagation();
+    if (setCart) {
+      setCart(prev => [...prev, { ...product, quantity: 1 }]);
+    }
+  };
+
+  const updateQuantity = (e, delta) => {
+    e.stopPropagation();
+    if (setCart) {
+      setCart(prev => prev.map(item => {
+        if (item.id === product.id) {
+          const newQty = item.quantity + delta;
+          return newQty > 0 ? { ...item, quantity: newQty } : null;
+        }
+        return item;
+      }).filter(Boolean));
+    }
+  };
 
   const handleReorder = (e) => {
     e.stopPropagation();
@@ -19,9 +42,11 @@ const ProductCard = ({ product, isOrderView, onCardClick }) => {
         <button className="wishlist-btn" onClick={(e) => e.stopPropagation()}>
           <Heart size={16} />
         </button>
-        <div className={`veg-indicator ${product.isVeg ? 'veg' : 'non-veg'}`}>
-          <div className="indicator-circle"></div>
-        </div>
+        {product.isVeg !== undefined && (
+          <div className={`veg-indicator ${product.isVeg ? 'veg' : 'non-veg'}`}>
+            <div className="indicator-circle"></div>
+          </div>
+        )}
       </div>
       
       <div className="product-info">
@@ -68,10 +93,14 @@ const ProductCard = ({ product, isOrderView, onCardClick }) => {
                 'Reorder'
               )}
             </button>
+          ) : isInCart ? (
+            <div className="quantity-controls" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#0c831f', borderRadius: '6px', height: '36px', padding: '0 8px', color: '#fff' }}>
+              <button onClick={(e) => updateQuantity(e, -1)} style={{ background: 'none', border: 'none', color: '#fff', fontSize: '20px', cursor: 'pointer', padding: '0 8px', display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>-</button>
+              <span style={{ fontWeight: 'bold', fontSize: '14px' }}>{cartItem.quantity}</span>
+              <button onClick={(e) => updateQuantity(e, 1)} style={{ background: 'none', border: 'none', color: '#fff', fontSize: '20px', cursor: 'pointer', padding: '0 8px', display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>+</button>
+            </div>
           ) : (
-            <button className="add-btn full-width" onClick={(e) => {
-              e.stopPropagation();
-            }}>
+            <button className="add-btn full-width" onClick={handleAddToCart}>
               <ShoppingCart size={16} style={{ marginRight: '6px' }} />
               ADD
             </button>

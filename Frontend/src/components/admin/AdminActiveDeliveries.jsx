@@ -2,53 +2,83 @@ import React, { useState } from 'react';
 import { Search, Filter, MapPin, Clock, User, Package, Navigation, Phone, MessageCircle } from 'lucide-react';
 import './AdminActiveDeliveries.css';
 
-const MOCK_ACTIVE_DELIVERIES = [
-  {
-    orderId: 'ORD-54321',
-    riderName: 'Ramesh Singh',
-    customerName: 'Aarti Sharma',
-    customerLocation: 'B-12, Sector 4, Rohini',
-    restaurantName: 'Fresh Mart Grocery',
-    status: 'On the way',
-    estimatedTime: '12 mins',
-    progress: 75
-  },
-  {
-    orderId: 'ORD-54322',
-    riderName: 'Suresh Kumar',
-    customerName: 'Vikas Gupta',
-    customerLocation: '45 Green Avenue, Andheri West',
-    restaurantName: 'ElectroWorld',
-    status: 'Picking up',
-    estimatedTime: '25 mins',
-    progress: 20
-  },
-  {
-    orderId: 'ORD-54323',
-    riderName: 'Vikram Mehta',
-    customerName: 'Priya Patel',
-    customerLocation: 'Sector 17, Fashion Street',
-    restaurantName: 'Fashion Hub',
-    status: 'Arrived at destination',
-    estimatedTime: '2 mins',
-    progress: 95
-  },
-  {
-    orderId: 'ORD-54324',
-    riderName: 'Abdul Rahman',
-    customerName: 'Neha Singh',
-    customerLocation: 'Shop 2, Tech Park',
-    restaurantName: 'Tech Hub Solutions',
-    status: 'On the way',
-    estimatedTime: '18 mins',
-    progress: 45
-  }
-];
-
 export default function AdminActiveDeliveries() {
-  const [deliveries, setDeliveries] = useState(MOCK_ACTIVE_DELIVERIES);
+  const [deliveries, setDeliveries] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('All');
+
+  React.useEffect(() => {
+    fetchActiveDeliveries();
+  }, []);
+
+  const fetchActiveDeliveries = async () => {
+    try {
+      setLoading(true);
+      const [delRes, sellersRes] = await Promise.all([
+        fetch('http://localhost:5000/api/delivery'),
+        fetch('http://localhost:5000/api/sellers')
+      ]);
+
+      const riders = await delRes.json();
+      const sellers = await sellersRes.json();
+
+      let allOrders = [];
+      await Promise.all(sellers.map(async (seller) => {
+        try {
+          const orderRes = await fetch(`http://localhost:5000/api/orders/seller/${seller._id}`);
+          const orderData = await orderRes.json();
+          if (orderData.orders) {
+            orderData.orders.forEach(o => o.sellerInfo = seller);
+            allOrders = [...allOrders, ...orderData.orders];
+          }
+        } catch (e) {}
+      }));
+
+      const uniqueOrdersMap = new Map();
+      allOrders.forEach(o => uniqueOrdersMap.set(o._id, o));
+      const uniqueOrders = Array.from(uniqueOrdersMap.values());
+
+      const activeOrderStatuses = ['Assigned', 'Picked Up', 'Out for Delivery'];
+      const active = uniqueOrders.filter(o => activeOrderStatuses.includes(o.status));
+
+      const dynamicDeliveries = active.map(order => {
+        const dBoyId = order.deliveryBoy?._id || order.deliveryBoy;
+        const rider = riders.find(r => r._id === dBoyId);
+        
+        let progress = 10;
+        let estimatedTime = '30 mins';
+        let uiStatus = 'Assigned';
+        
+        if (order.status === 'Picked Up') {
+          progress = 50;
+          estimatedTime = '15 mins';
+          uiStatus = 'Picking up';
+        } else if (order.status === 'Out for Delivery') {
+          progress = 80;
+          estimatedTime = '5 mins';
+          uiStatus = 'On the way';
+        }
+
+        return {
+          orderId: order.orderId,
+          riderName: rider ? (rider.fullName || rider.name) : 'Pending Assignment',
+          customerName: 'Customer', // Abstracted since user data isn't joined
+          customerLocation: `${order.shippingAddress?.address || ''}, ${order.shippingAddress?.city || ''}`,
+          restaurantName: order.sellerInfo ? (order.sellerInfo.businessName || order.sellerInfo.ownerName) : 'Unknown Store',
+          status: uiStatus,
+          estimatedTime,
+          progress
+        };
+      });
+
+      setDeliveries(dynamicDeliveries);
+    } catch(err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredDeliveries = deliveries.filter(d => {
     const matchesSearch = d.orderId.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -56,6 +86,10 @@ export default function AdminActiveDeliveries() {
     const matchesStatus = filterStatus === 'All' || d.status.includes(filterStatus);
     return matchesSearch && matchesStatus;
   });
+
+  if (loading) {
+    return <div className="admin-active-deliveries"><div style={{padding: '50px', textAlign: 'center'}}>Tracking live active deliveries...</div></div>;
+  }
 
   return (
     <div className="admin-active-deliveries">

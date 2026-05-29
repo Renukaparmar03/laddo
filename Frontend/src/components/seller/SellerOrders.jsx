@@ -1,85 +1,55 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Search, Filter, Eye, Check, X as CloseIcon, MapPin, Phone, Mail, Package, IndianRupee, CreditCard, User } from 'lucide-react';
 import './SellerOrders.css';
+import { useSocket } from '../../hooks/useSocket';
 
-const MOCK_ORDERS = [
-  {
-    id: 'ORD-8901',
-    customerName: 'Rahul Sharma',
-    customerEmail: 'rahul.s@example.com',
-    customerPhone: '+91 98765 43210',
-    address: '123, Palm Grove Apartments, Andheri West, Mumbai, 400053',
-    productImage: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=100&q=80',
-    productName: 'Wireless Noise Cancelling Headphones',
-    quantity: 1,
-    totalPrice: 4999,
-    paymentMethod: 'Credit Card',
-    status: 'Pending',
-    date: 'Oct 24, 2023 14:30'
-  },
-  {
-    id: 'ORD-8902',
-    customerName: 'Priya Patel',
-    customerEmail: 'priya.p@example.com',
-    customerPhone: '+91 87654 32109',
-    address: '45, Sunrise Villa, Koramangala, Bengaluru, 560034',
-    productImage: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=100&q=80',
-    productName: 'Smart Watch Series 5',
-    quantity: 2,
-    totalPrice: 2998,
-    paymentMethod: 'UPI',
-    status: 'Processing',
-    date: 'Oct 23, 2023 09:15'
-  },
-  {
-    id: 'ORD-8903',
-    customerName: 'Amit Kumar',
-    customerEmail: 'amit.k@example.com',
-    customerPhone: '+91 76543 21098',
-    address: 'B-702, Galaxy Towers, Cyber City, Gurugram, 122002',
-    productImage: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=100&q=80',
-    productName: 'Men\'s Running Shoes',
-    quantity: 1,
-    totalPrice: 2499,
-    paymentMethod: 'Cash on Delivery',
-    status: 'Delivered',
-    date: 'Oct 20, 2023 18:45'
-  },
-  {
-    id: 'ORD-8904',
-    customerName: 'Neha Gupta',
-    customerEmail: 'neha.g@example.com',
-    customerPhone: '+91 65432 10987',
-    address: 'Villa 12, Rose Garden, Banjara Hills, Hyderabad, 500034',
-    productImage: 'https://images.unsplash.com/photo-1596755094514-f87e32f85e23?w=100&q=80',
-    productName: 'Casual Cotton Shirt',
-    quantity: 3,
-    totalPrice: 3897,
-    paymentMethod: 'Net Banking',
-    status: 'Cancelled',
-    date: 'Oct 19, 2023 11:20'
-  },
-  {
-    id: 'ORD-8905',
-    customerName: 'Vikram Singh',
-    customerEmail: 'vikram.s@example.com',
-    customerPhone: '+91 54321 09876',
-    address: 'Flat 405, Green Valley, Vasant Kunj, New Delhi, 110070',
-    productImage: 'https://images.unsplash.com/photo-1587049352851-8d4e8913475f?w=100&q=80',
-    productName: 'Organic Honey 500g',
-    quantity: 5,
-    totalPrice: 2250,
-    paymentMethod: 'Wallet',
-    status: 'Pending',
-    date: 'Oct 24, 2023 16:05'
-  }
-];
+const MOCK_ORDERS = [];
 
 export default function SellerOrders() {
-  const [orders, setOrders] = useState(MOCK_ORDERS);
+  const [orders, setOrders] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   const [selectedOrder, setSelectedOrder] = useState(null);
+  React.useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        const sellerInfoStr = localStorage.getItem('seller_info');
+        if (sellerInfoStr) {
+          const sellerInfo = JSON.parse(sellerInfoStr);
+          const sellerId = sellerInfo._id || sellerInfo.id;
+          if (sellerId) {
+            const res = await fetch(`http://localhost:5000/api/orders/seller/${sellerId}`);
+            if (res.ok) {
+              const data = await res.json();
+              const mappedOrders = data.orders.map(order => {
+                const item = order.orderItems[0] || {};
+                return {
+                  id: order._id.substring(0,8).toUpperCase(),
+                  realId: order._id,
+                  customerName: order.user && order.user.name ? order.user.name : 'Customer', // Populated user data
+                  customerEmail: order.user && order.user.email ? order.user.email : 'N/A',
+                  customerPhone: 'N/A',
+                  address: `${order.shippingAddress?.address || ''}, ${order.shippingAddress?.city || ''}`,
+                  productImage: item.image || '',
+                  productName: item.title || 'Multiple Items',
+                  quantity: item.qty || 1,
+                  totalPrice: order.totalPrice,
+                  paymentMethod: order.paymentMethod,
+                  status: order.status,
+                  date: new Date(order.createdAt).toLocaleString()
+                };
+              });
+              setOrders(mappedOrders);
+              // We don't pop up the modal here anymore, global alert will handle it.
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch orders:', err);
+      }
+    };
+    fetchOrders();
+  }, []);
 
   const filteredOrders = orders.filter(order => {
     const matchesSearch = 
@@ -93,19 +63,41 @@ export default function SellerOrders() {
   const getStatusClass = (status) => {
     switch(status) {
       case 'Pending': return 'status-pending';
-      case 'Processing': return 'status-processing';
+      case 'Accepted / Preparing': return 'status-processing';
       case 'Delivered': return 'status-delivered';
+      case 'Rejected': return 'status-cancelled';
       case 'Cancelled': return 'status-cancelled';
       default: return '';
     }
   };
 
-  const handleAction = (orderId, newStatus) => {
-    setOrders(prev => prev.map(order => 
-      order.id === orderId ? { ...order, status: newStatus } : order
-    ));
-    if (selectedOrder && selectedOrder.id === orderId) {
-      setSelectedOrder(prev => ({ ...prev, status: newStatus }));
+  const handleAction = async (orderId, newStatus, autoRejectReason = '') => {
+    const targetOrder = orders.find(o => o.id === orderId);
+    if (!targetOrder) return;
+    
+    let rejectionReason = autoRejectReason;
+    if (newStatus === 'Rejected' && !autoRejectReason) {
+      rejectionReason = window.prompt("Please enter a reason for rejection (e.g. Out of stock, Shop closed):");
+      if (rejectionReason === null) return;
+    }
+    
+    try {
+      const res = await fetch(`http://localhost:5000/api/orders/${targetOrder.realId}/status`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus, rejectionReason })
+      });
+      
+      if (res.ok) {
+        setOrders(prev => prev.map(order => 
+          order.id === orderId ? { ...order, status: newStatus } : order
+        ));
+        if (selectedOrder && selectedOrder.id === orderId) {
+          setSelectedOrder(prev => ({ ...prev, status: newStatus }));
+        }
+      }
+    } catch (err) {
+      console.error('Failed to update status', err);
     }
   };
 
@@ -135,9 +127,9 @@ export default function SellerOrders() {
             >
               <option value="All">All Statuses</option>
               <option value="Pending">Pending</option>
-              <option value="Processing">Processing</option>
+              <option value="Accepted / Preparing">Accepted / Preparing</option>
               <option value="Delivered">Delivered</option>
-              <option value="Cancelled">Cancelled</option>
+              <option value="Rejected">Rejected</option>
             </select>
           </div>
         </div>
@@ -208,14 +200,14 @@ export default function SellerOrders() {
                             <button 
                               className="seller-action-btn accept-btn" 
                               title="Accept Order"
-                              onClick={() => handleAction(order.id, 'Processing')}
+                              onClick={() => handleAction(order.id, 'Accepted / Preparing')}
                             >
                               <Check size={18} />
                             </button>
                             <button 
                               className="seller-action-btn reject-btn" 
                               title="Reject Order"
-                              onClick={() => handleAction(order.id, 'Cancelled')}
+                              onClick={() => handleAction(order.id, 'Rejected')}
                             >
                               <CloseIcon size={18} />
                             </button>
@@ -262,10 +254,10 @@ export default function SellerOrders() {
                   </button>
                   {order.status === 'Pending' && (
                     <div className="action-group">
-                      <button className="btn-success" onClick={() => handleAction(order.id, 'Processing')}>
+                      <button className="btn-success" onClick={() => handleAction(order.id, 'Accepted / Preparing')}>
                         <Check size={16} /> Accept
                       </button>
-                      <button className="btn-danger" onClick={() => handleAction(order.id, 'Cancelled')}>
+                      <button className="btn-danger" onClick={() => handleAction(order.id, 'Rejected')}>
                         <CloseIcon size={16} />
                       </button>
                     </div>
@@ -361,14 +353,14 @@ export default function SellerOrders() {
             <div className="modal-footer">
               {selectedOrder.status === 'Pending' ? (
                 <>
-                  <button className="btn-danger" onClick={() => handleAction(selectedOrder.id, 'Cancelled')}>
+                  <button className="btn-danger" onClick={() => handleAction(selectedOrder.id, 'Rejected')}>
                     Reject Order
                   </button>
-                  <button className="btn-success" onClick={() => handleAction(selectedOrder.id, 'Processing')}>
+                  <button className="btn-success" onClick={() => handleAction(selectedOrder.id, 'Accepted / Preparing')}>
                     Accept Order
                   </button>
                 </>
-              ) : selectedOrder.status === 'Processing' ? (
+              ) : selectedOrder.status === 'Accepted / Preparing' ? (
                 <button className="btn-primary" onClick={() => handleAction(selectedOrder.id, 'Delivered')}>
                   Mark as Delivered
                 </button>

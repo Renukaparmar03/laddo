@@ -67,18 +67,65 @@ const RECENT_ACTIVITY = [
 ];
 
 export default function AdminDeliveryRequests() {
-  const [requests, setRequests] = useState(MOCK_REQUESTS);
+  const [requests, setRequests] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('All');
   const [filterVehicle, setFilterVehicle] = useState('All');
   const [selectedRequest, setSelectedRequest] = useState(null);
 
-  const handleAction = (id, newStatus) => {
-    setRequests(requests.map(req => 
-      req.id === id ? { ...req, overallStatus: newStatus } : req
-    ));
-    if (selectedRequest && selectedRequest.id === id) {
-      setSelectedRequest(null);
+  React.useEffect(() => {
+    fetchRequests();
+  }, []);
+
+  const fetchRequests = async () => {
+    try {
+      const res = await fetch('http://localhost:5000/api/delivery');
+      const data = await res.json();
+      
+      const formatted = data.map(req => ({
+        id: req._id,
+        name: req.name,
+        phone: req.phone,
+        email: 'N/A',
+        vehicleType: req.vehicle,
+        image: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=100&h=100&fit=crop',
+        licenseStatus: req.licenseNo ? 'Uploaded' : 'N/A',
+        idStatus: 'Uploaded',
+        requestDate: new Date(req.createdAt).toLocaleDateString(),
+        overallStatus: req.status === 'pending' ? 'Pending' : (req.status === 'approved' ? 'Verified' : 'Rejected'),
+        docs: {
+          aadhaar: req.aadharNo,
+          license: req.licenseNo,
+          rc: null,
+          selfie: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=400&h=400&fit=crop'
+        }
+      }));
+      setRequests(formatted);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleAction = async (id, newStatus) => {
+    const backendStatus = newStatus === 'Verified' ? 'approved' : 'rejected';
+    try {
+      const res = await fetch(`http://localhost:5000/api/delivery/${id}/status`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: backendStatus })
+      });
+      if (res.ok) {
+        setRequests(requests.map(req => 
+          req.id === id ? { ...req, overallStatus: newStatus } : req
+        ));
+        if (selectedRequest && selectedRequest.id === id) {
+          setSelectedRequest(null);
+        }
+      } else {
+        alert('Failed to update status');
+      }
+    } catch (error) {
+      console.error('Error updating status:', error);
     }
   };
 

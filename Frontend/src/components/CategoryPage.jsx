@@ -1,26 +1,46 @@
 import React, { useState, useEffect } from 'react';
-import { SUBCATEGORIES, PRODUCTS } from '../data';
+import { SUBCATEGORIES } from '../data';
 import ProductCard from './ProductCard';
 import { ArrowLeft } from 'lucide-react';
 
-const CategoryPage = ({ activeCategory, setActiveCategory, onProductSelect }) => {
+const CategoryPage = ({ activeCategory, setActiveCategory, onProductSelect, cart, setCart, navigate }) => {
   const subCats = SUBCATEGORIES[activeCategory] || [];
   const [activeSubCategory, setActiveSubCategory] = useState('');
 
   // Update active subcategory whenever activeCategory changes
   useEffect(() => {
-    const newSubCats = SUBCATEGORIES[activeCategory] || [];
-    if (newSubCats.length > 0) {
-      setActiveSubCategory(newSubCats[0].name);
-    } else {
-      setActiveSubCategory('');
-    }
+    // Default to 'All' so that products without a specific subcategory are visible
+    setActiveSubCategory('All');
   }, [activeCategory]);
 
-  const filteredProducts = PRODUCTS.filter(
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const res = await fetch('http://localhost:5000/api/products?approved=true');
+        const data = await res.json();
+        const formattedData = data.map(item => ({
+          ...item,
+          id: item._id,
+          title: item.title,
+        }));
+        setProducts(formattedData);
+      } catch (error) {
+        console.error('Error fetching products:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
+  const filteredProducts = products.filter(
     (product) =>
       product.category === activeCategory &&
-      (!activeSubCategory || product.subCategory === activeSubCategory)
+      (activeSubCategory === 'All' || activeSubCategory === '' || product.subCategory === activeSubCategory)
   );
 
   return (
@@ -43,6 +63,17 @@ const CategoryPage = ({ activeCategory, setActiveCategory, onProductSelect }) =>
       <div className="category-page-content">
         {/* Left Subcategory Sidebar */}
         <aside className="subcategory-sidebar hide-scrollbar">
+          {/* Always show an "All" tab at the top so uncategorized products are visible */}
+          <button
+            className={`subcategory-sidebar-item ${activeSubCategory === 'All' ? 'active' : ''}`}
+            onClick={() => setActiveSubCategory('All')}
+          >
+            <div className="subcat-img-wrapper" style={{ background: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <span style={{ fontSize: '20px' }}>📦</span>
+            </div>
+            <span className="subcat-name">All Items</span>
+          </button>
+          
           {subCats.map((sub) => (
             <button
               key={sub.id}
@@ -74,7 +105,7 @@ const CategoryPage = ({ activeCategory, setActiveCategory, onProductSelect }) =>
           {filteredProducts.length > 0 ? (
             <div className="category-product-grid">
               {filteredProducts.map((product) => (
-                <ProductCard key={product.id} product={product} onCardClick={onProductSelect} />
+                <ProductCard key={product.id} product={product} onCardClick={onProductSelect} cart={cart} setCart={setCart} navigate={navigate} />
               ))}
             </div>
           ) : (

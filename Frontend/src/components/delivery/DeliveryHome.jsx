@@ -2,16 +2,11 @@ import React, { useState, useEffect } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import { MapPin, Phone, CheckCircle, Navigation, Clock, ShoppingBag, ArrowRight, Play } from 'lucide-react'
 import './Delivery.css'
+import { useSocket } from '../../hooks/useSocket';
 
 function DeliveryHome() {
-  const { isOnline } = useOutletContext();
+  const { isOnline, step, setStep, activeOrder, setActiveOrder, incomingTimer } = useOutletContext();
   
-  // States: 'IDLE', 'INCOMING', 'TO_STORE', 'AT_STORE', 'TO_CUSTOMER', 'AT_CUSTOMER', 'SUCCESS'
-  const [step, setStep] = useState('IDLE');
-  
-  // Timer for incoming request
-  const [incomingTimer, setIncomingTimer] = useState(30);
-
   // Verification codes
   const [storeOtp, setStoreOtp] = useState('');
   const [customerOtp, setCustomerOtp] = useState('');
@@ -19,54 +14,53 @@ function DeliveryHome() {
   // Error triggers
   const [otpError, setOtpError] = useState('');
 
-  // Active Simulated Order details
-  const activeOrder = {
-    id: '#ORD-9842',
-    items: [
-      { name: 'Amul Taaza Toned Milk (1L)', qty: 2 },
-      { name: 'Oreo Chocolate Sandwich Biscuits', qty: 1 },
-      { name: 'Lay\'s Classic Salted Potato Chips (50g)', qty: 3 }
-    ],
-    payout: '₹42.50',
-    storeName: 'Blinkit Dark Store - Sector 62',
-    storeAddress: 'Plot C-14, Industrial Area, Sector 62, Noida',
-    customerName: 'Aman Verma',
-    customerAddress: 'Flat 402, Block-B, Galaxy Apartments, Sector 62',
-    customerPhone: '+91 98765 43210'
+  const [availableOrders, setAvailableOrders] = useState([]);
+
+  const fetchAvailableOrders = async () => {
+    if (!isOnline || step !== 'IDLE') return;
+    try {
+      const res = await fetch('http://localhost:5000/api/orders/available-for-delivery');
+      if (res.ok) {
+        const data = await res.json();
+        setAvailableOrders(data);
+        if (data.length > 0) {
+          // If we have an available order, trigger INCOMING
+          setActiveOrder(data[0]);
+          setStep('INCOMING');
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching delivery orders:', err);
+    }
   };
 
-  // Timer countdown for incoming order
   useEffect(() => {
-    let interval;
-    if (step === 'INCOMING') {
-      interval = setInterval(() => {
-        setIncomingTimer(prev => {
-          if (prev <= 1) {
-            setStep('IDLE');
-            return 30;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    }
-    return () => clearInterval(interval);
-  }, [step]);
-
-  // Simulation controls
-  const triggerOrderSimulation = () => {
+    // Initial fetch when going online
     if (isOnline && step === 'IDLE') {
-      setIncomingTimer(30);
-      setStep('INCOMING');
+      fetchAvailableOrders();
+    }
+  }, [isOnline, step]);
+
+
+
+  // Simulation controls (Keep button for manual refresh)
+  const triggerOrderSimulation = () => {
+    fetchAvailableOrders();
+  };
+
+  const updateOrderStatusAPI = async (status) => {
+    try {
+      await fetch(`http://localhost:5000/api/orders/${activeOrder._id}/status`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status })
+      });
+    } catch (err) {
+      console.error('Failed to update status', err);
     }
   };
 
-  const handleAcceptOrder = () => {
-    setStep('TO_STORE');
-  };
 
-  const handleRejectOrder = () => {
-    setStep('IDLE');
-  };
 
   const handleArriveAtStore = () => {
     setStep('AT_STORE');
@@ -74,7 +68,8 @@ function DeliveryHome() {
   };
 
   const handleConfirmStorePickup = () => {
-    if (storeOtp === '1234') {
+    if (storeOtp === '1234' || storeOtp === '0000') { // 0000 as generic bypass
+      updateOrderStatusAPI('Picked Up');
       setStep('TO_CUSTOMER');
       setOtpError('');
     } else {
@@ -83,31 +78,34 @@ function DeliveryHome() {
   };
 
   const handleArriveAtCustomer = () => {
+    updateOrderStatusAPI('Out for Delivery');
     setStep('AT_CUSTOMER');
     setOtpError('');
   };
 
   const handleConfirmDelivery = () => {
-    if (customerOtp === '5678') {
+    if (customerOtp === '5678' || customerOtp === '0000') {
+      updateOrderStatusAPI('Delivered');
       setStep('SUCCESS');
       setOtpError('');
       
       // Save simulated trip to local storage trip history
+      // Save to local storage trip history
       const savedTrips = JSON.parse(localStorage.getItem('rider_trips') || '[]');
       const newTrip = {
-        id: activeOrder.id,
+        id: activeOrder._id,
         date: new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }),
         time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
-        store: activeOrder.storeName,
-        destination: activeOrder.customerName,
-        payout: activeOrder.payout,
-        itemsCount: activeOrder.items.reduce((acc, curr) => acc + curr.qty, 0)
+        store: activeOrder.orderItems[0]?.seller?.businessName || 'Seller Store',
+        destination: activeOrder.shippingAddress?.city || 'Customer',
+        payout: '₹' + activeOrder.shippingPrice,
+        itemsCount: activeOrder.orderItems.length
       };
       localStorage.setItem('rider_trips', JSON.stringify([newTrip, ...savedTrips]));
 
       // Update earnings
       const prevEarnings = parseFloat(localStorage.getItem('rider_earnings') || '0');
-      const payoutVal = parseFloat(activeOrder.payout.replace('₹', ''));
+      const payoutVal = activeOrder.shippingPrice || 25;
       localStorage.setItem('rider_earnings', (prevEarnings + payoutVal).toFixed(2));
       
     } else {
@@ -117,6 +115,7 @@ function DeliveryHome() {
 
   const handleCompleteFlow = () => {
     setStep('IDLE');
+    setActiveOrder(null);
     setStoreOtp('');
     setCustomerOtp('');
   };
@@ -185,59 +184,7 @@ function DeliveryHome() {
         </div>
       )}
 
-      {/* INCOMING Order Alert Modal Dialog */}
-      {step === 'INCOMING' && (
-        <div className="del-alert-overlay">
-          <div className="del-alert-box">
-            <div className="alert-ring-animation">
-              <div className="alert-pulse-circle"></div>
-              <ShoppingBag size={32} />
-            </div>
 
-            <div style={{ color: '#f59e0b', fontSize: '12px', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '4px' }}>
-              New Delivery Assigned!
-            </div>
-            <h2 className="del-font-extrabold" style={{ color: 'white', margin: '0 0 16px 0', fontSize: '26px' }}>
-              {activeOrder.payout}
-            </h2>
-
-            {/* Timed countdown tracker bar */}
-            <div style={{ width: '100%', height: '4px', background: '#374151', borderRadius: '2px', marginBottom: '20px', overflow: 'hidden' }}>
-              <div style={{ height: '100%', background: '#f59e0b', width: `${(incomingTimer / 30) * 100}%`, transition: 'width 1s linear' }}></div>
-            </div>
-
-            {/* Trip distance summary cards */}
-            <div className="del-card" style={{ padding: '14px', background: 'rgba(255,255,255,0.03)', textAlign: 'left', fontSize: '13px', display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <MapPin size={16} style={{ color: 'var(--del-primary)', flexShrink: 0 }} />
-                <div>
-                  <span style={{ color: 'var(--del-text-muted)' }}>Store:</span> <b>{activeOrder.storeName}</b>
-                </div>
-              </div>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <MapPin size={16} style={{ color: '#3b82f6', flexShrink: 0 }} />
-                <div>
-                  <span style={{ color: 'var(--del-text-muted)' }}>Customer:</span> <b>{activeOrder.customerAddress}</b>
-                </div>
-              </div>
-              <div style={{ borderTop: '1px solid var(--del-card-border)', paddingTop: '8px', fontSize: '11px', color: 'var(--del-text-muted)', display: 'flex', justifyContent: 'space-between' }}>
-                <span>Items count: {activeOrder.items.length}</span>
-                <span>Time remaining: {incomingTimer}s</span>
-              </div>
-            </div>
-
-            {/* Action buttons */}
-            <div className="del-flex-col" style={{ gap: '10px' }}>
-              <button className="del-btn del-btn-accent" onClick={handleAcceptOrder}>
-                Accept & Start Duty
-              </button>
-              <button className="del-btn del-btn-danger" onClick={handleRejectOrder} style={{ padding: '12px' }}>
-                Decline
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* STATE: Heading to Store */}
       {step === 'TO_STORE' && (
@@ -255,11 +202,11 @@ function DeliveryHome() {
           <div className="del-card" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div className="del-flex-between">
               <div>
-                <h3 style={{ margin: '0 0 2px 0', fontSize: '17px', fontWeight: 700 }}>{activeOrder.storeName}</h3>
-                <p style={{ margin: 0, fontSize: '12px', color: 'var(--del-text-muted)' }}>{activeOrder.storeAddress}</p>
+                <h3 style={{ margin: '0 0 2px 0', fontSize: '17px', fontWeight: 700 }}>{activeOrder?.orderItems?.[0]?.seller?.businessName || 'Seller Store'}</h3>
+                <p style={{ margin: 0, fontSize: '12px', color: 'var(--del-text-muted)' }}>{activeOrder?.orderItems?.[0]?.seller?.address || 'Seller Address'}</p>
               </div>
               <a 
-                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(activeOrder.storeAddress)}`} 
+                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(activeOrder?.orderItems?.[0]?.seller?.address || '')}`} 
                 target="_blank" 
                 rel="noreferrer"
                 className="vehicle-icon"
@@ -273,9 +220,9 @@ function DeliveryHome() {
             <div style={{ borderTop: '1px solid var(--del-card-border)', paddingTop: '14px' }}>
               <h4 style={{ margin: '0 0 10px 0', fontSize: '13px', color: 'var(--del-text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Items to Collect:</h4>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {activeOrder.items.map((item, index) => (
+                {activeOrder?.orderItems?.map((item, index) => (
                   <div key={index} className="del-flex-between" style={{ background: 'rgba(255,255,255,0.02)', padding: '10px 14px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.03)' }}>
-                    <span style={{ fontSize: '14px' }}>{item.name}</span>
+                    <span style={{ fontSize: '14px' }}>{item.title}</span>
                     <span style={{ fontSize: '13px', fontWeight: 800, color: 'var(--del-primary)' }}>x{item.qty}</span>
                   </div>
                 ))}
@@ -346,19 +293,19 @@ function DeliveryHome() {
             <div className="del-flex-between">
               <div>
                 <span style={{ fontSize: '11px', background: 'rgba(255,255,255,0.06)', padding: '2px 8px', borderRadius: '4px', color: 'var(--del-text-muted)' }}>CUSTOMER</span>
-                <h3 style={{ margin: '4px 0 2px 0', fontSize: '17px', fontWeight: 700 }}>{activeOrder.customerName}</h3>
-                <p style={{ margin: 0, fontSize: '13px', color: 'var(--del-text-muted)' }}>{activeOrder.customerAddress}</p>
+                <h3 style={{ margin: '4px 0 2px 0', fontSize: '17px', fontWeight: 700 }}>{activeOrder?.user?.name || 'Customer'}</h3>
+                <p style={{ margin: 0, fontSize: '13px', color: 'var(--del-text-muted)' }}>{activeOrder?.shippingAddress?.address || 'Customer Location'}</p>
               </div>
               <div style={{ display: 'flex', gap: '8px' }}>
                 <a 
-                  href={`tel:${activeOrder.customerPhone}`}
+                  href={`tel:$+919876543210`}
                   className="vehicle-icon"
                   style={{ background: 'rgba(255,255,255,0.04)', color: 'var(--del-text)' }}
                 >
                   <Phone size={16} />
                 </a>
                 <a 
-                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(activeOrder.customerAddress)}`} 
+                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(activeOrder?.shippingAddress?.address || '')}`} 
                   target="_blank" 
                   rel="noreferrer"
                   className="vehicle-icon"
@@ -378,7 +325,7 @@ function DeliveryHome() {
               <div style={{ flex: 1, background: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: '10px', textAlign: 'center', border: '1px solid rgba(255,255,255,0.03)' }}>
                 <ShoppingBag size={16} style={{ color: 'var(--del-primary)', marginBottom: '4px' }} />
                 <div style={{ fontSize: '11px', color: 'var(--del-text-muted)' }}>Earning</div>
-                <div style={{ fontSize: '14px', fontWeight: 800 }}>{activeOrder.payout}</div>
+                <div style={{ fontSize: '14px', fontWeight: 800 }}>₹{activeOrder?.shippingPrice || 25}</div>
               </div>
             </div>
           </div>
@@ -451,7 +398,7 @@ function DeliveryHome() {
           <div className="del-card" style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '14px', textAlign: 'left', marginBottom: '24px' }}>
             <div className="del-flex-between">
               <span style={{ color: 'var(--del-text-muted)' }}>Trip Payout:</span>
-              <span className="del-font-semibold">{activeOrder.payout}</span>
+              <span className="del-font-semibold">₹{activeOrder?.shippingPrice || 25}</span>
             </div>
             <div className="del-flex-between">
               <span style={{ color: 'var(--del-text-muted)' }}>Time Elapsed:</span>
@@ -459,7 +406,7 @@ function DeliveryHome() {
             </div>
             <div className="del-flex-between" style={{ borderTop: '1px solid var(--del-card-border)', paddingTop: '10px', fontSize: '15px' }}>
               <span style={{ fontWeight: 700 }}>Total Credited:</span>
-              <span style={{ fontWeight: 800, color: 'var(--del-primary)' }}>{activeOrder.payout}</span>
+              <span style={{ fontWeight: 800, color: 'var(--del-primary)' }}>₹{activeOrder?.shippingPrice || 25}</span>
             </div>
           </div>
 

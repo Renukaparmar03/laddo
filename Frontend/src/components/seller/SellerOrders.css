@@ -656,6 +656,56 @@
   background-color: #f8fafc;
 }
 
+/* Incoming Order Alert Styles */
+.incoming-order-alert {
+  z-index: 2000;
+  background-color: rgba(0, 0, 0, 0.75);
+}
+
+.alert-bounce {
+  animation: bounceIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  border: 4px solid #f59e0b;
+}
+
+.bg-warning {
+  background-color: #fef3c7;
+  border-bottom: 2px solid #f59e0b;
+}
+
+.timer-badge {
+  background-color: #ef4444;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: 700;
+  font-size: 1.2rem;
+  letter-spacing: 2px;
+  animation: pulse 1s infinite;
+}
+
+.alert-details {
+  font-size: 1.1rem;
+  line-height: 1.6;
+}
+
+.alert-details p {
+  margin: 8px 0;
+  color: #1e293b;
+}
+
+@keyframes bounceIn {
+  0% { transform: scale(0.3); opacity: 0; }
+  50% { transform: scale(1.05); opacity: 1; }
+  70% { transform: scale(0.9); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
 @media (max-width: 768px) {
   .orders-header {
     flex-direction: column;

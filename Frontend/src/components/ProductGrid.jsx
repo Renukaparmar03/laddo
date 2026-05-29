@@ -1,21 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import ProductCard from './ProductCard';
 
-const ProductGrid = ({ activeCategory, onProductSelect }) => {
+const ProductGrid = ({ activeCategory, onProductSelect, cart, setCart, navigate }) => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const res = await fetch('http://localhost:5000/api/products');
+        const res = await fetch('http://localhost:5000/api/products?approved=true');
         const data = await res.json();
         
         // Map backend product model to frontend expected format
         const formattedData = data.map(item => ({
           ...item,
           id: item._id, // map _id to id for existing components
-          title: item.name, // map name to title
+          title: item.title, // map title
         }));
         
         setProducts(formattedData);
@@ -45,7 +45,7 @@ const ProductGrid = ({ activeCategory, onProductSelect }) => {
       {filteredProducts.length > 0 ? (
         <div className="product-grid">
           {filteredProducts.map(product => (
-            <ProductCard key={product.id} product={product} onCardClick={onProductSelect} />
+            <ProductCard key={product.id} product={product} onCardClick={onProductSelect} cart={cart} setCart={setCart} navigate={navigate} />
           ))}
         </div>
       ) : (
