@@ -44,6 +44,9 @@ io.on('connection', (socket) => {
   socket.on('joinDeliveryRoom', () => {
     socket.join('delivery_boys');
     console.log(`Socket ${socket.id} joined room delivery_boys`);
+    
+    // Log current rooms
+    console.log(`Socket ${socket.id} is now in rooms:`, Array.from(socket.rooms));
   });
 
   socket.on('disconnect', () => {

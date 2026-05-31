@@ -62,34 +62,51 @@ function DeliveryLayout() {
   const deliveryInfo = JSON.parse(localStorage.getItem('delivery_info') || '{}');
   const deliveryBoyId = deliveryInfo._id || deliveryInfo.id;
   
+  console.log('[DeliveryLayout] Delivery info:', { deliveryBoyId, hasRole: true });
+  
   const socket = useSocket('delivery', deliveryBoyId);
 
   // Bulletproof socket listener that never detaches unnecessarily
   useEffect(() => {
-    if (!socket) return;
+    if (!socket) {
+      console.log('[DeliveryLayout] Socket not ready yet');
+      return;
+    }
+
+    console.log('[DeliveryLayout] Socket is available, setting up listeners');
 
     const handleNewDeliveryRequest = (order) => {
+      console.log('[DeliveryLayout] Received newDeliveryRequest event:', order);
       const currentlyOnline = localStorage.getItem('rider_online') === 'true';
-      if (!currentlyOnline) return;
+      console.log('[DeliveryLayout] Currently online:', currentlyOnline);
+      
+      if (!currentlyOnline) {
+        console.log('[DeliveryLayout] Delivery boy is offline, ignoring request');
+        return;
+      }
 
       setStep(prevStep => {
         // Only accept new requests if we are idle or already viewing an incoming request
         if (prevStep === 'IDLE' || prevStep === 'INCOMING') {
+          console.log('[DeliveryLayout] Accepting new delivery request, playing notification');
           playNotificationSound(order);
           setActiveOrder(order);
           setIncomingTimer(60);
           return 'INCOMING';
         }
+        console.log('[DeliveryLayout] Step is not IDLE or INCOMING:', prevStep);
         return prevStep;
       });
     };
 
     const handleDeliveryAssigned = (orderId) => {
+      console.log('[DeliveryLayout] Received deliveryAssigned event:', orderId);
       setStep(prevStep => {
         if (prevStep === 'INCOMING') {
           setActiveOrder(prevOrder => {
             if (prevOrder && prevOrder._id === orderId) {
               // Order was assigned to someone else
+              console.log('[DeliveryLayout] Active order was assigned to someone else');
               return null;
             }
             return prevOrder;
@@ -100,10 +117,12 @@ function DeliveryLayout() {
       });
     };
 
+    console.log('[DeliveryLayout] Attaching socket event listeners');
     socket.on('newDeliveryRequest', handleNewDeliveryRequest);
     socket.on('deliveryAssigned', handleDeliveryAssigned);
 
     return () => {
+      console.log('[DeliveryLayout] Cleaning up socket event listeners');
       socket.off('newDeliveryRequest', handleNewDeliveryRequest);
       socket.off('deliveryAssigned', handleDeliveryAssigned);
     };

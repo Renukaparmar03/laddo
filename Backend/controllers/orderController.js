@@ -66,6 +66,7 @@ export const addOrderItems = async (req, res) => {
       // Emit real-time notification to the seller
       const io = req.app.get('io');
       if (io) {
+        console.log(`Emitting newOrder to seller_${sellerId}`);
         io.to(`seller_${sellerId}`).emit('newOrder', createdOrder);
       }
     }
@@ -146,6 +147,7 @@ export const updateOrderStatus = async (req, res) => {
       const io = req.app.get('io');
       if (io) {
         // Notify user of status update
+        console.log(`Emitting orderUpdated to user_${updatedOrder.user}`);
         io.to(`user_${updatedOrder.user}`).emit('orderUpdated', updatedOrder);
         
         // If order is accepted, notify delivery boys
@@ -153,6 +155,7 @@ export const updateOrderStatus = async (req, res) => {
           // Send populated order so delivery boy has seller address
           const populatedOrder = await Order.findById(updatedOrder._id)
             .populate('orderItems.seller', 'businessName address phone');
+          console.log(`Emitting newDeliveryRequest to delivery_boys room`);
           io.to('delivery_boys').emit('newDeliveryRequest', populatedOrder);
         }
       }
@@ -214,9 +217,11 @@ export const assignDeliveryBoy = async (req, res) => {
       const io = req.app.get('io');
       if (io) {
         // Notify all delivery boys that this order is no longer available
+        console.log(`Emitting deliveryAssigned for order ${order._id} to delivery_boys room`);
         io.to('delivery_boys').emit('deliveryAssigned', order._id);
         
         // Notify the user
+        console.log(`Emitting orderUpdated to user_${order.user}`);
         io.to(`user_${order.user}`).emit('orderUpdated', order);
       }
       res.json(order);
