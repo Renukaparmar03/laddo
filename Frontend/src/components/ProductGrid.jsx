@@ -11,12 +11,30 @@ const ProductGrid = ({ activeCategory, onProductSelect, cart, setCart, navigate 
         const res = await fetch('http://localhost:5000/api/products?approved=true');
         const data = await res.json();
         
-        // Map backend product model to frontend expected format
-        const formattedData = data.map(item => ({
-          ...item,
-          id: item._id, // map _id to id for existing components
-          title: item.title, // map title
-        }));
+        // Filter out products whose image points to a localhost port
+        // (e.g. localhost:7071) that isn't our own backend (port 5000).
+        // These are seller-uploaded products with broken local paths.
+        const isValidImage = (url) => {
+          if (!url) return false;
+          try {
+            const parsed = new URL(url);
+            // Allow: external URLs (https://...) OR our own backend
+            if (parsed.hostname === 'localhost' && parsed.port !== '5000') return false;
+            return true;
+          } catch {
+            // Relative URL or unparseable — allow it
+            return true;
+          }
+        };
+
+        const formattedData = data
+          .filter(item => isValidImage(item.image || item.images?.[0]))
+          .map(item => ({
+            ...item,
+            id: item._id,
+            title: item.title,
+            image: item.image || item.images?.[0],
+          }));
         
         setProducts(formattedData);
       } catch (error) {

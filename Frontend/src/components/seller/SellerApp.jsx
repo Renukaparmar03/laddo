@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, 
@@ -212,13 +212,31 @@ export default function SellerApp() {
   const [timer, setTimer] = useState(180);
   const [audioError, setAudioError] = useState(false);
   const [pendingOrdersCount, setPendingOrdersCount] = useState(0);
-  
+
+  // Keep a ref to the currently playing audio so we can stop it on demand
+  const notificationAudioRef = useRef(null);
+
   const playNotificationSound = () => {
+    // Stop any previously playing sound before starting a new one
+    if (notificationAudioRef.current) {
+      notificationAudioRef.current.pause();
+      notificationAudioRef.current.currentTime = 0;
+    }
     const audio = new Audio('/assets/notification.mpeg');
+    notificationAudioRef.current = audio;
     audio.play().catch(e => {
       console.warn('Audio play blocked or failed:', e);
       setAudioError(true);
     });
+  };
+
+  // Immediately silences the notification sound
+  const stopNotificationSound = () => {
+    if (notificationAudioRef.current) {
+      notificationAudioRef.current.pause();
+      notificationAudioRef.current.currentTime = 0;
+      notificationAudioRef.current = null;
+    }
   };
   
   const navigate = useNavigate();
@@ -321,24 +339,31 @@ export default function SellerApp() {
   }, [sellerId]);
 
   const handleAction = async (orderId, newStatus, autoRejectReason = '') => {
+    // Stop the notification sound immediately when user takes any action
+    stopNotificationSound();
+
     let rejectionReason = autoRejectReason;
     if (newStatus === 'Rejected' && !autoRejectReason) {
       rejectionReason = window.prompt("Please enter a reason for rejection (e.g. Out of stock, Shop closed):");
-      if (rejectionReason === null) return;
+      if (rejectionReason === null) {
+        // User cancelled the prompt — do not proceed, but sound is already stopped
+        return;
+      }
     }
-    
+
+    // Close the modal immediately so UX feels instant
+    setIncomingOrder(null);
+
     try {
-      const realId = incomingOrder.realId;
-      const res = await fetch(`http://localhost:5000/api/orders/${realId}/status`, {
+      const realId = incomingOrder?.realId;
+      if (!realId) return;
+      await fetch(`http://localhost:5000/api/orders/${realId}/status`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus, rejectionReason })
       });
-      if (res.ok) {
-        setIncomingOrder(null);
-      }
     } catch (err) {
-      console.error('Failed to update status', err);
+      console.error('Failed to update order status:', err);
     }
   };
 

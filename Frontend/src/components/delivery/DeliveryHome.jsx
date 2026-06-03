@@ -49,6 +49,10 @@ function DeliveryHome() {
   };
 
   const updateOrderStatusAPI = async (status) => {
+    if (!activeOrder?._id) {
+      console.warn('updateOrderStatusAPI called with no active order');
+      return;
+    }
     try {
       await fetch(`http://localhost:5000/api/orders/${activeOrder._id}/status`, {
         method: 'PUT',
@@ -68,12 +72,13 @@ function DeliveryHome() {
   };
 
   const handleConfirmStorePickup = () => {
-    if (storeOtp === '1234' || storeOtp === '0000') { // 0000 as generic bypass
+    const requiredOtp = activeOrder?.pickupOtp || '1234'; // Fallback for old orders
+    if (storeOtp === requiredOtp || storeOtp === '0000') { // 0000 as generic bypass
       updateOrderStatusAPI('Picked Up');
       setStep('TO_CUSTOMER');
       setOtpError('');
     } else {
-      setOtpError('Invalid Code! Hint: Use code 1234');
+      setOtpError(`Invalid Code! Hint: Use code ${requiredOtp}`);
     }
   };
 
@@ -84,13 +89,17 @@ function DeliveryHome() {
   };
 
   const handleConfirmDelivery = () => {
-    if (customerOtp === '5678' || customerOtp === '0000') {
+    if (!activeOrder) {
+      setOtpError('No active order found. Please refresh.');
+      return;
+    }
+    const requiredOtp = activeOrder?.deliveryOtp || '5678'; // Fallback for old orders
+    if (customerOtp === requiredOtp || customerOtp === '0000') {
       updateOrderStatusAPI('Delivered');
       setStep('SUCCESS');
       setOtpError('');
       
       // Save simulated trip to local storage trip history
-      // Save to local storage trip history
       const savedTrips = JSON.parse(localStorage.getItem('rider_trips') || '[]');
       const newTrip = {
         id: activeOrder._id,
@@ -109,7 +118,7 @@ function DeliveryHome() {
       localStorage.setItem('rider_earnings', (prevEarnings + payoutVal).toFixed(2));
       
     } else {
-      setOtpError('Invalid Code! Hint: Use code 5678');
+      setOtpError(`Invalid Code! Hint: Use code ${requiredOtp}`);
     }
   };
 
@@ -261,7 +270,7 @@ function DeliveryHome() {
               <input 
                 type="text" 
                 maxLength={4}
-                placeholder="Store Code (Hint: 1234)" 
+                placeholder={`Store Code (Hint: ${activeOrder?.pickupOtp || '1234'})`} 
                 className="del-input" 
                 style={{ textAlign: 'center', fontSize: '20px', fontWeight: 800, letterSpacing: '6px' }}
                 value={storeOtp}
@@ -361,7 +370,7 @@ function DeliveryHome() {
               <input 
                 type="text" 
                 maxLength={4}
-                placeholder="Customer Code (Hint: 5678)" 
+                placeholder={`Customer Code (Hint: ${activeOrder?.deliveryOtp || '5678'})`} 
                 className="del-input" 
                 style={{ textAlign: 'center', fontSize: '20px', fontWeight: 800, letterSpacing: '6px' }}
                 value={customerOtp}

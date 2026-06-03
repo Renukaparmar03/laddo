@@ -88,6 +88,14 @@ const orderSchema = mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Delivery',
       default: null
+    },
+    pickupOtp: {
+      type: String,
+      default: () => Math.floor(1000 + Math.random() * 9000).toString()
+    },
+    deliveryOtp: {
+      type: String,
+      default: () => Math.floor(1000 + Math.random() * 9000).toString()
     }
   },
   {

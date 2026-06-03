@@ -3,7 +3,8 @@ import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-
 import { 
   LayoutDashboard, Users, Store, Package, ShoppingCart, 
   BarChart2, IndianRupee, FileText, Settings, LogOut,
-  Bell, Menu, X, Search, ChevronRight, CheckCircle, PlusCircle, ArrowUpRight, TrendingUp, Activity, Truck, Image as ImageIcon
+  Bell, Menu, X, Search, ChevronRight, CheckCircle, PlusCircle, ArrowUpRight, TrendingUp, Activity, Truck, Image as ImageIcon,
+  Grid
 } from 'lucide-react';
 import './AdminApp.css';
 import AdminUsers from './AdminUsers';
@@ -27,6 +28,7 @@ import AdminSettings from './AdminSettings';
 import AdminProfile from './AdminProfile';
 import AdminLogin from './AdminLogin';
 import AdminNotifications from './AdminNotifications';
+import AdminCategories from './AdminCategories';
 
 // Placeholder Pages
 
@@ -380,6 +382,7 @@ export default function AdminApp() {
       ]
     },
     { name: 'Banners', path: '/admin/banners', icon: <ImageIcon size={20} /> },
+    { name: 'Categories', path: '/admin/categories', icon: <Grid size={20} /> },
     { name: 'Products', path: '/admin/products', icon: <Package size={20} /> },
     { name: 'Orders', path: '/admin/orders', icon: <ShoppingCart size={20} /> },
     { name: 'Analytics', path: '/admin/analytics', icon: <BarChart2 size={20} /> },
@@ -530,6 +533,7 @@ export default function AdminApp() {
             <Route path="active-deliveries" element={<AdminActiveDeliveries />} />
             <Route path="delivery-earnings" element={<AdminDeliveryEarnings />} />
             <Route path="banners" element={<AdminBanners />} />
+            <Route path="categories" element={<AdminCategories />} />
             <Route path="products" element={<AdminProducts />} />
             <Route path="orders" element={<AdminOrders />} />
             <Route path="analytics" element={<AdminAnalytics />} />

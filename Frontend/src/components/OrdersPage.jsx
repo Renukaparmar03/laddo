@@ -118,6 +118,13 @@ const OrdersPage = ({ onProductSelect }) => {
                     <strong>Reason for rejection:</strong> {order.rejectionReason}
                   </div>
                 )}
+
+                {(order.status === 'Assigned' || order.status === 'Picked Up' || order.status === 'Out for Delivery') && (
+                  <div style={{ background: '#eff6ff', borderLeft: '4px solid #3b82f6', padding: '12px', margin: '0 0 12px 0', fontSize: '13px', color: '#1e40af', borderRadius: '4px' }}>
+                    <strong>Delivery OTP: {order.deliveryOtp || '5678'}</strong><br/>
+                    <span style={{ fontSize: '12px' }}>Share this code with the delivery partner to receive your order.</span>
+                  </div>
+                )}
                 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                   {order.orderItems.map((item, index) => (

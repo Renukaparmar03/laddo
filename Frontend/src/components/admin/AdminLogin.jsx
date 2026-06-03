@@ -14,7 +14,11 @@ function AdminLogin() {
     setLoading(true);
     setTimeout(() => {
       setLoading(false);
+      // Persist admin identity so AdminProfile can read it
       localStorage.setItem('admin_logged_in', 'true');
+      localStorage.setItem('admin_email',     email);
+      localStorage.setItem('admin_name',      email.split('@')[0].replace(/[._-]/g, ' ').replace(/\b\w/g, c => c.toUpperCase()));
+      localStorage.setItem('admin_login_at',  new Date().toISOString());
       navigate('/admin/home');
     }, 1000);
   };

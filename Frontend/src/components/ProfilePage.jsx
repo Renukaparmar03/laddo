@@ -22,7 +22,8 @@ import {
   Bell, 
   LogOut,
   ChevronRight,
-  ChevronDown
+  ChevronDown,
+  Mail
 } from 'lucide-react';
 
 const ProfilePage = ({ setActiveTab, setActiveCategory }) => {
@@ -30,20 +31,33 @@ const ProfilePage = ({ setActiveTab, setActiveCategory }) => {
   const [appearance, setAppearance] = useState('LIGHT');
   const [showAppearanceDropdown, setShowAppearanceDropdown] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [orderCount, setOrderCount] = useState(null);
+  const [loggingOut, setLoggingOut] = useState(false);
   const containerRef = useRef(null);
+
+  // Read user info from localStorage (set at login/register time)
+  const userInfoStr = localStorage.getItem('user_info');
+  const userInfo = userInfoStr ? JSON.parse(userInfoStr) : null;
+  const userId   = userInfo ? (userInfo._id || userInfo.id) : null;
+  const userName  = userInfo?.name  || 'Your account';
+  const userEmail = userInfo?.email || '';
+
+  // Mask email for display: e.g. vi***@gmail.com
+  const maskEmail = (email) => {
+    if (!email) return '';
+    const [local, domain] = email.split('@');
+    if (!domain) return email;
+    const visible = local.slice(0, 2);
+    return `${visible}${'*'.repeat(Math.max(local.length - 2, 3))}@${domain}`;
+  };
 
   // Monitor scroll level to trigger transition into white sticky title bar
   useEffect(() => {
     const handleScroll = () => {
       if (containerRef.current) {
-        if (containerRef.current.scrollTop > 40) {
-          setIsScrolled(true);
-        } else {
-          setIsScrolled(false);
-        }
+        setIsScrolled(containerRef.current.scrollTop > 40);
       }
     };
-
     const scrollContainer = containerRef.current;
     if (scrollContainer) {
       scrollContainer.addEventListener('scroll', handleScroll);
@@ -55,6 +69,23 @@ const ProfilePage = ({ setActiveTab, setActiveCategory }) => {
     };
   }, []);
 
+  // Fetch real order count for this user
+  useEffect(() => {
+    const fetchOrderCount = async () => {
+      if (!userId) return;
+      try {
+        const res = await fetch(`http://localhost:5000/api/orders/user/${userId}`);
+        if (res.ok) {
+          const data = await res.json();
+          setOrderCount(Array.isArray(data) ? data.length : 0);
+        }
+      } catch (err) {
+        console.error('Error fetching order count:', err);
+      }
+    };
+    fetchOrderCount();
+  }, [userId]);
+
   const handleBackToHome = () => {
     setActiveTab('home');
     if (setActiveCategory) {
@@ -64,6 +95,25 @@ const ProfilePage = ({ setActiveTab, setActiveCategory }) => {
 
   const handleGoToOrders = () => {
     setActiveTab('orders');
+  };
+
+  const handleLogout = async () => {
+    setLoggingOut(true);
+    try {
+      // Clear JWT cookie via backend
+      await fetch('http://localhost:5000/api/users/logout', { method: 'POST', credentials: 'include' });
+    } catch (e) {
+      console.warn('Logout request failed:', e.message);
+    }
+    // Clear localStorage
+    localStorage.removeItem('user_logged_in');
+    localStorage.removeItem('user_info');
+    setLoggingOut(false);
+    // Navigate back to home (which will show login screen)
+    setActiveTab('home');
+    if (setActiveCategory) setActiveCategory('All');
+    // Force reload so App re-evaluates auth state
+    window.location.href = '/user/login';
   };
 
   return (
@@ -84,10 +134,22 @@ const ProfilePage = ({ setActiveTab, setActiveCategory }) => {
       <div className="profile-header-gradient">
         <div className="profile-avatar-section">
           <div className="profile-avatar-circle">
-            <User size={46} className="profile-avatar-icon" />
+            {/* Show first letter of name as avatar */}
+            {userName && userName !== 'Your account' ? (
+              <span style={{ fontSize: '32px', fontWeight: '700', color: '#fff', textTransform: 'uppercase' }}>
+                {userName.charAt(0)}
+              </span>
+            ) : (
+              <User size={46} className="profile-avatar-icon" />
+            )}
           </div>
-          <h2 className="profile-username">Your account</h2>
-          <p className="profile-phone">9589924090</p>
+          <h2 className="profile-username">{userName}</h2>
+          {userEmail && (
+            <p className="profile-phone" style={{ display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'center' }}>
+              <Mail size={13} style={{ opacity: 0.8 }} />
+              {maskEmail(userEmail)}
+            </p>
+          )}
         </div>
       </div>
 
@@ -103,11 +165,19 @@ const ProfilePage = ({ setActiveTab, setActiveCategory }) => {
 
         {/* Triple Action Cards Grid */}
         <div className="profile-action-grid">
-          <button className="action-card" onClick={handleGoToOrders}>
+          <button className="action-card" onClick={handleGoToOrders} style={{ position: 'relative' }}>
             <div className="action-card-icon-wrapper orders">
               <ShoppingBag size={24} />
             </div>
             <span className="action-card-label">Your orders</span>
+            {orderCount !== null && orderCount > 0 && (
+              <span style={{
+                position: 'absolute', top: '8px', right: '8px',
+                background: '#f59e0b', color: '#fff',
+                borderRadius: '999px', fontSize: '10px', fontWeight: '700',
+                padding: '1px 6px', lineHeight: '16px'
+              }}>{orderCount}</span>
+            )}
           </button>
           
           <button className="action-card">
@@ -295,13 +365,34 @@ const ProfilePage = ({ setActiveTab, setActiveCategory }) => {
               <span className="list-label">Notification preferences</span>
               <ChevronRight size={16} className="list-chevron" />
             </div>
-            <div className="profile-list-item log-out-item" onClick={handleBackToHome} style={{ cursor: 'pointer' }}>
+            <div 
+              className="profile-list-item log-out-item" 
+              onClick={loggingOut ? undefined : handleLogout} 
+              style={{ cursor: loggingOut ? 'not-allowed' : 'pointer', opacity: loggingOut ? 0.6 : 1 }}
+            >
               <LogOut size={18} className="list-icon logout" />
-              <span className="list-label logout">Log out</span>
+              <span className="list-label logout">{loggingOut ? 'Logging out...' : 'Log out'}</span>
               <ChevronRight size={16} className="list-chevron" />
             </div>
           </div>
         </div>
+
+        {/* User identity footer */}
+        {userInfo && (
+          <div style={{
+            margin: '8px 16px 0',
+            padding: '14px 16px',
+            background: '#f9fafb',
+            borderRadius: '12px',
+            fontSize: '12px',
+            color: '#9ca3af',
+            lineHeight: '1.6'
+          }}>
+            <span style={{ fontWeight: '600', color: '#6b7280' }}>Logged in as: </span>
+            {userName}
+            {userEmail && <> &bull; {maskEmail(userEmail)}</>}
+          </div>
+        )}
 
         {/* Brand Footer */}
         <div className="profile-brand-footer">

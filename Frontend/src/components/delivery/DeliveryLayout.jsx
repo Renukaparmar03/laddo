@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { Home, History, TrendingUp, User, Bike, Bell, ShoppingBag, MapPin, Navigation } from 'lucide-react'
 import './Delivery.css'
@@ -31,8 +31,17 @@ function DeliveryLayout() {
   const [incomingTimer, setIncomingTimer] = useState(60);
   const [audioError, setAudioError] = useState(false);
 
+  // Keep a ref to the currently playing audio so it can be stopped on demand
+  const notificationAudioRef = useRef(null);
+
   const playNotificationSound = (order) => {
-    const audio = new Audio('/assets/WhatsApp%20Audio%202026-05-28%20at%2011.56.27%20PM.mpeg');
+    // Stop any already-playing notification before starting a new one
+    if (notificationAudioRef.current) {
+      notificationAudioRef.current.pause();
+      notificationAudioRef.current.currentTime = 0;
+    }
+    const audio = new Audio('/assets/notification.mpeg');
+    notificationAudioRef.current = audio;
     audio.play().catch(e => {
       console.warn('Audio play blocked or failed:', e);
       setAudioError(true);
@@ -56,6 +65,15 @@ function DeliveryLayout() {
           }
         });
       }
+    }
+  };
+
+  // Immediately silences the notification sound
+  const stopNotificationSound = () => {
+    if (notificationAudioRef.current) {
+      notificationAudioRef.current.pause();
+      notificationAudioRef.current.currentTime = 0;
+      notificationAudioRef.current = null;
     }
   };
 
@@ -170,6 +188,8 @@ function DeliveryLayout() {
   }, [step, activeOrder]);
 
   const handleAcceptOrder = async () => {
+    // Stop notification sound the instant the rider taps Accept
+    stopNotificationSound();
     try {
       const res = await fetch(`http://localhost:5000/api/orders/${activeOrder._id}/assign`, {
         method: 'PUT',
@@ -192,7 +212,10 @@ function DeliveryLayout() {
 
   const handleRejectOrder = (autoReason = '') => {
     if (!activeOrder) return;
-    
+
+    // Stop notification sound the instant the rider taps Decline
+    stopNotificationSound();
+
     const orderToReject = activeOrder;
     
     // Clear state immediately to stop the timer and close the modal

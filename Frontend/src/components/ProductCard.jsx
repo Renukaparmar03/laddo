@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { Heart, Star, Clock, Check, ShoppingCart } from 'lucide-react';
 
+// Fallback shown when a product image URL is broken / unreachable
+const FALLBACK_IMG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' fill='%23f0fdf4'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-size='60'%3E🛒%3C/text%3E%3C/svg%3E";
+
 const ProductCard = ({ product, isOrderView, onCardClick, cart = [], setCart, navigate }) => {
   const [isReordered, setIsReordered] = useState(false);
 
@@ -38,7 +41,12 @@ const ProductCard = ({ product, isOrderView, onCardClick, cart = [], setCart, na
   return (
     <div className="product-card new-design" onClick={() => onCardClick && onCardClick(product)}>
       <div className="product-img-wrapper">
-        <img src={product.image} alt={product.title} className="product-img" />
+        <img
+          src={product.image}
+          alt={product.title}
+          className="product-img"
+          onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = FALLBACK_IMG; }}
+        />
         <button className="wishlist-btn" onClick={(e) => e.stopPropagation()}>
           <Heart size={16} />
         </button>

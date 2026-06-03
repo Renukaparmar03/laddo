@@ -12,6 +12,8 @@ import bannerRoutes from './routes/bannerRoutes.js';
 import deliveryRoutes from './routes/deliveryRoutes.js';
 import settingsRoutes from './routes/settingsRoutes.js';
 import orderRoutes from './routes/orderRoutes.js';
+import paymentRoutes from './routes/paymentRoutes.js'; // Razorpay payment gateway
+import categoryRoutes from './routes/categoryRoutes.js';
 
 dotenv.config();
 
@@ -71,6 +73,8 @@ app.use('/api/banners', bannerRoutes);
 app.use('/api/delivery', deliveryRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/orders', orderRoutes);
+app.use('/api/payments', paymentRoutes);          // Razorpay payment routes
+app.use('/api/categories', categoryRoutes);
 
 app.get('/', (req, res) => {
   res.send('API is running...');

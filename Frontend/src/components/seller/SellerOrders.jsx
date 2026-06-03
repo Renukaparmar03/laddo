@@ -36,6 +36,7 @@ export default function SellerOrders() {
                   totalPrice: order.totalPrice,
                   paymentMethod: order.paymentMethod,
                   status: order.status,
+                  pickupOtp: order.pickupOtp,
                   date: new Date(order.createdAt).toLocaleString()
                 };
               });
@@ -174,6 +175,12 @@ export default function SellerOrders() {
                           <span className="product-name" title={order.productName}>{order.productName}</span>
                           <span className="product-qty">Qty: {order.quantity}</span>
                         </div>
+                        {(order.status === 'Assigned' || order.status === 'Out for Delivery') && (
+                          <div className="order-details-card" style={{ background: '#eff6ff', borderLeft: '4px solid #3b82f6', padding: '8px', marginTop: '8px' }}>
+                            <h4 className="detail-title" style={{ color: '#1e40af', fontSize: '11px', margin: '0' }}>Pickup OTP</h4>
+                            <p className="detail-text" style={{ fontSize: '16px', fontWeight: 'bold', color: '#1e40af', margin: '0' }}>{order.pickupOtp || '1234'}</p>
+                          </div>
+                        )}
                       </div>
                     </td>
                     <td>
