@@ -78,7 +78,10 @@ function UserLogin() {
           </div>
 
           <div style={{ marginBottom: '32px' }}>
-            <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '8px' }}>Password</label>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', margin: 0 }}>Password</label>
+              <Link to="/reset-password?type=user" style={{ fontSize: '13px', color: '#16a34a', textDecoration: 'none', fontWeight: '500' }}>Forgot Password?</Link>
+            </div>
             <div style={{ position: 'relative' }}>
               <Lock size={18} color="#9ca3af" style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)' }} />
               <input 

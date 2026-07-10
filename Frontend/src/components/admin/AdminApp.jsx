@@ -75,7 +75,7 @@ const AdminDashboard = () => {
 
             sellerStats.push({
               name: seller.businessName || seller.ownerName || 'Seller',
-              img: seller.logo || 'https://via.placeholder.com/50',
+              img: seller.logo || 'https://placehold.co/50x50',
               rev: orderData.totalSales || 0,
               orders: orderData.totalOrders || 0
             });
@@ -478,7 +478,10 @@ export default function AdminApp() {
           })}
         </nav>
         <div className="sidebar-footer">
-          <button className="nav-item logout" onClick={() => navigate('/user/home')}>
+          <button className="nav-item logout" onClick={() => {
+            localStorage.removeItem('admin_logged_in');
+            navigate('/admin/login');
+          }}>
             <LogOut size={20} />
             <span>Logout</span>
           </button>

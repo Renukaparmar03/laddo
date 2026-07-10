@@ -164,3 +164,16 @@ export const updateSellerStatus = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+export const resetPassword = async (req, res) => {
+  const { email, newPassword } = req.body;
+  try {
+    const seller = await Seller.findOne({ email });
+    if (!seller) return res.status(404).json({ message: 'Seller not found' });
+    seller.password = newPassword;
+    await seller.save();
+    res.json({ message: 'Password reset successful' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};

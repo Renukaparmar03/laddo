@@ -198,7 +198,7 @@ export default function AdminDeliveryOverview() {
             <p>Daily deliveries vs average delivery time (mins)</p>
           </div>
           <div className="chart-wrapper">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height={300}>
               <AreaChart data={performanceData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorDeliveries" x1="0" y1="0" x2="0" y2="1">
@@ -227,7 +227,7 @@ export default function AdminDeliveryOverview() {
             <p>Weekly financial breakdown</p>
           </div>
           <div className="chart-wrapper">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height={300}>
               <BarChart data={earningsData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                 <XAxis dataKey="name" axisLine={false} tickLine={false} />

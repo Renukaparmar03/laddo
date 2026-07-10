@@ -15,22 +15,10 @@ const OrdersPage = ({ onProductSelect }) => {
   React.useEffect(() => {
     if (!socket) return;
 
-    const playNotificationSound = () => {
-      const audio = new Audio('/assets/notification.mpeg');
-      audio.play().catch(e => {
-        // Silently catch autoplay restriction errors on the user panel
-        console.warn('Audio autoplay blocked for user order panel:', e.message);
-      });
-    };
-
     const handleOrderUpdated = (updatedOrder) => {
-      // Play sound and show generic alert if rejected by seller
+      // Show generic alert if rejected by seller
       if (updatedOrder.status === 'Rejected') {
-        playNotificationSound();
         alert(`Your order #${updatedOrder.orderId || updatedOrder._id.substring(0,8).toUpperCase()} was rejected. Reason: ${updatedOrder.rejectionReason}`);
-      } else {
-        // Just play a tiny sound for other updates
-        playNotificationSound();
       }
 
       setOrders(prevOrders => prevOrders.map(order => 

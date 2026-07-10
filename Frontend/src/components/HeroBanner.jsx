@@ -9,6 +9,22 @@ const FALLBACK_BANNERS = [
     desc: "On your first grocery order",
     btnText: "Shop Now",
     gradient: "linear-gradient(90deg, rgba(0,0,0,0.7) 0%, transparent 75%)"
+  },
+  {
+    _id: '2',
+    image: "https://images.unsplash.com/photo-1604719312566-8fa20f162af6?w=1200&q=80",
+    title: "Fresh Fruits",
+    desc: "Farm fresh fruits delivered to you",
+    btnText: "Explore Now",
+    gradient: "linear-gradient(90deg, rgba(34, 197, 94, 0.7) 0%, transparent 75%)"
+  },
+  {
+    _id: '3',
+    image: "https://images.unsplash.com/photo-1583258292688-d0213dc5a3a8?w=1200&q=80",
+    title: "Daily Essentials",
+    desc: "Everything you need, everyday",
+    btnText: "Order Now",
+    gradient: "linear-gradient(90deg, rgba(59, 130, 246, 0.7) 0%, transparent 75%)"
   }
 ];
 

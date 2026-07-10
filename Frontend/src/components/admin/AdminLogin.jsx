@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Mail, Lock, Shield, ArrowRight } from 'lucide-react';
 import './AdminApp.css';
 
@@ -63,6 +63,7 @@ function AdminLogin() {
           <div style={{ marginBottom: '24px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
               <label style={{ fontSize: '14px', fontWeight: '500', color: '#cbd5e1' }}>Password</label>
+              <Link to="/reset-password?type=admin" style={{ fontSize: '13px', color: '#3b82f6', textDecoration: 'none', fontWeight: '500' }}>Forgot?</Link>
             </div>
             <div style={{ position: 'relative' }}>
               <Lock size={18} color="#64748b" style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)' }} />

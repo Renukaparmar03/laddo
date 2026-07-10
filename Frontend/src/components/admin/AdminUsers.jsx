@@ -70,7 +70,9 @@ export default function AdminUsers() {
       });
 
       // Combine real user profile data with their order statistics
-      const formattedUsers = usersData.map(u => {
+      const formattedUsers = usersData
+        .filter(u => u.role !== 'admin')
+        .map(u => {
         const orderStats = userOrdersMap.get(u._id) || { orders: 0, address: 'Not provided yet' };
         
         return {

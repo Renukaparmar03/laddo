@@ -497,7 +497,7 @@ export default function SellerApp() {
           <button className="nav-item logout" onClick={() => {
             localStorage.removeItem('seller_logged_in');
             localStorage.removeItem('seller_info');
-            navigate('/user/home');
+            navigate('/seller/login');
           }}>
             <LogOut size={20} />
             <span>Logout</span>

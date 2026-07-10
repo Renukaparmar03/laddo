@@ -72,7 +72,7 @@ function DeliveryHome() {
   };
 
   const handleConfirmStorePickup = () => {
-    const requiredOtp = activeOrder?.pickupOtp || '1234'; // Fallback for old orders
+    const requiredOtp = String(activeOrder?.pickupOtp || '1234'); // Fallback for old orders
     if (storeOtp === requiredOtp || storeOtp === '0000') { // 0000 as generic bypass
       updateOrderStatusAPI('Picked Up');
       setStep('TO_CUSTOMER');
@@ -93,7 +93,7 @@ function DeliveryHome() {
       setOtpError('No active order found. Please refresh.');
       return;
     }
-    const requiredOtp = activeOrder?.deliveryOtp || '5678'; // Fallback for old orders
+    const requiredOtp = String(activeOrder?.deliveryOtp || '5678'); // Fallback for old orders
     if (customerOtp === requiredOtp || customerOtp === '0000') {
       updateOrderStatusAPI('Delivered');
       setStep('SUCCESS');

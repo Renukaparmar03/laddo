@@ -87,10 +87,13 @@ function DeliveryLogin() {
           </div>
 
           <div className="del-input-group">
-            <label className="del-flex-between">
-              <span>Password</span>
-              <Lock size={16} />
-            </label>
+            <div className="del-flex-between" style={{ marginBottom: '8px' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--del-text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Password</span>
+                <Lock size={14} color="var(--del-text-muted)" />
+              </label>
+              <Link to="/reset-password?type=delivery" style={{ fontSize: '13px', color: 'var(--del-primary)', textDecoration: 'none', fontWeight: '600' }}>Forgot Password?</Link>
+            </div>
             <input 
               type="password" 
               placeholder="Enter your password" 

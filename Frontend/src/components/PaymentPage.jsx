@@ -12,6 +12,15 @@ const PaymentPage = ({ cart, navigate, setCart }) => {
     { id: 'COD',    name: 'Cash on Delivery',      icon: <Banknote  size={24} color="#16a34a" />, desc: 'Pay at your doorstep'          },
   ];
 
+  React.useEffect(() => {
+    if (document.getElementById('razorpay-sdk')) return;
+    const script = document.createElement('script');
+    script.id = 'razorpay-sdk';
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.async = true;
+    document.body.appendChild(script);
+  }, []);
+
   // ── Helpers ──────────────────────────────────────────────────────────────────
 
   /** Read logged-in user info from localStorage (set at login time) */

@@ -190,6 +190,9 @@ function DeliveryLayout() {
   const handleAcceptOrder = async () => {
     // Stop notification sound the instant the rider taps Accept
     stopNotificationSound();
+    
+    setStep('TO_STORE'); // Optimistically update to avoid race condition with socket
+    
     try {
       const res = await fetch(`http://localhost:5000/api/orders/${activeOrder._id}/assign`, {
         method: 'PUT',
@@ -198,7 +201,6 @@ function DeliveryLayout() {
       });
       
       if (res.ok) {
-        setStep('TO_STORE');
         navigate('/delivery/home');
       } else {
         alert('Order was already assigned to someone else!');
@@ -207,6 +209,8 @@ function DeliveryLayout() {
       }
     } catch (err) {
       console.error(err);
+      setStep('IDLE');
+      setActiveOrder(null);
     }
   };
 

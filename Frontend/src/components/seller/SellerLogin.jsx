@@ -86,7 +86,7 @@ function SellerLogin() {
           <div style={{ marginBottom: '24px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
               <label style={{ fontSize: '14px', fontWeight: '500', color: '#334155' }}>Password</label>
-              <a href="#" style={{ fontSize: '13px', color: '#8b5cf6', textDecoration: 'none', fontWeight: '500' }}>Forgot?</a>
+              <Link to="/reset-password?type=seller" style={{ fontSize: '13px', color: '#8b5cf6', textDecoration: 'none', fontWeight: '500' }}>Forgot?</Link>
             </div>
             <div style={{ position: 'relative' }}>
               <Lock size={18} color="#94a3b8" style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)' }} />

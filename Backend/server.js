@@ -14,6 +14,8 @@ import settingsRoutes from './routes/settingsRoutes.js';
 import orderRoutes from './routes/orderRoutes.js';
 import paymentRoutes from './routes/paymentRoutes.js'; // Razorpay payment gateway
 import categoryRoutes from './routes/categoryRoutes.js';
+import dns from "node:dns/promises";
+dns.setServers(["8.8.8.8"], ["1.1.1.1"]);
 
 dotenv.config();
 
@@ -41,12 +43,12 @@ io.on('connection', (socket) => {
       console.log(`Socket ${socket.id} joined room ${room}`);
     }
   });
-  
+
   // Delivery boys can join a general 'delivery_boys' room for broad notifications
   socket.on('joinDeliveryRoom', () => {
     socket.join('delivery_boys');
     console.log(`Socket ${socket.id} joined room delivery_boys`);
-    
+
     // Log current rooms
     console.log(`Socket ${socket.id} is now in rooms:`, Array.from(socket.rooms));
   });
