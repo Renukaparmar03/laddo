@@ -216,7 +216,7 @@ export default function SellerApp() {
   // Keep a ref to the currently playing audio so we can stop it on demand
   const notificationAudioRef = useRef(null);
 
-  const playNotificationSound = () => {
+  const playNotificationSound = (orderData) => {
     // Stop any previously playing sound before starting a new one
     if (notificationAudioRef.current) {
       notificationAudioRef.current.pause();
@@ -228,6 +228,26 @@ export default function SellerApp() {
       console.warn('Audio play blocked or failed:', e);
       setAudioError(true);
     });
+
+    // OS-level Web Notification to ensure real-time alert without refresh
+    if ('Notification' in window) {
+      const title = 'New Order Received! 🔔';
+      const options = {
+        body: orderData ? `Customer: ${orderData.user?.name || 'Customer'}\nItems: ${orderData.orderItems?.length || 1}\nTotal: ₹${orderData.totalPrice || 0}` : 'You have a new order waiting. Check your dashboard.',
+        icon: '/favicon.ico',
+        requireInteraction: true
+      };
+
+      if (Notification.permission === 'granted') {
+        new Notification(title, options);
+      } else if (Notification.permission !== 'denied') {
+        Notification.requestPermission().then(permission => {
+          if (permission === 'granted') {
+            new Notification(title, options);
+          }
+        });
+      }
+    }
   };
 
   // Immediately silences the notification sound
@@ -252,13 +272,13 @@ export default function SellerApp() {
     if (!socket) return;
 
     const handleNewOrder = (order) => {
-      playNotificationSound();
+      playNotificationSound(order);
 
       const item = order.orderItems[0] || {};
       const mappedOrder = {
         id: order.orderId || order._id.substring(0,8).toUpperCase(),
         realId: order._id,
-        customerName: 'Customer',
+        customerName: order.user?.name || 'Customer',
         customerEmail: 'N/A',
         customerPhone: 'N/A',
         address: `${order.shippingAddress?.address || ''}, ${order.shippingAddress?.city || ''}`,
@@ -268,7 +288,7 @@ export default function SellerApp() {
         totalPrice: order.totalPrice,
         paymentMethod: order.paymentMethod,
         status: order.status,
-        date: new Date(order.createdAt).toLocaleString()
+        date: new Date(order.createdAt).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
       };
 
       setIncomingOrder(mappedOrder);
@@ -310,7 +330,7 @@ export default function SellerApp() {
             const mappedOrder = {
               id: order.orderId || order._id.substring(0,8).toUpperCase(),
               realId: order._id,
-              customerName: 'Customer',
+              customerName: order.user?.name || 'Customer',
               customerEmail: 'N/A',
               customerPhone: 'N/A',
               address: `${order.shippingAddress?.address || ''}, ${order.shippingAddress?.city || ''}`,
@@ -320,11 +340,11 @@ export default function SellerApp() {
               totalPrice: order.totalPrice,
               paymentMethod: order.paymentMethod,
               status: order.status,
-              date: new Date(order.createdAt).toLocaleString()
+              date: new Date(order.createdAt).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
             };
             setIncomingOrder(mappedOrder);
             setTimer(180);
-            playNotificationSound();
+            playNotificationSound(order);
           }
         }
       } catch (err) {

@@ -63,7 +63,7 @@ function DeliveryRegister() {
       <header className="del-header">
         <div className="del-logo">
           <Bike size={24} />
-          <span>Blinkit Partner</span>
+          <span>QuickKart Partner</span>
         </div>
         <div style={{ fontSize: '14px', color: 'var(--del-text-muted)', fontWeight: 600 }}>
           Step {step} of 4

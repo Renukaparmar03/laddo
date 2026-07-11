@@ -49,61 +49,56 @@ const AdminDashboard = () => {
     const fetchDashboardData = async () => {
       try {
         setLoading(true);
-        // 1. Fetch all sellers
-        const sellersRes = await fetch('http://localhost:5000/api/sellers');
+        const [sellersRes, ordersRes, usersRes] = await Promise.all([
+          fetch('http://localhost:5000/api/sellers'),
+          fetch('http://localhost:5000/api/orders'),
+          fetch('http://localhost:5000/api/users')
+        ]);
+        
         const sellersData = await sellersRes.json();
+        const ordersData = await ordersRes.json();
+        const usersData = await usersRes.json();
         
-        let allOrders = [];
         let totalRevenue = 0;
-        let uniqueUsers = new Set();
-        let sellerStats = [];
+        const sellerStatsMap = {};
 
-        // 2. Fetch orders for each seller
-        await Promise.all(sellersData.map(async (seller) => {
-          try {
-            const orderRes = await fetch(`http://localhost:5000/api/orders/seller/${seller._id}`);
-            const orderData = await orderRes.json();
-            
-            totalRevenue += orderData.totalSales || 0;
-            
-            if (orderData.orders) {
-              allOrders = [...allOrders, ...orderData.orders];
-              orderData.orders.forEach(o => {
-                if (o.user) uniqueUsers.add(o.user.toString());
-              });
+        sellersData.forEach(seller => {
+          sellerStatsMap[seller._id] = {
+            name: seller.businessName || seller.ownerName || 'Seller',
+            img: seller.logo || 'https://placehold.co/50x50',
+            rev: 0,
+            orders: 0
+          };
+        });
+
+        ordersData.forEach(order => {
+          totalRevenue += order.totalPrice || 0;
+          order.orderItems.forEach(item => {
+            if (item.seller && item.seller._id) {
+              const sId = item.seller._id;
+              if (sellerStatsMap[sId]) {
+                sellerStatsMap[sId].rev += (item.price * item.qty);
+                sellerStatsMap[sId].orders += 1;
+              }
             }
+          });
+        });
 
-            sellerStats.push({
-              name: seller.businessName || seller.ownerName || 'Seller',
-              img: seller.logo || 'https://placehold.co/50x50',
-              rev: orderData.totalSales || 0,
-              orders: orderData.totalOrders || 0
-            });
-          } catch (e) {
-            console.error(e);
-          }
-        }));
-
-        // Deduplicate orders
-        const uniqueOrdersMap = new Map();
-        allOrders.forEach(o => uniqueOrdersMap.set(o._id, o));
-        const uniqueOrders = Array.from(uniqueOrdersMap.values());
-        
-        // Sort recent orders by date
-        uniqueOrders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-        const uniqueRecentOrders = uniqueOrders.slice(0, 5);
-
-        // Sort top sellers by revenue
+        const sellerStats = Object.values(sellerStatsMap);
         sellerStats.sort((a, b) => b.rev - a.rev);
         const top5Sellers = sellerStats.slice(0, 4);
 
+        const recentOrders = ordersData.slice(0, 5);
+
+        // Real active users count (excluding admins)
+        const realUsersCount = usersData.filter(u => u.role !== 'admin').length;
+
         setStats({
-          // If no unique users found, fallback to 0 instead of fake data so it reflects real DB state
-          totalUsers: uniqueUsers.size,
+          totalUsers: realUsersCount,
           totalSellers: sellersData.length,
-          totalOrders: uniqueOrders.length,
+          totalOrders: ordersData.length,
           totalRevenue: totalRevenue,
-          recentOrders: uniqueRecentOrders,
+          recentOrders: recentOrders,
           topSellers: top5Sellers
         });
       } catch (err) {
@@ -333,18 +328,24 @@ export default function AdminApp() {
     }
     
     if (isLoggedIn) {
-      fetch('http://localhost:5000/api/sellers?status=pending')
-        .then(res => res.json())
-        .then(data => setPendingCount(data.length))
-        .catch(err => console.error(err));
+      const fetchCounts = () => {
+        fetch('http://localhost:5000/api/sellers?status=pending')
+          .then(res => res.json())
+          .then(data => setPendingCount(data.length))
+          .catch(err => console.error(err));
 
-      fetch('http://localhost:5000/api/delivery')
-        .then(res => res.json())
-        .then(data => {
-          const pending = data.filter(d => d.status === 'pending');
-          setPendingDeliveryCount(pending.length);
-        })
-        .catch(err => console.error(err));
+        fetch('http://localhost:5000/api/delivery')
+          .then(res => res.json())
+          .then(data => {
+            const pending = data.filter(d => d.status === 'pending');
+            setPendingDeliveryCount(pending.length);
+          })
+          .catch(err => console.error(err));
+      };
+
+      fetchCounts();
+      const interval = setInterval(fetchCounts, 5000); // Real-time reflection
+      return () => clearInterval(interval);
     }
   }, [location.pathname, navigate]);
 

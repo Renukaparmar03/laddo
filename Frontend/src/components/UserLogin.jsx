@@ -18,6 +18,7 @@ function UserLogin() {
           headers: {
             'Content-Type': 'application/json',
           },
+          credentials: 'include',
           body: JSON.stringify({ email, password }),
         });
         
@@ -54,7 +55,7 @@ function UserLogin() {
           }}>
             <ShoppingBag size={32} />
           </div>
-          <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: '#166534', margin: '0 0 8px 0' }}>Welcome to Blinkit</h2>
+          <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: '#166534', margin: '0 0 8px 0' }}>Welcome to QuickKart</h2>
           <p style={{ color: '#15803d', margin: 0, fontSize: '14px' }}>Groceries delivered in 10 minutes</p>
         </div>
 
@@ -115,7 +116,7 @@ function UserLogin() {
         </form>
 
         <p style={{ textAlign: 'center', marginTop: '24px', fontSize: '14px', color: '#6b7280' }}>
-          New to Blinkit? <Link to="/user/register" style={{ color: '#16a34a', fontWeight: '600', textDecoration: 'none' }}>Create an account</Link>
+          New to QuickKart? <Link to="/user/register" style={{ color: '#16a34a', fontWeight: '600', textDecoration: 'none' }}>Create an account</Link>
         </p>
       </div>
     </div>

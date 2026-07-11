@@ -24,7 +24,9 @@ export const addOrderItems = async (req, res) => {
     // Group items by seller
     const itemsBySeller = {};
     orderItems.forEach(item => {
-      const sellerId = item.seller;
+      // Ensure sellerId is a string, handle case where frontend sends populated object
+      const sellerId = (item.seller && item.seller._id) ? item.seller._id.toString() : item.seller.toString();
+      item.seller = sellerId; // update item to have string seller
       if (!itemsBySeller[sellerId]) {
         itemsBySeller[sellerId] = [];
       }
@@ -66,8 +68,9 @@ export const addOrderItems = async (req, res) => {
       // Emit real-time notification to the seller
       const io = req.app.get('io');
       if (io) {
+        const populatedOrder = await Order.findById(createdOrder._id).populate('user', 'name email');
         console.log(`Emitting newOrder to seller_${sellerId}`);
-        io.to(`seller_${sellerId}`).emit('newOrder', createdOrder);
+        io.to(`seller_${sellerId}`).emit('newOrder', populatedOrder);
       }
     }
 
@@ -228,6 +231,21 @@ export const assignDeliveryBoy = async (req, res) => {
     } else {
       res.status(400).json({ message: 'Order already assigned or not found' });
     }
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Get all orders (Admin)
+// @route   GET /api/orders
+// @access  Public (should be Admin)
+export const getAllOrders = async (req, res) => {
+  try {
+    const orders = await Order.find({})
+      .populate('user', 'name email phone')
+      .populate('orderItems.seller', 'businessName ownerName logo')
+      .sort({ createdAt: -1 });
+    res.json(orders);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

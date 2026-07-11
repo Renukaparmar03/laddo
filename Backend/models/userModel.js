@@ -21,6 +21,9 @@ const userSchema = mongoose.Schema(
       enum: ['user', 'admin'],
       default: 'user',
     },
+    phone: { type: String, default: '' },
+    birthday: { type: String, default: '' },
+    avatar: { type: String, default: '' },
     addresses: [
       {
         label: { type: String, enum: ['Home', 'Work', 'Other'], default: 'Home' },

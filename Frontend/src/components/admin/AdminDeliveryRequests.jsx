@@ -2,69 +2,7 @@ import React, { useState } from 'react';
 import { Search, Filter, Eye, CheckCircle, XCircle, FileText, Download, X, History, UserPlus, Clock } from 'lucide-react';
 import './AdminDeliveryRequests.css';
 
-const MOCK_REQUESTS = [
-  {
-    id: 'DREQ-201',
-    name: 'Sanjeev Kumar',
-    phone: '+91 9876543220',
-    email: 'sanjeev.k@example.com',
-    vehicleType: 'Two Wheeler (Bike)',
-    image: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=100&h=100&fit=crop',
-    licenseStatus: 'Pending',
-    idStatus: 'Verified',
-    requestDate: '22 May 2024',
-    overallStatus: 'Pending',
-    docs: {
-      aadhaar: 'AADHAAR_SANJEEV.pdf',
-      license: 'DL_SANJEEV.pdf',
-      rc: 'RC_MH12.pdf',
-      selfie: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=400&h=400&fit=crop'
-    }
-  },
-  {
-    id: 'DREQ-202',
-    name: 'Manish Verma',
-    phone: '+91 9876543221',
-    email: 'manish.v@example.com',
-    vehicleType: 'Electric Scooter',
-    image: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop',
-    licenseStatus: 'Verified',
-    idStatus: 'Verified',
-    requestDate: '21 May 2024',
-    overallStatus: 'Pending',
-    docs: {
-      aadhaar: 'AADHAAR_MANISH.pdf',
-      license: 'DL_MANISH.pdf',
-      rc: 'RC_DL01.pdf',
-      selfie: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&h=400&fit=crop'
-    }
-  },
-  {
-    id: 'DREQ-203',
-    name: 'Rohan Das',
-    phone: '+91 9876543222',
-    email: 'rohan.d@example.com',
-    vehicleType: 'Bicycle',
-    image: 'https://images.unsplash.com/photo-1527980965255-d3b416303d12?w=100&h=100&fit=crop',
-    licenseStatus: 'N/A',
-    idStatus: 'Rejected',
-    requestDate: '20 May 2024',
-    overallStatus: 'Rejected',
-    docs: {
-      aadhaar: 'AADHAAR_ROHAN.pdf',
-      license: null,
-      rc: null,
-      selfie: 'https://images.unsplash.com/photo-1527980965255-d3b416303d12?w=400&h=400&fit=crop'
-    }
-  }
-];
-
-const RECENT_ACTIVITY = [
-  { id: 1, type: 'new', text: 'New rider applied: Sanjeev Kumar', time: '10 mins ago', icon: <UserPlus size={16} /> },
-  { id: 2, type: 'approved', text: 'Rider approved: Amit Sharma', time: '1 hour ago', icon: <CheckCircle size={16} /> },
-  { id: 3, type: 'rejected', text: 'Request rejected: Rohan Das (Invalid ID)', time: '3 hours ago', icon: <XCircle size={16} /> },
-  { id: 4, type: 'new', text: 'New rider applied: Manish Verma', time: 'Yesterday', icon: <UserPlus size={16} /> }
-];
+// Removed MOCK_REQUESTS and RECENT_ACTIVITY arrays as they are no longer needed
 
 export default function AdminDeliveryRequests() {
   const [requests, setRequests] = useState([]);
@@ -82,7 +20,9 @@ export default function AdminDeliveryRequests() {
       const res = await fetch('http://localhost:5000/api/delivery');
       const data = await res.json();
       
-      const formatted = data.map(req => ({
+      const formatted = data
+        .filter(req => req.status === 'pending')
+        .map(req => ({
         id: req._id,
         name: req.name,
         phone: req.phone,
@@ -248,27 +188,6 @@ export default function AdminDeliveryRequests() {
                   </tbody>
                 </table>
               )}
-            </div>
-          </div>
-        </div>
-
-        <div className="activity-section">
-          <div className="activity-card">
-            <div className="card-header">
-              <h3><History size={18} /> Recent Activity</h3>
-            </div>
-            <div className="activity-list">
-              {RECENT_ACTIVITY.map(act => (
-                <div className="activity-item" key={act.id}>
-                  <div className={`act-icon ${act.type}`}>
-                    {act.icon}
-                  </div>
-                  <div className="act-content">
-                    <p>{act.text}</p>
-                    <span>{act.time}</span>
-                  </div>
-                </div>
-              ))}
             </div>
           </div>
         </div>

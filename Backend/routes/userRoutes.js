@@ -4,6 +4,7 @@ import {
   registerUser,
   logoutUser,
   getUserProfile,
+  updateUserProfile,
   getAllUsers,
   resetPassword,
   resetPasswordAdmin
@@ -17,6 +18,6 @@ router.post('/auth', authUser);
 router.post('/logout', logoutUser);
 router.put('/reset-password', resetPassword);
 router.put('/reset-password-admin', resetPasswordAdmin);
-router.route('/profile').get(protectUser, getUserProfile);
+router.route('/profile').get(protectUser, getUserProfile).put(protectUser, updateUserProfile);
 
 export default router;

@@ -204,7 +204,7 @@ function DeliveryHome() {
               <span style={{ fontSize: '12px', color: 'var(--del-primary)', fontWeight: 700 }}>STEP 1 OF 3</span>
               <span className="duty-status-badge online">Picked Up Phase</span>
             </div>
-            <h4 style={{ margin: 0, fontWeight: 700 }}>Navigate to Blinkit Dark Store</h4>
+            <h4 style={{ margin: 0, fontWeight: 700 }}>Navigate to QuickKart Dark Store</h4>
           </div>
 
           {/* Details map & directions card */}

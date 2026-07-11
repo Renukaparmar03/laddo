@@ -12,7 +12,7 @@ function DeliveryProfile() {
   const [profileInfo, setProfileInfo] = useState({
     name: '',
     phone: '',
-    email: 'rider@blinkit.com',
+    email: 'rider@quickkart.com',
     address: 'Noida Sector 62',
     vehicleType: '',
     vehicleNumber: 'UP 16 AB 1234'

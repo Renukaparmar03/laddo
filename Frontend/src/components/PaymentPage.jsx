@@ -43,7 +43,7 @@ const PaymentPage = ({ cart, navigate, setCart }) => {
       qty:     item.quantity,
       image:   item.image || item.images?.[0] || 'https://via.placeholder.com/150',
       price:   item.price,
-      seller:  item.seller || item.sellerId || '000000000000000000000000',
+      seller:  item.seller?._id || item.seller || item.sellerId || '000000000000000000000000',
     }));
 
   /** Calculate grand total (mirrors CartPage logic) */

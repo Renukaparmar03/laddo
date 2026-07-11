@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { ArrowLeft, Heart, Search, Share2, Star, Clock, Check, ChevronRight, ShieldCheck, ChevronDown } from 'lucide-react';
 import ProductCard from './ProductCard';
 
-const ProductDetailPage = ({ product, onBack, onSelectProduct, cart = [], setCart, navigate }) => {
+const ProductDetailPage = ({ product, onBack, onSelectProduct, cart = [], setCart, wishlist = [], setWishlist, navigate }) => {
   const [selectedUnitIndex, setSelectedUnitIndex] = useState(0);
-  const [isWishlisted, setIsWishlisted] = useState(false);
+  const isWishlisted = wishlist.some(item => item.id === product.id);
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -119,7 +119,15 @@ const ProductDetailPage = ({ product, onBack, onSelectProduct, cart = [], setCar
         <div className="detail-header-right">
           <button 
             className={`detail-header-btn wishlist-btn-detail ${isWishlisted ? 'active' : ''}`}
-            onClick={() => setIsWishlisted(!isWishlisted)}
+            onClick={() => {
+              if (setWishlist) {
+                if (isWishlisted) {
+                  setWishlist(prev => prev.filter(item => item.id !== product.id));
+                } else {
+                  setWishlist(prev => [...prev, product]);
+                }
+              }
+            }}
             aria-label="Wishlist"
           >
             <Heart size={20} fill={isWishlisted ? "#ef4444" : "none"} color={isWishlisted ? "#ef4444" : "#1a1a1a"} />
@@ -289,7 +297,7 @@ const ProductDetailPage = ({ product, onBack, onSelectProduct, cart = [], setCar
                   setSelectedUnitIndex(0);
                   window.scrollTo({ top: 0, behavior: 'smooth' });
                 }}>
-                  <ProductCard product={p} cart={cart} setCart={setCart} navigate={navigate} />
+                  <ProductCard product={p} cart={cart} setCart={setCart} wishlist={wishlist} setWishlist={setWishlist} navigate={navigate} />
                 </div>
               ))}
             </div>

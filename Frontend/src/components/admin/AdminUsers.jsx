@@ -19,34 +19,19 @@ export default function AdminUsers() {
     try {
       setLoading(true);
       
-      // Fetch both real users and sellers (to get orders)
-      const [usersRes, sellersRes] = await Promise.all([
+      const [usersRes, ordersRes] = await Promise.all([
         fetch('http://localhost:5000/api/users'),
-        fetch('http://localhost:5000/api/sellers')
+        fetch('http://localhost:5000/api/orders')
       ]);
       
       const usersData = await usersRes.json();
-      const sellersData = await sellersRes.json();
-
-      let allOrders = [];
-      // Fetch orders for every seller
-      await Promise.all(sellersData.map(async (seller) => {
-        try {
-          const orderRes = await fetch(`http://localhost:5000/api/orders/seller/${seller._id}`);
-          const orderData = await orderRes.json();
-          if (orderData.orders) {
-            allOrders = [...allOrders, ...orderData.orders];
-          }
-        } catch (e) {
-          console.error(e);
-        }
-      }));
+      const allOrders = await ordersRes.json();
 
       // Group orders by user ID to get their total order count and most recent address
       const userOrdersMap = new Map();
       
       allOrders.forEach(order => {
-        const userId = order.user;
+        const userId = order.user ? (order.user._id || order.user) : null;
         if (!userId) return;
 
         if (!userOrdersMap.has(userId)) {

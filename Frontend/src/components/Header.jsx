@@ -13,7 +13,7 @@ const Header = ({ setActiveTab, setActiveCategory }) => {
           }}
           style={{ cursor: 'pointer' }}
         >
-          <span className="logo-text">blink<span className="logo-accent">it</span></span>
+          <span className="logo-text">Quick<span className="logo-accent">Kart</span></span>
         </div>
         
         <div className="header-actions">
@@ -25,7 +25,7 @@ const Header = ({ setActiveTab, setActiveCategory }) => {
             <Wallet size={20} />
             <span className="action-label">₹500</span>
           </div>
-          <div className="action-item profile">
+          <div className="action-item profile" onClick={() => setActiveTab && setActiveTab('profile')} style={{ cursor: 'pointer' }}>
             <User size={20} />
           </div>
         </div>

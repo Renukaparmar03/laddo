@@ -53,7 +53,7 @@ function DeliveryLogin() {
             <Bike size={32} />
           </div>
           <div>
-            <h2 className="del-font-extrabold" style={{ margin: '0 0 4px 0', fontSize: '24px' }}>Blinkit Partner</h2>
+            <h2 className="del-font-extrabold" style={{ margin: '0 0 4px 0', fontSize: '24px' }}>QuickKart Partner</h2>
             <p style={{ color: 'var(--del-text-muted)', margin: 0, fontSize: '13px' }}>
               Delivering happiness in 10-minutes.
             </p>

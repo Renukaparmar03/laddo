@@ -83,10 +83,8 @@
 
 /* Layout */
 .main-layout {
-  display: grid;
-  grid-template-columns: 3fr 1fr;
-  gap: 24px;
-  align-items: start;
+  display: block;
+  width: 100%;
 }
 
 @media (max-width: 1024px) {

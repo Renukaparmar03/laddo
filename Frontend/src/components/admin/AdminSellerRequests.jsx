@@ -18,9 +18,9 @@ export default function AdminSellerRequests() {
       const data = await res.json();
       const formatted = data.map(seller => ({
         id: seller._id,
-        sellerName: seller.ownerName,
-        shopName: seller.businessName,
-        email: seller.email,
+        sellerName: seller.ownerName || seller.name || 'Unknown',
+        shopName: seller.businessName || seller.name || 'Unknown',
+        email: seller.email || 'No email',
         appliedDate: new Date(seller.createdAt).toLocaleDateString(),
         docsStatus: 'Uploaded', // placeholder
         gstStatus: 'Unverified', // placeholder
@@ -57,8 +57,8 @@ export default function AdminSellerRequests() {
   };
 
   const filteredRequests = requests.filter(req => {
-    const matchesSearch = req.shopName.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          req.sellerName.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = (req.shopName?.toLowerCase().includes(searchTerm.toLowerCase())) || 
+                          (req.sellerName?.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesStatus = filterStatus === 'All' || req.docsStatus.includes(filterStatus) || filterStatus === 'Pending';
     return matchesSearch && matchesStatus;
   });

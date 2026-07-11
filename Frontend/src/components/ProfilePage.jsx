@@ -23,13 +23,16 @@ import {
   LogOut,
   ChevronRight,
   ChevronDown,
-  Mail
+  Mail,
+  Edit
 } from 'lucide-react';
 
 const ProfilePage = ({ setActiveTab, setActiveCategory }) => {
-  const [hideSensitive, setHideSensitive] = useState(false);
-  const [appearance, setAppearance] = useState('LIGHT');
+  const [hideSensitive, setHideSensitive] = useState(localStorage.getItem('hideSensitive') === 'true');
+  const [appearance, setAppearance] = useState(localStorage.getItem('theme') === 'DARK' ? 'DARK' : 'LIGHT');
   const [showAppearanceDropdown, setShowAppearanceDropdown] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [profileData, setProfileData] = useState({ name: '', email: '', phone: '', birthday: '', avatar: '' });
   const [isScrolled, setIsScrolled] = useState(false);
   const [orderCount, setOrderCount] = useState(null);
   const [loggingOut, setLoggingOut] = useState(false);
@@ -39,8 +42,9 @@ const ProfilePage = ({ setActiveTab, setActiveCategory }) => {
   const userInfoStr = localStorage.getItem('user_info');
   const userInfo = userInfoStr ? JSON.parse(userInfoStr) : null;
   const userId   = userInfo ? (userInfo._id || userInfo.id) : null;
-  const userName  = userInfo?.name  || 'Your account';
-  const userEmail = userInfo?.email || '';
+  const userName  = profileData.name || userInfo?.name || 'Your account';
+  const userEmail = profileData.email || userInfo?.email || '';
+  const userAvatar = profileData.avatar || userInfo?.avatar || '';
 
   // Mask email for display: e.g. vi***@gmail.com
   const maskEmail = (email) => {
@@ -69,6 +73,60 @@ const ProfilePage = ({ setActiveTab, setActiveCategory }) => {
     };
   }, []);
 
+  useEffect(() => {
+    localStorage.setItem('hideSensitive', hideSensitive);
+  }, [hideSensitive]);
+
+  useEffect(() => {
+    localStorage.setItem('theme', appearance);
+    if (appearance === 'DARK') {
+      document.body.classList.add('dark-mode');
+    } else {
+      document.body.classList.remove('dark-mode');
+    }
+  }, [appearance]);
+
+  const handleLogout = async () => {
+    setLoggingOut(true);
+    try {
+      await fetch('http://localhost:5000/api/users/logout', { method: 'POST', credentials: 'include' });
+    } catch (e) {
+      console.warn('Logout request failed:', e.message);
+    }
+    localStorage.removeItem('user_logged_in');
+    localStorage.removeItem('user_info');
+    setLoggingOut(false);
+    setActiveTab('home');
+    if (setActiveCategory) setActiveCategory('All');
+    window.location.href = '/user/login';
+  };
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (!userId) return;
+      try {
+        const res = await fetch('http://localhost:5000/api/users/profile', { credentials: 'include' });
+        if (res.ok) {
+          const data = await res.json();
+          setProfileData({
+            name: data.name || '',
+            email: data.email || '',
+            phone: data.phone || '',
+            birthday: data.birthday || '',
+            avatar: data.avatar || ''
+          });
+          const updatedUserInfo = { ...userInfo, ...data };
+          localStorage.setItem('user_info', JSON.stringify(updatedUserInfo));
+        } else if (res.status === 401) {
+          handleLogout();
+        }
+      } catch (err) {
+        console.error('Error fetching profile:', err);
+      }
+    };
+    fetchProfile();
+  }, [userId]);
+
   // Fetch real order count for this user
   useEffect(() => {
     const fetchOrderCount = async () => {
@@ -86,6 +144,26 @@ const ProfilePage = ({ setActiveTab, setActiveCategory }) => {
     fetchOrderCount();
   }, [userId]);
 
+  const handleSaveProfile = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await fetch('http://localhost:5000/api/users/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(profileData)
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const updatedUserInfo = { ...userInfo, ...data };
+        localStorage.setItem('user_info', JSON.stringify(updatedUserInfo));
+        setIsEditing(false);
+      }
+    } catch (err) {
+      console.error('Error saving profile:', err);
+    }
+  };
+
   const handleBackToHome = () => {
     setActiveTab('home');
     if (setActiveCategory) {
@@ -95,25 +173,6 @@ const ProfilePage = ({ setActiveTab, setActiveCategory }) => {
 
   const handleGoToOrders = () => {
     setActiveTab('orders');
-  };
-
-  const handleLogout = async () => {
-    setLoggingOut(true);
-    try {
-      // Clear JWT cookie via backend
-      await fetch('http://localhost:5000/api/users/logout', { method: 'POST', credentials: 'include' });
-    } catch (e) {
-      console.warn('Logout request failed:', e.message);
-    }
-    // Clear localStorage
-    localStorage.removeItem('user_logged_in');
-    localStorage.removeItem('user_info');
-    setLoggingOut(false);
-    // Navigate back to home (which will show login screen)
-    setActiveTab('home');
-    if (setActiveCategory) setActiveCategory('All');
-    // Force reload so App re-evaluates auth state
-    window.location.href = '/user/login';
   };
 
   return (
@@ -133,17 +192,23 @@ const ProfilePage = ({ setActiveTab, setActiveCategory }) => {
       {/* Yellow/Orange Top Gradient Profile Header */}
       <div className="profile-header-gradient">
         <div className="profile-avatar-section">
-          <div className="profile-avatar-circle">
-            {/* Show first letter of name as avatar */}
-            {userName && userName !== 'Your account' ? (
+          <div className="profile-avatar-circle" onClick={() => setIsEditing(true)} style={{ cursor: 'pointer', position: 'relative' }}>
+            {userAvatar ? (
+              <img src={userAvatar} alt="Profile" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+            ) : userName && userName !== 'Your account' ? (
               <span style={{ fontSize: '32px', fontWeight: '700', color: '#fff', textTransform: 'uppercase' }}>
                 {userName.charAt(0)}
               </span>
             ) : (
               <User size={46} className="profile-avatar-icon" />
             )}
+            <div style={{ position: 'absolute', bottom: -5, right: -5, background: '#fff', borderRadius: '50%', padding: '4px', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}>
+              <Edit size={14} color="#333" />
+            </div>
           </div>
-          <h2 className="profile-username">{userName}</h2>
+          <h2 className="profile-username" onClick={() => setIsEditing(true)} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            {userName} <Edit size={14} style={{ opacity: 0.6 }} />
+          </h2>
           {userEmail && (
             <p className="profile-phone" style={{ display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'center' }}>
               <Mail size={13} style={{ opacity: 0.8 }} />
@@ -157,8 +222,8 @@ const ProfilePage = ({ setActiveTab, setActiveCategory }) => {
         {/* Birthday Promotion Banner */}
         <div className="birthday-banner">
           <div className="birthday-text-col">
-            <h4 className="birthday-title">Add your birthday</h4>
-            <span className="birthday-action">Enter details <ChevronRight size={12} style={{ display: 'inline', marginLeft: '2px' }} /></span>
+            <h4 className="birthday-title">{profileData.birthday ? `Birthday: ${profileData.birthday}` : 'Add your birthday'}</h4>
+            <span className="birthday-action" onClick={() => setIsEditing(true)} style={{ cursor: 'pointer' }}>{profileData.birthday ? 'Edit details' : 'Enter details'} <ChevronRight size={12} style={{ display: 'inline', marginLeft: '2px' }} /></span>
           </div>
           <div className="birthday-cake-art">🎂</div>
         </div>
@@ -187,7 +252,7 @@ const ProfilePage = ({ setActiveTab, setActiveCategory }) => {
                 <span className="wallet-rupee-symbol">₹</span>
               </div>
             </div>
-            <span className="action-card-label">Blinkit Money</span>
+            <span className="action-card-label">QuickKart Money</span>
           </button>
 
           <button className="action-card">
@@ -259,32 +324,32 @@ const ProfilePage = ({ setActiveTab, setActiveCategory }) => {
         <div className="profile-info-section">
           <h3 className="profile-section-heading">Your information</h3>
           <div className="profile-list">
-            <div className="profile-list-item">
+            <div className="profile-list-item" onClick={() => alert('Feature coming soon')} style={{ cursor: 'pointer' }}>
               <BookOpen size={18} className="list-icon" />
               <span className="list-label">Address book</span>
               <ChevronRight size={16} className="list-chevron" />
             </div>
-            <div className="profile-list-item">
+            <div className="profile-list-item" onClick={() => alert('Feature coming soon')} style={{ cursor: 'pointer' }}>
               <Coffee size={18} className="list-icon" />
               <span className="list-label">Bookmarked recipes</span>
               <ChevronRight size={16} className="list-chevron" />
             </div>
-            <div className="profile-list-item">
+            <div className="profile-list-item" onClick={() => setActiveTab('wishlist')} style={{ cursor: 'pointer' }}>
               <Heart size={18} className="list-icon" />
               <span className="list-label">Your wishlist</span>
               <ChevronRight size={16} className="list-chevron" />
             </div>
-            <div className="profile-list-item">
+            <div className="profile-list-item" onClick={() => alert('Feature coming soon')} style={{ cursor: 'pointer' }}>
               <FileText size={18} className="list-icon" />
               <span className="list-label">GST details</span>
               <ChevronRight size={16} className="list-chevron" />
             </div>
-            <div className="profile-list-item">
+            <div className="profile-list-item" onClick={() => alert('Feature coming soon')} style={{ cursor: 'pointer' }}>
               <Gift size={18} className="list-icon" />
               <span className="list-label">E-gift cards</span>
               <ChevronRight size={16} className="list-chevron" />
             </div>
-            <div className="profile-list-item">
+            <div className="profile-list-item" onClick={() => alert('Feature coming soon')} style={{ cursor: 'pointer' }}>
               <FileText size={18} className="list-icon" />
               <span className="list-label">Your prescriptions</span>
               <ChevronRight size={16} className="list-chevron" />
@@ -296,22 +361,22 @@ const ProfilePage = ({ setActiveTab, setActiveCategory }) => {
         <div className="profile-info-section">
           <h3 className="profile-section-heading">Payment and coupons</h3>
           <div className="profile-list">
-            <div className="profile-list-item">
+            <div className="profile-list-item" onClick={() => alert('Feature coming soon')} style={{ cursor: 'pointer' }}>
               <Wallet size={18} className="list-icon" />
-              <span className="list-label">Blinkit Money</span>
+              <span className="list-label">QuickKart Money</span>
               <ChevronRight size={16} className="list-chevron" />
             </div>
-            <div className="profile-list-item">
+            <div className="profile-list-item" onClick={() => alert('Feature coming soon')} style={{ cursor: 'pointer' }}>
               <CreditCard size={18} className="list-icon" />
               <span className="list-label">Payment settings</span>
               <ChevronRight size={16} className="list-chevron" />
             </div>
-            <div className="profile-list-item">
+            <div className="profile-list-item" onClick={() => alert('Feature coming soon')} style={{ cursor: 'pointer' }}>
               <Gift size={18} className="list-icon" />
               <span className="list-label">Claim Gift card</span>
               <ChevronRight size={16} className="list-chevron" />
             </div>
-            <div className="profile-list-item">
+            <div className="profile-list-item" onClick={() => alert('Feature coming soon')} style={{ cursor: 'pointer' }}>
               <Tag size={18} className="list-icon" />
               <span className="list-label">Your collected rewards</span>
               <ChevronRight size={16} className="list-chevron" />
@@ -323,12 +388,12 @@ const ProfilePage = ({ setActiveTab, setActiveCategory }) => {
         <div className="profile-info-section">
           <h3 className="profile-section-heading">Feeding India</h3>
           <div className="profile-list">
-            <div className="profile-list-item">
+            <div className="profile-list-item" onClick={() => alert('Feature coming soon')} style={{ cursor: 'pointer' }}>
               <div className="feeding-india-logo">fi</div>
               <span className="list-label">Your impact</span>
               <ChevronRight size={16} className="list-chevron" />
             </div>
-            <div className="profile-list-item">
+            <div className="profile-list-item" onClick={() => alert('Feature coming soon')} style={{ cursor: 'pointer' }}>
               <Receipt size={18} className="list-icon" />
               <span className="list-label">Get Feeding India receipt</span>
               <ChevronRight size={16} className="list-chevron" />
@@ -340,27 +405,27 @@ const ProfilePage = ({ setActiveTab, setActiveCategory }) => {
         <div className="profile-info-section">
           <h3 className="profile-section-heading">Other Information</h3>
           <div className="profile-list">
-            <div className="profile-list-item">
+            <div className="profile-list-item" onClick={() => alert('Feature coming soon')} style={{ cursor: 'pointer' }}>
               <Share2 size={18} className="list-icon" />
               <span className="list-label">Share the app</span>
               <ChevronRight size={16} className="list-chevron" />
             </div>
-            <div className="profile-list-item">
+            <div className="profile-list-item" onClick={() => alert('Feature coming soon')} style={{ cursor: 'pointer' }}>
               <Info size={18} className="list-icon" />
               <span className="list-label">About us</span>
               <ChevronRight size={16} className="list-chevron" />
             </div>
-            <div className="profile-list-item">
+            <div className="profile-list-item" onClick={() => window.location.href = '/seller'} style={{ cursor: 'pointer' }}>
               <ShoppingBag size={18} className="list-icon" />
-              <span className="list-label">Sell on Blinkit</span>
+              <span className="list-label">Sell on QuickKart</span>
               <ChevronRight size={16} className="list-chevron" />
             </div>
-            <div className="profile-list-item">
+            <div className="profile-list-item" onClick={() => alert('Feature coming soon')} style={{ cursor: 'pointer' }}>
               <Lock size={18} className="list-icon" />
               <span className="list-label">Account privacy</span>
               <ChevronRight size={16} className="list-chevron" />
             </div>
-            <div className="profile-list-item">
+            <div className="profile-list-item" onClick={() => alert('Feature coming soon')} style={{ cursor: 'pointer' }}>
               <Bell size={18} className="list-icon" />
               <span className="list-label">Notification preferences</span>
               <ChevronRight size={16} className="list-chevron" />
@@ -396,10 +461,47 @@ const ProfilePage = ({ setActiveTab, setActiveCategory }) => {
 
         {/* Brand Footer */}
         <div className="profile-brand-footer">
-          <span className="brand-footer-logo">blinkit</span>
+          <span className="brand-footer-logo">Quick<span className="logo-accent">Kart</span></span>
           <p className="brand-footer-version">v17.95.4</p>
         </div>
       </div>
+
+      {isEditing && (
+        <div className="modal-overlay" onClick={() => setIsEditing(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '400px', width: '90%', borderRadius: '12px', background: '#fff', overflow: 'hidden' }}>
+            <div className="modal-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px', borderBottom: '1px solid #f3f4f6' }}>
+              <h2 style={{ margin: 0, fontSize: '18px', color: '#111827' }}>Edit Profile</h2>
+              <button className="close-btn" onClick={() => setIsEditing(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6b7280' }}>
+                <Edit size={0} /> {/* Just for placeholder since lucide-react x might not be imported */}
+                <span style={{ fontSize: '20px', fontWeight: 'bold' }}>&times;</span>
+              </button>
+            </div>
+            <form onSubmit={handleSaveProfile} className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '16px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <label style={{ fontSize: '13px', fontWeight: '600', color: '#374151' }}>Name</label>
+                <input type="text" value={profileData.name} onChange={e => setProfileData({...profileData, name: e.target.value})} className="form-input" required style={{ padding: '10px', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '14px' }} />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <label style={{ fontSize: '13px', fontWeight: '600', color: '#374151' }}>Email</label>
+                <input type="email" value={profileData.email} onChange={e => setProfileData({...profileData, email: e.target.value})} className="form-input" required style={{ padding: '10px', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '14px' }} />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <label style={{ fontSize: '13px', fontWeight: '600', color: '#374151' }}>Phone Number</label>
+                <input type="tel" value={profileData.phone} onChange={e => setProfileData({...profileData, phone: e.target.value})} className="form-input" placeholder="e.g. +91 9876543210" style={{ padding: '10px', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '14px' }} />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <label style={{ fontSize: '13px', fontWeight: '600', color: '#374151' }}>Birthday</label>
+                <input type="date" value={profileData.birthday} onChange={e => setProfileData({...profileData, birthday: e.target.value})} className="form-input" style={{ padding: '10px', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '14px' }} />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <label style={{ fontSize: '13px', fontWeight: '600', color: '#374151' }}>Avatar Image URL</label>
+                <input type="url" value={profileData.avatar} onChange={e => setProfileData({...profileData, avatar: e.target.value})} className="form-input" placeholder="https://example.com/photo.jpg" style={{ padding: '10px', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '14px' }} />
+              </div>
+              <button type="submit" className="btn-primary" style={{ marginTop: '8px', padding: '12px', borderRadius: '8px', background: '#0c831f', color: '#fff', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>Save Changes</button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

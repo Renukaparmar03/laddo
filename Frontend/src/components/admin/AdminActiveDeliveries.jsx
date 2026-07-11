@@ -42,9 +42,11 @@ export default function AdminActiveDeliveries() {
       const activeOrderStatuses = ['Assigned', 'Picked Up', 'Out for Delivery'];
       const active = uniqueOrders.filter(o => activeOrderStatuses.includes(o.status));
 
-      const dynamicDeliveries = active.map(order => {
+      const dynamicDeliveries = active.reduce((acc, order) => {
         const dBoyId = order.deliveryBoy?._id || order.deliveryBoy;
-        const rider = riders.find(r => r._id === dBoyId);
+        const rider = riders.find(r => r._id === dBoyId && r.status === 'approved');
+        
+        if (!rider) return acc; // Skip if no active delivery partner
         
         let progress = 10;
         let estimatedTime = '30 mins';
@@ -60,17 +62,19 @@ export default function AdminActiveDeliveries() {
           uiStatus = 'On the way';
         }
 
-        return {
-          orderId: order.orderId,
-          riderName: rider ? (rider.fullName || rider.name) : 'Pending Assignment',
-          customerName: 'Customer', // Abstracted since user data isn't joined
+        acc.push({
+          orderId: order.orderId || order._id.substring(0,8).toUpperCase(),
+          riderName: rider.name || rider.fullName,
+          customerName: 'Customer',
           customerLocation: `${order.shippingAddress?.address || ''}, ${order.shippingAddress?.city || ''}`,
           restaurantName: order.sellerInfo ? (order.sellerInfo.businessName || order.sellerInfo.ownerName) : 'Unknown Store',
           status: uiStatus,
           estimatedTime,
           progress
-        };
-      });
+        });
+
+        return acc;
+      }, []);
 
       setDeliveries(dynamicDeliveries);
     } catch(err) {

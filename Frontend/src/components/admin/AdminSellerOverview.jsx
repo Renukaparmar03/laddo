@@ -15,6 +15,26 @@ export default function AdminSellerOverview() {
 
   React.useEffect(() => {
     fetchSellerData();
+    
+    // Poll sellers to keep pending count in sync in real-time
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch('http://localhost:5000/api/sellers');
+        if (res.ok) {
+          const sellers = await res.json();
+          setData(prev => ({
+            ...prev,
+            totalSellers: sellers.length,
+            activeSellers: sellers.filter(s => s.status === 'approved').length,
+            pendingRequests: sellers.filter(s => s.status === 'pending').length,
+          }));
+        }
+      } catch (e) {
+        console.error('Polling error:', e);
+      }
+    }, 5000);
+
+    return () => clearInterval(interval);
   }, []);
 
   const fetchSellerData = async () => {
@@ -65,8 +85,8 @@ export default function AdminSellerOverview() {
            status: s.isApproved ? 'Active' : 'Pending' 
         }));
 
-      const activeSellers = sellers.filter(s => s.isApproved).length;
-      const pendingRequests = sellers.length - activeSellers;
+      const activeSellers = sellers.filter(s => s.status === 'approved').length;
+      const pendingRequests = sellers.filter(s => s.status === 'pending').length;
       
       const recentActivity = sellers
         .sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt))
@@ -76,7 +96,7 @@ export default function AdminSellerOverview() {
           const timeStr = hours < 1 ? 'Just now' : (hours < 24 ? `${hours} hours ago` : `${Math.floor(hours/24)} days ago`);
           return {
              name: s.businessName || 'A new shop',
-             type: s.isApproved ? 'approved' : 'registered',
+             type: s.status === 'approved' ? 'approved' : 'registered',
              time: timeStr
           }
       });
