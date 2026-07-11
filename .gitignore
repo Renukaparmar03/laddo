@@ -1,0 +1,12 @@
+# Backend
+Backend/node_modules/
+Backend/.env
+Backend/.env.*
+Backend/test.js
+Backend/test-mongo.cjs
+Backend/test-mongo2.cjs
+
+# Frontend
+Frontend/node_modules/
+Frontend/.env
+Frontend/.env.*
