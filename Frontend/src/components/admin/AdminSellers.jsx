@@ -14,23 +14,56 @@ export default function AdminSellers() {
 
   const fetchSellers = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/sellers?status=approved');
-      const data = await res.json();
+      const [sellersRes, ordersRes] = await Promise.all([
+        fetch('http://localhost:5000/api/sellers?status=approved'),
+        fetch('http://localhost:5000/api/orders')
+      ]);
+      const data = await sellersRes.json();
+      const allOrders = await ordersRes.json();
+
+      const sellerStats = {};
+      data.forEach(s => {
+        sellerStats[s._id] = { orders: 0, revenue: 0 };
+      });
+
+      allOrders.forEach(order => {
+        const sellersInOrder = new Set();
+        order.orderItems.forEach(item => {
+          if (item.seller && item.seller._id) {
+            const sId = item.seller._id;
+            if (sellerStats[sId]) {
+              if (!sellersInOrder.has(sId)) {
+                 sellerStats[sId].orders += 1;
+                 sellersInOrder.add(sId);
+              }
+              sellerStats[sId].revenue += (item.price * item.qty);
+            }
+          }
+        });
+      });
+
       const formatted = data.map(seller => ({
         id: seller._id,
-        shopName: seller.businessName,
+        shopName: seller.businessName || seller.ownerName,
         ownerName: seller.ownerName,
         email: seller.email,
         phone: seller.phone,
-        gstStatus: 'Verified',
-        revenue: '₹0',
-        orders: 0,
+        gstStatus: seller.gstNumber ? 'Verified' : 'Pending',
+        revenue: '₹' + (sellerStats[seller._id]?.revenue || 0).toLocaleString(),
+        orders: sellerStats[seller._id]?.orders || 0,
         status: seller.status === 'approved' ? 'Active' : seller.status,
         rating: 0,
-        image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&q=80',
+        image: seller.logo || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&q=80',
         address: seller.address,
-        category: 'General',
-        joinDate: new Date(seller.createdAt).toLocaleDateString()
+        category: seller.businessType || 'General',
+        joinDate: new Date(seller.createdAt).toLocaleDateString(),
+        pan: seller.panNumber || 'N/A',
+        bankName: seller.bankName || 'N/A',
+        accountNo: seller.accountNumber || 'N/A',
+        ifsc: seller.ifscCode || 'N/A',
+        accountHolder: seller.accountHolderName || 'N/A',
+        gstin: seller.gstNumber || 'N/A',
+        fssai: seller.fssaiNumber || 'N/A'
       }));
       setSellers(formatted);
     } catch(err) {

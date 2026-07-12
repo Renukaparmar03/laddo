@@ -16,18 +16,22 @@ function DeliveryHistory() {
         const res = await fetch(`http://localhost:5000/api/orders/delivery-boy/${deliveryBoyId}`);
         if (res.ok) {
           const data = await res.json();
-          // Map DB orders to trip format
-          const mappedTrips = data.map(order => ({
-            id: order._id,
-            dateRaw: new Date(order.createdAt),
-            date: new Date(order.createdAt).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }),
-            time: new Date(order.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
-            store: order.orderItems[0]?.seller?.businessName || 'Seller Store',
-            destination: order.shippingAddress?.address + ', ' + order.shippingAddress?.city,
-            payout: '₹' + (order.shippingPrice || 25),
-            itemsCount: order.orderItems.length,
-            status: order.status
-          }));
+          // Map DB orders to trip format, filtering only completed ones
+          const completedOrders = data.filter(order => order.status === 'Delivered');
+          const mappedTrips = completedOrders.map(order => {
+            const timestamp = order.deliveredAt || order.updatedAt || order.createdAt;
+            return {
+              id: order._id,
+              dateRaw: new Date(timestamp),
+              date: new Date(timestamp).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }),
+              time: new Date(timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+              store: order.orderItems[0]?.seller?.businessName || 'Seller Store',
+              destination: order.shippingAddress?.address + ', ' + order.shippingAddress?.city,
+              payout: '₹' + (order.shippingPrice || 25),
+              itemsCount: order.orderItems?.length || 0,
+              status: order.status
+            };
+          });
           setTrips(mappedTrips);
         }
       } catch (err) {
@@ -40,7 +44,7 @@ function DeliveryHistory() {
   const handleClearHistory = () => {
     localStorage.removeItem('rider_trips');
     localStorage.removeItem('rider_earnings');
-    setTrips([]);
+    // We intentionally DO NOT clear trips here because they are fetched from the database permanently.
   };
 
   const getFilteredTrips = () => {
@@ -72,19 +76,6 @@ function DeliveryHistory() {
           <h2 className="del-font-extrabold" style={{ margin: 0, fontSize: '22px' }}>Trips History</h2>
           <p style={{ color: 'var(--del-text-muted)', fontSize: '13px', margin: 0 }}>List of your deliveries.</p>
         </div>
-        
-        {trips.length > 0 && (
-          <button 
-            onClick={handleClearHistory} 
-            style={{ 
-              background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', 
-              color: '#ef4444', padding: '6px 12px', borderRadius: '8px', 
-              fontSize: '11px', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' 
-            }}
-          >
-            Reset
-          </button>
-        )}
       </div>
 
       {/* Tabs */}

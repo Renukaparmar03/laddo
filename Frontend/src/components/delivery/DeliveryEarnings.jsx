@@ -4,20 +4,39 @@ import './Delivery.css'
 
 function DeliveryEarnings() {
   const [totalEarnings, setTotalEarnings] = useState('0.00');
+  const [currentTripsCount, setCurrentTripsCount] = useState(0);
   const [isWithdrawing, setIsWithdrawing] = useState(false);
   const [withdrawnSuccess, setWithdrawnSuccess] = useState(false);
   const [lastWithdrawnAmount, setLastWithdrawnAmount] = useState('0.00');
 
   useEffect(() => {
-    // Read from localStorage, fallback to mock initial value
-    const localEarnings = localStorage.getItem('rider_earnings');
-    if (localEarnings) {
-      setTotalEarnings(localEarnings);
-    } else {
-      const initialMockVal = '118.50'; // sum of the 3 pre-loaded mock trips
-      setTotalEarnings(initialMockVal);
-      localStorage.setItem('rider_earnings', initialMockVal);
-    }
+    const fetchEarnings = async () => {
+      try {
+        const deliveryInfo = JSON.parse(localStorage.getItem('delivery_info') || '{}');
+        const deliveryBoyId = deliveryInfo._id || deliveryInfo.id;
+        if (!deliveryBoyId) return;
+
+        const res = await fetch(`http://localhost:5000/api/orders/delivery-boy/${deliveryBoyId}`);
+        if (res.ok) {
+          const data = await res.json();
+          const completedOrders = data.filter(order => order.status === 'Delivered');
+          
+          let total = 0;
+          completedOrders.forEach(order => {
+             total += (order.shippingPrice || 25);
+          });
+
+          const withdrawn = parseFloat(localStorage.getItem('rider_withdrawn') || '0');
+          const remaining = Math.max(0, total - withdrawn);
+          
+          setTotalEarnings(remaining.toFixed(2));
+          setCurrentTripsCount(completedOrders.length);
+        }
+      } catch (err) {
+        console.error('Error fetching earnings:', err);
+      }
+    };
+    fetchEarnings();
   }, []);
 
   const handleWithdraw = () => {
@@ -26,8 +45,9 @@ function DeliveryEarnings() {
       setLastWithdrawnAmount(totalEarnings);
       setTimeout(() => {
         setIsWithdrawing(false);
+        const previouslyWithdrawn = parseFloat(localStorage.getItem('rider_withdrawn') || '0');
+        localStorage.setItem('rider_withdrawn', (previouslyWithdrawn + parseFloat(totalEarnings)).toFixed(2));
         setTotalEarnings('0.00');
-        localStorage.setItem('rider_earnings', '0.00');
         setWithdrawnSuccess(true);
         setTimeout(() => {
           setWithdrawnSuccess(false);
@@ -36,7 +56,6 @@ function DeliveryEarnings() {
     }
   };
 
-  const currentTripsCount = JSON.parse(localStorage.getItem('rider_trips') || '[]').length;
   const targetTrips = 8;
   const progressPercent = Math.min((currentTripsCount / targetTrips) * 100, 100);
 

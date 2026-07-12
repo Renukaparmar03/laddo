@@ -33,6 +33,9 @@ const formatTime = (seconds) => {
 const DashboardHome = () => {
   const [totalProducts, setTotalProducts] = useState(0);
   const [orderStats, setOrderStats] = useState({ totalOrders: 0, totalSales: 0, pendingOrders: 0, recentOrders: [] });
+  const [bestSellingProduct, setBestSellingProduct] = useState(null);
+  const [totalCustomers, setTotalCustomers] = useState(0);
+  const [salesData, setSalesData] = useState([]);
 
   React.useEffect(() => {
     const fetchStats = async () => {
@@ -52,12 +55,73 @@ const DashboardHome = () => {
             const ordersRes = await fetch(`http://localhost:5000/api/orders/seller/${sellerId}`);
             if (ordersRes.ok) {
               const ordersData = await ordersRes.json();
+              const orders = ordersData.orders || [];
               setOrderStats({
                 totalOrders: ordersData.totalOrders || 0,
                 totalSales: ordersData.totalSales || 0,
                 pendingOrders: ordersData.pendingOrders || 0,
-                recentOrders: ordersData.orders || []
+                recentOrders: orders
               });
+
+              // Compute additional stats
+              const productCounts = {};
+              const uniqueCustomers = new Set();
+
+              orders.forEach(o => {
+                if (o.user) {
+                  uniqueCustomers.add(typeof o.user === 'object' ? o.user._id || o.user.id || JSON.stringify(o.user) : o.user);
+                }
+
+                if (o.status !== 'Rejected' && o.status !== 'Cancelled') {
+                  o.orderItems?.forEach(item => {
+                    if (!productCounts[item.title]) {
+                      productCounts[item.title] = { count: 0, image: item.image, title: item.title };
+                    }
+                    productCounts[item.title].count += (item.qty || 1);
+                  });
+                }
+              });
+
+              setTotalCustomers(uniqueCustomers.size);
+
+              let bestProduct = null;
+              let maxCount = 0;
+              for (const key in productCounts) {
+                if (productCounts[key].count > maxCount) {
+                  maxCount = productCounts[key].count;
+                  bestProduct = productCounts[key];
+                }
+              }
+              setBestSellingProduct(bestProduct);
+
+              // 7 Days Sales
+              const last7Days = [];
+              for (let i = 6; i >= 0; i--) {
+                const d = new Date();
+                d.setDate(d.getDate() - i);
+                last7Days.push({
+                  date: d.toLocaleDateString('en-US', { weekday: 'short' }),
+                  sales: 0,
+                  dateString: d.toDateString()
+                });
+              }
+
+              orders.forEach(o => {
+                if (o.status !== 'Rejected' && o.status !== 'Cancelled') {
+                  const orderDate = new Date(o.createdAt).toDateString();
+                  const dayEntry = last7Days.find(d => d.dateString === orderDate);
+                  if (dayEntry) {
+                    dayEntry.sales += o.totalPrice || 0;
+                  }
+                }
+              });
+
+              const maxSales = Math.max(...last7Days.map(d => d.sales), 1);
+              setSalesData(last7Days.map(d => ({
+                label: d.date,
+                amount: d.sales,
+                height: `${(d.sales / maxSales) * 100}%`
+              })));
             }
           }
         }
@@ -119,20 +183,29 @@ const DashboardHome = () => {
       </div>
 
       <div className="dashboard-grid">
-        {/* Sales Overview Section */}
         <div className="sales-overview card">
           <div className="card-header">
             <h3>Sales Overview</h3>
-            <select className="date-select"><option>This Month</option></select>
+            <select className="date-select"><option>Last 7 Days</option></select>
           </div>
           <div className="chart-placeholder">
-            <div className="bar" style={{height: '0%'}}></div>
-            <div className="bar" style={{height: '0%'}}></div>
-            <div className="bar" style={{height: '0%'}}></div>
-            <div className="bar" style={{height: '0%'}}></div>
-            <div className="bar" style={{height: '0%'}}></div>
-            <div className="bar" style={{height: '0%'}}></div>
-            <div className="bar" style={{height: '0%'}}></div>
+            {salesData.length > 0 ? salesData.map((data, idx) => (
+              <div key={idx} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%', justifyContent: 'flex-end', flex: 1, margin: '0 5px' }}>
+                <div style={{ fontSize: '10px', color: '#666', marginBottom: '4px' }}>₹{data.amount}</div>
+                <div className="bar" style={{ flex: 'none', height: data.height, width: '100%', minHeight: '4px' }}></div>
+                <div style={{ fontSize: '12px', color: '#666', marginTop: '8px' }}>{data.label}</div>
+              </div>
+            )) : (
+              <>
+                <div className="bar" style={{height: '0%'}}></div>
+                <div className="bar" style={{height: '0%'}}></div>
+                <div className="bar" style={{height: '0%'}}></div>
+                <div className="bar" style={{height: '0%'}}></div>
+                <div className="bar" style={{height: '0%'}}></div>
+                <div className="bar" style={{height: '0%'}}></div>
+                <div className="bar" style={{height: '0%'}}></div>
+              </>
+            )}
           </div>
         </div>
 
@@ -140,17 +213,27 @@ const DashboardHome = () => {
           {/* Small stats cards */}
           <div className="small-stat-card card">
             <h4>Best Selling Product</h4>
-            <div className="product-stat" style={{ justifyContent: 'center', color: '#666' }}>
-              <p>No sales data yet.</p>
-            </div>
+            {bestSellingProduct ? (
+              <div className="product-stat">
+                <img src={bestSellingProduct.image || 'https://via.placeholder.com/60'} alt={bestSellingProduct.title} />
+                <div>
+                  <p className="name">{bestSellingProduct.title}</p>
+                  <p className="sales">{bestSellingProduct.count} units sold</p>
+                </div>
+              </div>
+            ) : (
+              <div className="product-stat" style={{ justifyContent: 'center', color: '#666' }}>
+                <p>No sales data yet.</p>
+              </div>
+            )}
           </div>
           <div className="small-stat-card card">
             <h4>Total Customers</h4>
             <div className="customer-stat">
               <User size={32} className="text-blue" />
               <div>
-                <h3>0</h3>
-                <p className="trend" style={{ color: '#666' }}>No data available</p>
+                <h3>{totalCustomers}</h3>
+                <p className="trend" style={{ color: '#666' }}>Unique buyers</p>
               </div>
             </div>
           </div>

@@ -16,6 +16,7 @@ import AdminFundRelease from './AdminFundRelease';
 import AdminDeliveryOverview from './AdminDeliveryOverview';
 import AdminDeliveryPartners from './AdminDeliveryPartners';
 import AdminActiveDeliveries from './AdminActiveDeliveries';
+import AdminDeliveryHistory from './AdminDeliveryHistory';
 import AdminDeliveryEarnings from './AdminDeliveryEarnings';
 import AdminDeliveryRequests from './AdminDeliveryRequests';
 import AdminBanners from './AdminBanners';
@@ -71,14 +72,24 @@ const AdminDashboard = () => {
           };
         });
 
-        ordersData.forEach(order => {
+        const validOrders = ordersData.filter(order => {
+          return order.orderItems && order.orderItems.some(item => item.seller && item.seller._id && sellerStatsMap[item.seller._id]);
+        });
+
+        validOrders.forEach(order => {
           totalRevenue += order.totalPrice || 0;
+          const sellersInOrder = new Set();
+          
           order.orderItems.forEach(item => {
             if (item.seller && item.seller._id) {
               const sId = item.seller._id;
               if (sellerStatsMap[sId]) {
                 sellerStatsMap[sId].rev += (item.price * item.qty);
-                sellerStatsMap[sId].orders += 1;
+                
+                if (!sellersInOrder.has(sId)) {
+                  sellerStatsMap[sId].orders += 1;
+                  sellersInOrder.add(sId);
+                }
               }
             }
           });
@@ -88,7 +99,7 @@ const AdminDashboard = () => {
         sellerStats.sort((a, b) => b.rev - a.rev);
         const top5Sellers = sellerStats.slice(0, 4);
 
-        const recentOrders = ordersData.slice(0, 5);
+        const recentOrders = validOrders.slice(0, 10);
 
         // Real active users count (excluding admins)
         const realUsersCount = usersData.filter(u => u.role !== 'admin').length;
@@ -96,7 +107,7 @@ const AdminDashboard = () => {
         setStats({
           totalUsers: realUsersCount,
           totalSellers: sellersData.length,
-          totalOrders: ordersData.length,
+          totalOrders: validOrders.length,
           totalRevenue: totalRevenue,
           recentOrders: recentOrders,
           topSellers: top5Sellers
@@ -379,6 +390,7 @@ export default function AdminApp() {
         { name: 'Delivery Requests', path: '/admin/delivery-requests', badge: pendingDeliveryCount > 0 ? pendingDeliveryCount : null },
         { name: 'Delivery Partners', path: '/admin/delivery-partners' },
         { name: 'Active Deliveries', path: '/admin/active-deliveries' },
+        { name: 'Delivery History', path: '/admin/delivery-history' },
         { name: 'Delivery Earnings & Bonuses', path: '/admin/delivery-earnings' },
       ]
     },
@@ -535,6 +547,7 @@ export default function AdminApp() {
             <Route path="delivery-requests" element={<AdminDeliveryRequests />} />
             <Route path="delivery-partners" element={<AdminDeliveryPartners />} />
             <Route path="active-deliveries" element={<AdminActiveDeliveries />} />
+            <Route path="delivery-history" element={<AdminDeliveryHistory />} />
             <Route path="delivery-earnings" element={<AdminDeliveryEarnings />} />
             <Route path="banners" element={<AdminBanners />} />
             <Route path="categories" element={<AdminCategories />} />
