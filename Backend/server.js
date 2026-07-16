@@ -68,10 +68,11 @@ const ALLOWED_ORIGINS = [
 // Add environment-based origins
 if (process.env.FRONTEND_URL) {
   ALLOWED_ORIGINS.push(process.env.FRONTEND_URL);
-} else {
-  // Default production URLs
-  ALLOWED_ORIGINS.push('https://quick-kart-ojl0.onrender.com');
 }
+
+// Add default production URLs
+ALLOWED_ORIGINS.push('https://quick-kart-ojl0.onrender.com');
+ALLOWED_ORIGINS.push('https://quick-kart-self.vercel.app');
 
 app.use(cors({
   origin: (origin, callback) => {
@@ -87,6 +88,11 @@ app.use(cors({
     
     // Allow all render.com subdomains in production
     if (origin.includes('.onrender.com') || origin.includes('render.com')) {
+      return callback(null, true);
+    }
+    
+    // Allow all vercel.app subdomains in production
+    if (origin.includes('.vercel.app') || origin.includes('vercel.app')) {
       return callback(null, true);
     }
     
