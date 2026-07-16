@@ -62,16 +62,36 @@ io.on('connection', (socket) => {
 const ALLOWED_ORIGINS = [
   'http://localhost:5173', // Local Vite dev
   'http://localhost:3000',  // Local fallback
-  process.env.FRONTEND_URL || 'https://quick-kart-ojl0.onrender.com', // Production or env override
+  'http://localhost:5000',  // Local backend
 ];
+
+// Add environment-based origins
+if (process.env.FRONTEND_URL) {
+  ALLOWED_ORIGINS.push(process.env.FRONTEND_URL);
+} else {
+  // Default production URLs
+  ALLOWED_ORIGINS.push('https://quick-kart-ojl0.onrender.com');
+}
 
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin || ALLOWED_ORIGINS.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) {
+      return callback(null, true);
     }
+    
+    // Check exact match
+    if (ALLOWED_ORIGINS.includes(origin)) {
+      return callback(null, true);
+    }
+    
+    // Allow all render.com subdomains in production
+    if (origin.includes('.onrender.com') || origin.includes('render.com')) {
+      return callback(null, true);
+    }
+    
+    console.warn(`CORS denied for origin: ${origin}`);
+    callback(null, false); // Silently reject instead of throwing
   },
   credentials: true
 }));
