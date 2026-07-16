@@ -25,7 +25,7 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: 'https://quick-kart-self.vercel.app/user/login',
+    origin: 'https://quick-kart-self.vercel.app',
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     credentials: true
   }
@@ -60,7 +60,7 @@ io.on('connection', (socket) => {
 
 // Middleware
 app.use(cors({
-  origin: 'http://localhost:5173', // Vite default port
+  origin: 'https://quick-kart-self.vercel.app', // Vite default port
   credentials: true
 }));
 app.use(express.json());
