@@ -89,7 +89,7 @@ const ProfilePage = ({ setActiveTab, setActiveCategory }) => {
   const handleLogout = async () => {
     setLoggingOut(true);
     try {
-      await fetch('http://localhost:5000/api/users/logout', { method: 'POST', credentials: 'include' });
+      await fetch(`${import.meta.env.VITE_API_URL}/api/users/logout`, { method: 'POST', credentials: 'include' });
     } catch (e) {
       console.warn('Logout request failed:', e.message);
     }
@@ -105,7 +105,7 @@ const ProfilePage = ({ setActiveTab, setActiveCategory }) => {
     const fetchProfile = async () => {
       if (!userId) return;
       try {
-        const res = await fetch('http://localhost:5000/api/users/profile', { credentials: 'include' });
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/users/profile`, { credentials: 'include' });
         if (res.ok) {
           const data = await res.json();
           setProfileData({
@@ -132,7 +132,7 @@ const ProfilePage = ({ setActiveTab, setActiveCategory }) => {
     const fetchOrderCount = async () => {
       if (!userId) return;
       try {
-        const res = await fetch(`http://localhost:5000/api/orders/user/${userId}`);
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/orders/user/${userId}`);
         if (res.ok) {
           const data = await res.json();
           setOrderCount(Array.isArray(data) ? data.length : 0);
@@ -147,7 +147,7 @@ const ProfilePage = ({ setActiveTab, setActiveCategory }) => {
   const handleSaveProfile = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch('http://localhost:5000/api/users/profile', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/users/profile`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
