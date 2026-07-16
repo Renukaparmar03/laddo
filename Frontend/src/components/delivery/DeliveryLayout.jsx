@@ -51,7 +51,7 @@ function DeliveryLayout() {
     if ('Notification' in window) {
       const title = 'New Delivery Assigned! 🔔';
       const options = {
-        body: order ? `Pickup: ${order.orderItems?.[0]?.seller?.businessName || 'Store'}\nDropoff: ${order.shippingAddress?.address || 'Customer'}\nEarning: ₹${order.shippingPrice || 25}` : 'You have a new delivery request waiting.',
+        body: order ? `Pickup: ${order.orderItems?.[0]?.seller?.businessName || 'Store'}\nDropoff: ${order.user?.name || 'Customer'} - ${order.shippingAddress?.address || ''}\nEarning: ₹${order.shippingPrice || 25}` : 'You have a new delivery request waiting.',
         icon: '/favicon.ico',
         requireInteraction: true
       };
@@ -190,6 +190,9 @@ function DeliveryLayout() {
   const handleAcceptOrder = async () => {
     // Stop notification sound the instant the rider taps Accept
     stopNotificationSound();
+    
+    setStep('TO_STORE'); // Optimistically update to avoid race condition with socket
+    
     try {
       const res = await fetch(`http://localhost:5000/api/orders/${activeOrder._id}/assign`, {
         method: 'PUT',
@@ -198,7 +201,6 @@ function DeliveryLayout() {
       });
       
       if (res.ok) {
-        setStep('TO_STORE');
         navigate('/delivery/home');
       } else {
         alert('Order was already assigned to someone else!');
@@ -207,6 +209,8 @@ function DeliveryLayout() {
       }
     } catch (err) {
       console.error(err);
+      setStep('IDLE');
+      setActiveOrder(null);
     }
   };
 
@@ -261,7 +265,7 @@ function DeliveryLayout() {
       <header className="del-header">
         <div className="del-logo" onClick={() => navigate('/delivery/home')} style={{ cursor: 'pointer' }}>
           <Bike size={24} />
-          <span>Blinkit Partner</span>
+          <span>QuickKart Partner</span>
         </div>
 
         {/* Online / Offline switch & Notifications */}
@@ -333,7 +337,7 @@ function DeliveryLayout() {
               <div style={{ display: 'flex', gap: '8px' }}>
                 <Navigation size={16} style={{ color: '#3b82f6', flexShrink: 0 }} />
                 <div style={{ flex: 1 }}>
-                  <span style={{ color: 'var(--del-text-muted)' }}>Dropoff:</span> <b style={{ color: '#fff' }}>{activeOrder.shippingAddress?.address || 'Customer Location'}</b>
+                  <span style={{ color: 'var(--del-text-muted)' }}>Dropoff:</span> <b style={{ color: '#fff' }}>{activeOrder.user?.name || 'Customer'}</b>
                   <div style={{ color: 'var(--del-text-muted)', fontSize: '11px', marginTop: '2px' }}>{activeOrder.shippingAddress?.city || 'City'}</div>
                 </div>
               </div>

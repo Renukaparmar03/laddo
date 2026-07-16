@@ -31,6 +31,7 @@ function UserRegister() {
           headers: {
             'Content-Type': 'application/json',
           },
+          credentials: 'include',
           body: JSON.stringify({
             name: formData.fullName,
             email: formData.email,
@@ -71,7 +72,7 @@ function UserRegister() {
             <ShoppingBag size={32} />
           </div>
           <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: '#166534', margin: '0 0 8px 0' }}>Create Account</h2>
-          <p style={{ color: '#15803d', margin: 0, fontSize: '14px' }}>Join Blinkit for 10-minute deliveries</p>
+          <p style={{ color: '#15803d', margin: 0, fontSize: '14px' }}>Join QuickKart for 10-minute deliveries</p>
         </div>
 
         <form onSubmit={handleRegister} style={{ background: 'white', padding: '32px', borderRadius: '24px', boxShadow: '0 12px 24px rgba(0,0,0,0.04)' }}>

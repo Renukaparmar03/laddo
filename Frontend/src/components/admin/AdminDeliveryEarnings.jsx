@@ -15,28 +15,13 @@ export default function AdminDeliveryEarnings() {
   const fetchDeliveryEarnings = async () => {
     try {
       setLoading(true);
-      const [delRes, sellersRes] = await Promise.all([
+      const [delRes, ordersRes] = await Promise.all([
         fetch('http://localhost:5000/api/delivery'),
-        fetch('http://localhost:5000/api/sellers')
+        fetch('http://localhost:5000/api/orders')
       ]);
 
       const riders = await delRes.json();
-      const sellers = await sellersRes.json();
-
-      let allOrders = [];
-      await Promise.all(sellers.map(async (seller) => {
-        try {
-          const orderRes = await fetch(`http://localhost:5000/api/orders/seller/${seller._id}`);
-          const orderData = await orderRes.json();
-          if (orderData.orders) {
-            allOrders = [...allOrders, ...orderData.orders];
-          }
-        } catch (e) {}
-      }));
-
-      const uniqueOrdersMap = new Map();
-      allOrders.forEach(o => uniqueOrdersMap.set(o._id, o));
-      const uniqueOrders = Array.from(uniqueOrdersMap.values());
+      const allOrders = await ordersRes.json();
 
       const riderStats = {};
       riders.forEach(r => {
@@ -46,7 +31,7 @@ export default function AdminDeliveryEarnings() {
         }
       });
 
-      uniqueOrders.forEach(order => {
+      allOrders.forEach(order => {
         if (order.status === 'Delivered') {
           const dBoyId = order.deliveryBoy?._id || order.deliveryBoy;
           if (dBoyId && riderStats[dBoyId]) {

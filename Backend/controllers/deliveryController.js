@@ -104,3 +104,16 @@ export const updateDeliveryStatus = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+export const resetPassword = async (req, res) => {
+  const { phone, newPassword } = req.body;
+  try {
+    const delivery = await Delivery.findOne({ phone });
+    if (!delivery) return res.status(404).json({ message: 'Delivery partner not found' });
+    delivery.password = newPassword;
+    await delivery.save();
+    res.json({ message: 'Password reset successful' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};

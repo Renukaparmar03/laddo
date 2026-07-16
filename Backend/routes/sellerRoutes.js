@@ -5,7 +5,8 @@ import {
   logoutSeller,
   getSellerProfile,
   getAllSellers,
-  updateSellerStatus
+  updateSellerStatus,
+  resetPassword
 } from '../controllers/sellerController.js';
 import { protectSeller } from '../middleware/authMiddleware.js';
 
@@ -14,6 +15,7 @@ const router = express.Router();
 router.route('/').post(registerSeller).get(getAllSellers);
 router.post('/auth', authSeller);
 router.post('/logout', logoutSeller);
+router.put('/reset-password', resetPassword);
 router.route('/profile').get(protectSeller, getSellerProfile);
 router.route('/:id/status').put(updateSellerStatus);
 

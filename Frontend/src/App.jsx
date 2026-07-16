@@ -20,17 +20,35 @@ import SellerApp from './components/seller/SellerApp'
 import AdminApp from './components/admin/AdminApp'
 import UserLogin from './components/UserLogin'
 import UserRegister from './components/UserRegister'
+import ResetPassword from './components/ResetPassword'
+import WishlistPage from './components/WishlistPage'
 import './App.css'
 
 function CustomerApp() {
   const [activeCategory, setActiveCategory] = useState('All');
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [cart, setCart] = useState([]);
+  const [wishlist, setWishlist] = useState(() => {
+    const saved = localStorage.getItem('user_wishlist');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  useEffect(() => {
+    localStorage.setItem('user_wishlist', JSON.stringify(wishlist));
+  }, [wishlist]);
   
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Redirect base path to /user/home
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'DARK') {
+      document.body.classList.add('dark-mode');
+    } else {
+      document.body.classList.remove('dark-mode');
+    }
+  }, []);
+
   useEffect(() => {
     const isLoggedIn = localStorage.getItem('user_logged_in') === 'true';
 
@@ -52,9 +70,27 @@ function CustomerApp() {
   if (location.pathname.includes('/user/cart')) activeTab = 'cart';
   if (location.pathname.includes('/user/payment')) activeTab = 'payment';
   if (location.pathname.includes('/user/order-success')) activeTab = 'order-success';
+  if (location.pathname.includes('/user/category')) activeTab = 'category';
+  if (location.pathname.includes('/user/wishlist')) activeTab = 'wishlist';
 
   useEffect(() => {
-    if (activeTab === 'cart' || activeTab === 'orders' || activeTab === 'profile' || activeTab === 'payment' || activeTab === 'order-success') {
+    if (activeTab === 'category' && activeCategory === 'All') {
+      setActiveCategory('Grocery & Kitchen'); // Default category when navigating to /category
+    } else if (activeTab === 'home' && activeCategory !== 'All') {
+      setActiveCategory('All');
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (activeCategory !== 'All' && location.pathname === '/user/home') {
+      navigate('/user/category');
+    } else if (activeCategory === 'All' && location.pathname === '/user/category') {
+      navigate('/user/home');
+    }
+  }, [activeCategory, location.pathname, navigate]);
+
+  useEffect(() => {
+    if (activeTab === 'cart' || activeTab === 'orders' || activeTab === 'profile' || activeTab === 'payment' || activeTab === 'order-success' || activeTab === 'wishlist') {
       setSelectedProduct(null);
     }
   }, [activeTab]);
@@ -74,6 +110,8 @@ function CustomerApp() {
             onSelectProduct={setSelectedProduct} 
             cart={cart}
             setCart={setCart}
+            wishlist={wishlist}
+            setWishlist={setWishlist}
             navigate={navigate}
           />
         </main>
@@ -89,17 +127,28 @@ function CustomerApp() {
         <main className="content-area full-tab-view">
           <OrderSuccessPage navigate={navigate} />
         </main>
+      ) : activeTab === 'wishlist' ? (
+        <main className="content-area full-tab-view">
+          <WishlistPage 
+            wishlist={wishlist} 
+            setWishlist={setWishlist} 
+            setCart={setCart} 
+            onProductSelect={setSelectedProduct} 
+            navigate={navigate} 
+            setActiveTab={handleTabChange} 
+          />
+        </main>
       ) : (
         <>
           {/* Persistent Address Header & Searchbar are rendered on the homepage and orders tab */}
-          {(activeTab === 'home' || activeTab === 'orders') && (
+          {(activeTab === 'home' || activeTab === 'orders' || activeTab === 'category') && (
             <>
               <Header setActiveTab={handleTabChange} setActiveCategory={setActiveCategory} />
               <SearchBar />
             </>
           )}
 
-          {activeTab === 'home' && (
+          {(activeTab === 'home' || activeTab === 'category') && (
             <>
               <CategoryNav activeCategory={activeCategory} setActiveCategory={setActiveCategory} />
               
@@ -107,7 +156,7 @@ function CustomerApp() {
                 <HeroBanner />
                 <CategorySection activeCategory={activeCategory} setActiveCategory={setActiveCategory} />
                 {activeCategory === 'All' ? (
-                  <ProductGrid activeCategory={activeCategory} onProductSelect={setSelectedProduct} cart={cart} setCart={setCart} navigate={navigate} />
+                  <ProductGrid activeCategory={activeCategory} onProductSelect={setSelectedProduct} cart={cart} setCart={setCart} wishlist={wishlist} setWishlist={setWishlist} navigate={navigate} />
                 ) : (
                   <CategoryPage 
                     activeCategory={activeCategory} 
@@ -115,6 +164,8 @@ function CustomerApp() {
                     onProductSelect={setSelectedProduct} 
                     cart={cart}
                     setCart={setCart}
+                    wishlist={wishlist}
+                    setWishlist={setWishlist}
                     navigate={navigate}
                   />
                 )}
@@ -143,8 +194,8 @@ function CustomerApp() {
           />
         </>
       )}
-      {/* Blinkit Style Floating Cart - Rendered globally except on cart, profile, payment, and success pages */}
-      {activeTab !== 'cart' && activeTab !== 'profile' && activeTab !== 'payment' && activeTab !== 'order-success' && <FloatingCart cart={cart} navigate={navigate} />}
+      {/* QuickKart Style Floating Cart - Rendered globally except on cart, profile, payment, success, and wishlist pages */}
+      {activeTab !== 'cart' && activeTab !== 'profile' && activeTab !== 'payment' && activeTab !== 'order-success' && activeTab !== 'wishlist' && <FloatingCart cart={cart} navigate={navigate} />}
     </div>
   )
 }
@@ -157,6 +208,7 @@ function App() {
       <Route path="/admin/*" element={<AdminApp />} />
       <Route path="/user/login" element={<UserLogin />} />
       <Route path="/user/register" element={<UserRegister />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/user/*" element={<CustomerApp />} />
       <Route path="/" element={<Navigate to="/user/home" replace />} />
     </Routes>

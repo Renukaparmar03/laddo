@@ -12,6 +12,15 @@ const PaymentPage = ({ cart, navigate, setCart }) => {
     { id: 'COD',    name: 'Cash on Delivery',      icon: <Banknote  size={24} color="#16a34a" />, desc: 'Pay at your doorstep'          },
   ];
 
+  React.useEffect(() => {
+    if (document.getElementById('razorpay-sdk')) return;
+    const script = document.createElement('script');
+    script.id = 'razorpay-sdk';
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.async = true;
+    document.body.appendChild(script);
+  }, []);
+
   // ── Helpers ──────────────────────────────────────────────────────────────────
 
   /** Read logged-in user info from localStorage (set at login time) */
@@ -34,7 +43,7 @@ const PaymentPage = ({ cart, navigate, setCart }) => {
       qty:     item.quantity,
       image:   item.image || item.images?.[0] || 'https://via.placeholder.com/150',
       price:   item.price,
-      seller:  item.seller || item.sellerId || '000000000000000000000000',
+      seller:  item.seller?._id || item.seller || item.sellerId || '000000000000000000000000',
     }));
 
   /** Calculate grand total (mirrors CartPage logic) */

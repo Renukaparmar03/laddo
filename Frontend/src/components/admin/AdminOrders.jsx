@@ -61,7 +61,7 @@ export default function AdminOrders() {
           product: order.orderItems?.length > 1 
             ? `${firstItem?.title} + ${order.orderItems.length - 1} more` 
             : firstItem?.title || 'Unknown Product',
-          img: firstItem?.image || 'https://via.placeholder.com/50',
+          img: firstItem?.image || 'https://placehold.co/50x50',
           amount: `₹${order.totalPrice}`,
           paymentMethod: order.paymentMethod || 'UPI',
           paymentStatus: order.isPaid ? 'Paid' : 'Pending',

@@ -53,7 +53,7 @@ function DeliveryLogin() {
             <Bike size={32} />
           </div>
           <div>
-            <h2 className="del-font-extrabold" style={{ margin: '0 0 4px 0', fontSize: '24px' }}>Blinkit Partner</h2>
+            <h2 className="del-font-extrabold" style={{ margin: '0 0 4px 0', fontSize: '24px' }}>QuickKart Partner</h2>
             <p style={{ color: 'var(--del-text-muted)', margin: 0, fontSize: '13px' }}>
               Delivering happiness in 10-minutes.
             </p>
@@ -87,10 +87,13 @@ function DeliveryLogin() {
           </div>
 
           <div className="del-input-group">
-            <label className="del-flex-between">
-              <span>Password</span>
-              <Lock size={16} />
-            </label>
+            <div className="del-flex-between" style={{ marginBottom: '8px' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--del-text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Password</span>
+                <Lock size={14} color="var(--del-text-muted)" />
+              </label>
+              <Link to="/reset-password?type=delivery" style={{ fontSize: '13px', color: 'var(--del-primary)', textDecoration: 'none', fontWeight: '600' }}>Forgot Password?</Link>
+            </div>
             <input 
               type="password" 
               placeholder="Enter your password" 

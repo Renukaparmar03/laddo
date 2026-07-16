@@ -6,12 +6,13 @@ import {
   getUserOrders,
   getAvailableForDelivery,
   getDeliveryBoyOrders,
-  assignDeliveryBoy
+  assignDeliveryBoy,
+  getAllOrders
 } from '../controllers/orderController.js';
 
 const router = express.Router();
 
-router.route('/').post(addOrderItems);
+router.route('/').post(addOrderItems).get(getAllOrders);
 router.route('/available-for-delivery').get(getAvailableForDelivery);
 router.route('/seller/:id').get(getSellerOrders);
 router.route('/user/:id').get(getUserOrders);

@@ -38,28 +38,13 @@ export default function AdminDeliveryOverview() {
   const fetchDeliveryData = async () => {
     try {
       setData(prev => ({...prev, loading: true}));
-      const [delRes, sellersRes] = await Promise.all([
+      const [delRes, ordersRes] = await Promise.all([
         fetch('http://localhost:5000/api/delivery'),
-        fetch('http://localhost:5000/api/sellers')
+        fetch('http://localhost:5000/api/orders')
       ]);
 
       const riders = await delRes.json();
-      const sellers = await sellersRes.json();
-
-      let allOrders = [];
-      await Promise.all(sellers.map(async (seller) => {
-        try {
-          const orderRes = await fetch(`http://localhost:5000/api/orders/seller/${seller._id}`);
-          const orderData = await orderRes.json();
-          if (orderData.orders) {
-            allOrders = [...allOrders, ...orderData.orders];
-          }
-        } catch (e) {}
-      }));
-
-      const uniqueOrdersMap = new Map();
-      allOrders.forEach(o => uniqueOrdersMap.set(o._id, o));
-      const uniqueOrders = Array.from(uniqueOrdersMap.values());
+      const allOrders = await ordersRes.json();
 
       let completedCount = 0;
       let delayedCount = 0;
@@ -68,7 +53,7 @@ export default function AdminDeliveryOverview() {
         riderStats[r._id] = { ...r, deliveries: 0 };
       });
 
-      uniqueOrders.forEach(order => {
+      allOrders.forEach(order => {
         if (order.status === 'Delivered') {
           completedCount++;
           const dBoyId = order.deliveryBoy?._id || order.deliveryBoy;
@@ -198,7 +183,7 @@ export default function AdminDeliveryOverview() {
             <p>Daily deliveries vs average delivery time (mins)</p>
           </div>
           <div className="chart-wrapper">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height={300}>
               <AreaChart data={performanceData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorDeliveries" x1="0" y1="0" x2="0" y2="1">
@@ -227,7 +212,7 @@ export default function AdminDeliveryOverview() {
             <p>Weekly financial breakdown</p>
           </div>
           <div className="chart-wrapper">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height={300}>
               <BarChart data={earningsData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                 <XAxis dataKey="name" axisLine={false} tickLine={false} />

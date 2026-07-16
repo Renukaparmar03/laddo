@@ -3,7 +3,7 @@ import { SUBCATEGORIES } from '../data';
 import ProductCard from './ProductCard';
 import { ArrowLeft } from 'lucide-react';
 
-const CategoryPage = ({ activeCategory, setActiveCategory, onProductSelect, cart, setCart, navigate }) => {
+const CategoryPage = ({ activeCategory, setActiveCategory, onProductSelect, cart, setCart, wishlist, setWishlist, navigate }) => {
   const subCats = SUBCATEGORIES[activeCategory] || [];
   const [activeSubCategory, setActiveSubCategory] = useState('');
 
@@ -105,7 +105,7 @@ const CategoryPage = ({ activeCategory, setActiveCategory, onProductSelect, cart
           {filteredProducts.length > 0 ? (
             <div className="category-product-grid">
               {filteredProducts.map((product) => (
-                <ProductCard key={product.id} product={product} onCardClick={onProductSelect} cart={cart} setCart={setCart} navigate={navigate} />
+                <ProductCard key={product.id} product={product} onCardClick={onProductSelect} cart={cart} setCart={setCart} wishlist={wishlist} setWishlist={setWishlist} navigate={navigate} />
               ))}
             </div>
           ) : (

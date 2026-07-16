@@ -5,7 +5,7 @@ const BottomNav = ({ activeTab, setActiveTab, activeCategory, setActiveCategory 
   return (
     <nav className="bottom-nav">
       <button 
-        className={`bottom-nav-item ${activeTab === 'home' && activeCategory === 'All' ? 'active' : ''}`}
+        className={`bottom-nav-item ${activeTab === 'home' ? 'active' : ''}`}
         onClick={() => {
           setActiveTab('home');
           setActiveCategory && setActiveCategory('All');
@@ -22,9 +22,9 @@ const BottomNav = ({ activeTab, setActiveTab, activeCategory, setActiveCategory 
         <span>Orders</span>
       </button>
       <button 
-        className={`bottom-nav-item ${activeTab === 'home' && activeCategory !== 'All' ? 'active' : ''}`}
+        className={`bottom-nav-item ${activeTab === 'category' ? 'active' : ''}`}
         onClick={() => {
-          setActiveTab('home');
+          setActiveTab('category');
           if (setActiveCategory && activeCategory === 'All') {
             setActiveCategory('Grocery & Kitchen');
           }

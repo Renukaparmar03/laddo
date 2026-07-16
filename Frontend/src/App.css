@@ -42,14 +42,17 @@
 }
 
 .logo-text {
-  font-size: 18px;
-  font-weight: 800;
-  color: var(--text-primary);
+  font-size: 22px;
+  font-weight: 900;
+  color: #111;
   letter-spacing: -0.5px;
+  font-family: 'Inter', system-ui, sans-serif;
 }
 
 .logo-accent {
-  color: #f7d000;
+  color: #ff4757; /* Vibrant coral red for Kart */
+  font-style: italic;
+  margin-left: 1px;
 }
 
 .header-actions {
@@ -1756,7 +1759,7 @@
 }
 
 /* ==========================================================================
-   Profile & Settings Screen Styles (Pixel-Perfect Match to Blinkit Screenshots)
+   Profile & Settings Screen Styles (Pixel-Perfect Match to QuickKart Screenshots)
    ========================================================================== */
 .profile-page-container {
   display: flex;
@@ -2319,7 +2322,8 @@
   font-size: 26px;
   font-weight: 900;
   color: #a1a1aa;
-  letter-spacing: -0.6px;
+  letter-spacing: -1px;
+  font-family: 'Inter', system-ui, sans-serif;
 }
 
 .brand-footer-version {

@@ -13,18 +13,18 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  background: var(--primary);
+  background-color: var(--admin-primary, #3b82f6);
   color: white;
   border: none;
   padding: 10px 20px;
   border-radius: 8px;
   cursor: pointer;
-  font-weight: 600;
-  transition: all 0.2s;
+  font-weight: 500;
+  transition: background-color 0.2s;
 }
 
 .admin-categories .add-btn:hover {
-  background: var(--primary-dark);
+  background-color: #2563eb;
 }
 
 .categories-grid {

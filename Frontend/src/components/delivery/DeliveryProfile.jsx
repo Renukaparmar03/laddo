@@ -12,7 +12,7 @@ function DeliveryProfile() {
   const [profileInfo, setProfileInfo] = useState({
     name: '',
     phone: '',
-    email: 'rider@blinkit.com',
+    email: 'rider@quickkart.com',
     address: 'Noida Sector 62',
     vehicleType: '',
     vehicleNumber: 'UP 16 AB 1234'
@@ -28,17 +28,37 @@ function DeliveryProfile() {
 
   useEffect(() => {
     // Load from local storage
-    const name = localStorage.getItem('rider_name') || 'Rahul Sharma';
-    const phone = '9876543210'; 
+    const deliveryInfo = JSON.parse(localStorage.getItem('delivery_info') || '{}');
+    const name = deliveryInfo.fullName || deliveryInfo.name || localStorage.getItem('rider_name') || 'Rahul Sharma';
+    const phone = deliveryInfo.phone || '9876543210'; 
     const vehicleType = localStorage.getItem('rider_vehicle') || 'Bike';
     setProfileInfo(prev => ({ ...prev, name, phone, vehicleType }));
 
-    const localEarnings = localStorage.getItem('rider_earnings') || '118.50';
-    const currentTripsCount = JSON.parse(localStorage.getItem('rider_trips') || '[]').length || 3;
-    setStats({
-      todayEarnings: localEarnings,
-      totalOrders: currentTripsCount
-    });
+    const fetchStats = async () => {
+      try {
+        const deliveryBoyId = deliveryInfo._id || deliveryInfo.id;
+        if (!deliveryBoyId) return;
+
+        const res = await fetch(`http://localhost:5000/api/orders/delivery-boy/${deliveryBoyId}`);
+        if (res.ok) {
+          const data = await res.json();
+          const completedOrders = data.filter(order => order.status === 'Delivered');
+          
+          let totalEarning = 0;
+          completedOrders.forEach(order => {
+             totalEarning += (order.shippingPrice || 25);
+          });
+
+          setStats({
+            todayEarnings: totalEarning.toFixed(2),
+            totalOrders: completedOrders.length
+          });
+        }
+      } catch (err) {
+        console.error('Error fetching stats:', err);
+      }
+    };
+    fetchStats();
   }, []);
 
   const handleInfoChange = (e) => {

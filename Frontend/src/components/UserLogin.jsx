@@ -18,6 +18,7 @@ function UserLogin() {
           headers: {
             'Content-Type': 'application/json',
           },
+          credentials: 'include',
           body: JSON.stringify({ email, password }),
         });
         
@@ -54,7 +55,7 @@ function UserLogin() {
           }}>
             <ShoppingBag size={32} />
           </div>
-          <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: '#166534', margin: '0 0 8px 0' }}>Welcome to Blinkit</h2>
+          <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: '#166534', margin: '0 0 8px 0' }}>Welcome to QuickKart</h2>
           <p style={{ color: '#15803d', margin: 0, fontSize: '14px' }}>Groceries delivered in 10 minutes</p>
         </div>
 
@@ -78,7 +79,10 @@ function UserLogin() {
           </div>
 
           <div style={{ marginBottom: '32px' }}>
-            <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '8px' }}>Password</label>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', margin: 0 }}>Password</label>
+              <Link to="/reset-password?type=user" style={{ fontSize: '13px', color: '#16a34a', textDecoration: 'none', fontWeight: '500' }}>Forgot Password?</Link>
+            </div>
             <div style={{ position: 'relative' }}>
               <Lock size={18} color="#9ca3af" style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)' }} />
               <input 
@@ -112,7 +116,7 @@ function UserLogin() {
         </form>
 
         <p style={{ textAlign: 'center', marginTop: '24px', fontSize: '14px', color: '#6b7280' }}>
-          New to Blinkit? <Link to="/user/register" style={{ color: '#16a34a', fontWeight: '600', textDecoration: 'none' }}>Create an account</Link>
+          New to QuickKart? <Link to="/user/register" style={{ color: '#16a34a', fontWeight: '600', textDecoration: 'none' }}>Create an account</Link>
         </p>
       </div>
     </div>

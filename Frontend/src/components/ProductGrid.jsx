@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import ProductCard from './ProductCard';
 
-const ProductGrid = ({ activeCategory, onProductSelect, cart, setCart, navigate }) => {
+const ProductGrid = ({ activeCategory, onProductSelect, cart, setCart, wishlist, setWishlist, navigate }) => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -63,7 +63,7 @@ const ProductGrid = ({ activeCategory, onProductSelect, cart, setCart, navigate 
       {filteredProducts.length > 0 ? (
         <div className="product-grid">
           {filteredProducts.map(product => (
-            <ProductCard key={product.id} product={product} onCardClick={onProductSelect} cart={cart} setCart={setCart} navigate={navigate} />
+            <ProductCard key={product.id} product={product} onCardClick={onProductSelect} cart={cart} setCart={setCart} wishlist={wishlist} setWishlist={setWishlist} navigate={navigate} />
           ))}
         </div>
       ) : (

@@ -14,8 +14,22 @@ export default function AdminDeliveryPartners() {
 
   const fetchPartners = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/delivery');
-      const data = await res.json();
+      const [delRes, ordersRes] = await Promise.all([
+        fetch('http://localhost:5000/api/delivery'),
+        fetch('http://localhost:5000/api/orders')
+      ]);
+      const data = await delRes.json();
+      const allOrders = await ordersRes.json();
+      
+      const riderDeliveries = {};
+      allOrders.forEach(o => {
+        if (o.status === 'Delivered') {
+          const dBoyId = o.deliveryBoy?._id || o.deliveryBoy;
+          if (dBoyId) {
+             riderDeliveries[dBoyId] = (riderDeliveries[dBoyId] || 0) + 1;
+          }
+        }
+      });
       
       const approvedPartners = data
         .filter(p => p.status === 'approved')
@@ -25,9 +39,9 @@ export default function AdminDeliveryPartners() {
           phone: p.phone,
           vehicleNo: p.licenseNo || 'N/A',
           vehicleType: p.vehicle,
-          rating: 4.5, // Default rating
-          deliveries: 0, // Default deliveries
-          status: 'Active', // Default status for approved partners
+          rating: 4.8, // Fallback realistic rating
+          deliveries: riderDeliveries[p._id] || 0, // Real delivery count
+          status: 'Active', 
           image: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=100&h=100&fit=crop',
           location: p.city,
           joinDate: new Date(p.createdAt).toLocaleDateString()
