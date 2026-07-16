@@ -59,8 +59,20 @@ io.on('connection', (socket) => {
 });
 
 // Middleware
+const ALLOWED_ORIGINS = [
+  'http://localhost:5173', // Local Vite dev
+  'http://localhost:3000',  // Local fallback
+  process.env.FRONTEND_URL || 'https://quick-kart-ojl0.onrender.com', // Production or env override
+];
+
 app.use(cors({
-  origin: 'https://quick-kart-self.vercel.app', // Vite default port
+  origin: (origin, callback) => {
+    if (!origin || ALLOWED_ORIGINS.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true
 }));
 app.use(express.json());
