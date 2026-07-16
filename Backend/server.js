@@ -25,7 +25,7 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: 'http://localhost:5173',
+    origin: 'https://quick-kart-self.vercel.app',
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     credentials: true
   }
@@ -59,8 +59,46 @@ io.on('connection', (socket) => {
 });
 
 // Middleware
+const ALLOWED_ORIGINS = [
+  'http://localhost:5173', // Local Vite dev
+  'http://localhost:3000',  // Local fallback
+  'http://localhost:5000',  // Local backend
+];
+
+// Add environment-based origins
+if (process.env.FRONTEND_URL) {
+  ALLOWED_ORIGINS.push(process.env.FRONTEND_URL);
+}
+
+// Add default production URLs
+ALLOWED_ORIGINS.push('https://quick-kart-ojl0.onrender.com');
+ALLOWED_ORIGINS.push('https://quick-kart-self.vercel.app');
+
 app.use(cors({
-  origin: 'http://localhost:5173', // Vite default port
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) {
+      return callback(null, true);
+    }
+    
+    // Check exact match
+    if (ALLOWED_ORIGINS.includes(origin)) {
+      return callback(null, true);
+    }
+    
+    // Allow all render.com subdomains in production
+    if (origin.includes('.onrender.com') || origin.includes('render.com')) {
+      return callback(null, true);
+    }
+    
+    // Allow all vercel.app subdomains in production
+    if (origin.includes('.vercel.app') || origin.includes('vercel.app')) {
+      return callback(null, true);
+    }
+    
+    console.warn(`CORS denied for origin: ${origin}`);
+    callback(null, false); // Silently reject instead of throwing
+  },
   credentials: true
 }));
 app.use(express.json());
