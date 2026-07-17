@@ -8,8 +8,9 @@ const generateToken = (res, userId) => {
 
   res.cookie('jwt', token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV !== 'development',
-    sameSite: process.env.NODE_ENV !== 'development' ? 'none' : 'strict',
+    secure: true,
+    sameSite: 'none',
+    path: '/',
     maxAge: 30 * 24 * 60 * 60 * 1000,
   });
 };
@@ -25,6 +26,7 @@ export const authUser = async (req, res) => {
 
     if (user && (await user.matchPassword(password))) {
       generateToken(res, user._id);
+
       res.status(200).json({
         _id: user._id,
         name: user.name,
@@ -49,8 +51,7 @@ export const registerUser = async (req, res) => {
     const userExists = await User.findOne({ email });
 
     if (userExists) {
-      res.status(400).json({ message: 'User already exists' });
-      return;
+      return res.status(400).json({ message: 'User already exists' });
     }
 
     const user = await User.create({
@@ -61,6 +62,7 @@ export const registerUser = async (req, res) => {
 
     if (user) {
       generateToken(res, user._id);
+
       res.status(201).json({
         _id: user._id,
         name: user.name,
@@ -81,9 +83,10 @@ export const registerUser = async (req, res) => {
 export const logoutUser = async (req, res) => {
   res.cookie('jwt', '', {
     httpOnly: true,
+    secure: true,
+    sameSite: 'none',
+    path: '/',
     expires: new Date(0),
-    secure: process.env.NODE_ENV !== 'development',
-    sameSite: process.env.NODE_ENV !== 'development' ? 'none' : 'strict',
   });
 
   res.status(200).json({ message: 'User logged out' });
@@ -124,9 +127,14 @@ export const updateUserProfile = async (req, res) => {
     if (user) {
       user.name = req.body.name || user.name;
       user.email = req.body.email || user.email;
-      user.phone = req.body.phone !== undefined ? req.body.phone : user.phone;
-      user.birthday = req.body.birthday !== undefined ? req.body.birthday : user.birthday;
-      user.avatar = req.body.avatar !== undefined ? req.body.avatar : user.avatar;
+      user.phone =
+        req.body.phone !== undefined ? req.body.phone : user.phone;
+      user.birthday =
+        req.body.birthday !== undefined
+          ? req.body.birthday
+          : user.birthday;
+      user.avatar =
+        req.body.avatar !== undefined ? req.body.avatar : user.avatar;
 
       if (req.body.password) {
         user.password = req.body.password;
@@ -153,10 +161,13 @@ export const updateUserProfile = async (req, res) => {
 
 // @desc    Get all users
 // @route   GET /api/users
-// @access  Public (Should be Admin, but keeping it simple for MVP)
+// @access  Public
 export const getAllUsers = async (req, res) => {
   try {
-    const users = await User.find({}).select('-password').sort({ createdAt: -1 });
+    const users = await User.find({})
+      .select('-password')
+      .sort({ createdAt: -1 });
+
     res.json(users);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -165,11 +176,17 @@ export const getAllUsers = async (req, res) => {
 
 export const resetPassword = async (req, res) => {
   const { email, newPassword } = req.body;
+
   try {
     const user = await User.findOne({ email, role: 'user' });
-    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
     user.password = newPassword;
     await user.save();
+
     res.json({ message: 'Password reset successful' });
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -178,11 +195,17 @@ export const resetPassword = async (req, res) => {
 
 export const resetPasswordAdmin = async (req, res) => {
   const { email, newPassword } = req.body;
+
   try {
     const user = await User.findOne({ email, role: 'admin' });
-    if (!user) return res.status(404).json({ message: 'Admin not found' });
+
+    if (!user) {
+      return res.status(404).json({ message: 'Admin not found' });
+    }
+
     user.password = newPassword;
     await user.save();
+
     res.json({ message: 'Password reset successful' });
   } catch (err) {
     res.status(500).json({ message: err.message });
