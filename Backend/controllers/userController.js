@@ -108,6 +108,7 @@ export const getUserProfile = async (req, res) => {
         phone: user.phone,
         birthday: user.birthday,
         avatar: user.avatar,
+        addresses: user.addresses,
       });
     } else {
       res.status(404).json({ message: 'User not found' });
@@ -137,7 +138,17 @@ export const updateUserProfile = async (req, res) => {
         req.body.avatar !== undefined ? req.body.avatar : user.avatar;
 
       if (req.body.password) {
+        if (req.body.currentPassword) {
+          const isMatch = await user.matchPassword(req.body.currentPassword);
+          if (!isMatch) {
+             return res.status(401).json({ message: 'Invalid current password' });
+          }
+        }
         user.password = req.body.password;
+      }
+
+      if (req.body.addresses !== undefined) {
+        user.addresses = req.body.addresses;
       }
 
       const updatedUser = await user.save();
@@ -150,6 +161,7 @@ export const updateUserProfile = async (req, res) => {
         phone: updatedUser.phone,
         birthday: updatedUser.birthday,
         avatar: updatedUser.avatar,
+        addresses: updatedUser.addresses,
       });
     } else {
       res.status(404).json({ message: 'User not found' });

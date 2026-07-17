@@ -2610,3 +2610,516 @@
 .add-btn.full-width:hover {
   background-color: #0d8a4d;
 }
+
+/* Orders Page Base Classes (formerly inline) */
+.order-history-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+}
+.order-empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: #666;
+  background: #fff;
+  border-radius: 12px;
+  margin-top: 16px;
+}
+.order-text-primary { color: #333; }
+.order-text-secondary { color: #666; }
+.order-text-muted { color: #999; }
+.order-alert {
+  padding: 12px;
+  margin: 0 0 12px 0;
+  font-size: 13px;
+  border-radius: 4px;
+}
+.order-alert.rejected-alert {
+  background: #fef2f2;
+  border-left: 4px solid #ef4444;
+  color: #b91c1c;
+}
+.order-alert.assigned-alert {
+  background: #eff6ff;
+  border-left: 4px solid #3b82f6;
+  color: #1e40af;
+}
+.order-item-img {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+.order-total-row {
+  display: flex;
+  justify-content: space-between;
+  border-top: 1px dashed var(--border-color, #eee);
+  padding-top: 12px;
+  margin-top: 12px;
+  font-weight: bold;
+}
+
+/* Profile Base Classes (formerly inline) */
+.profile-edit-badge {
+  position: absolute;
+  bottom: -5px;
+  right: -5px;
+  background: #ffffff;
+  border-radius: 50%;
+  padding: 4px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.profile-edit-badge .edit-icon {
+  color: #333333;
+}
+.profile-identity-footer {
+  margin: 8px 16px 0;
+  padding: 14px 16px;
+  background: #f9fafb;
+  border-radius: 12px;
+  font-size: 12px;
+  color: #9ca3af;
+  line-height: 1.6;
+}
+
+/* ========================================= */
+/* USER APP DARK MODE OVERRIDES              */
+/* Matches the "Seller" perfect dark theme   */
+/* ========================================= */
+body.dark-mode {
+  background-color: #0f172a !important;
+  color: #f8fafc !important;
+}
+
+body.dark-mode .app,
+body.dark-mode .profile-page-container,
+body.dark-mode .profile-page-content,
+body.dark-mode .category-page-container,
+body.dark-mode .content-area {
+  background-color: #0f172a !important;
+}
+
+/* Header & Bottom Nav */
+body.dark-mode .header,
+body.dark-mode .bottom-nav,
+body.dark-mode .profile-sticky-header.scrolled {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+}
+
+body.dark-mode .logo-text,
+body.dark-mode .action-label,
+body.dark-mode .action-item,
+body.dark-mode .action-item svg,
+body.dark-mode .bottom-nav-item,
+body.dark-mode .profile-sticky-title,
+body.dark-mode .profile-back-btn,
+body.dark-mode .edit-icon,
+body.dark-mode .header-icon {
+  color: #f8fafc !important;
+}
+
+body.dark-mode .bottom-nav-item.active {
+  color: #818cf8 !important;
+}
+
+/* Cards & Sections in Profile & App */
+body.dark-mode .action-card,
+body.dark-mode .profile-settings-block,
+body.dark-mode .profile-info-section,
+body.dark-mode .settings-row,
+body.dark-mode .modal-content,
+body.dark-mode .address-card,
+body.dark-mode .product-card,
+body.dark-mode .category-card,
+body.dark-mode .search-bar-container,
+body.dark-mode .search-input-wrapper,
+body.dark-mode .category-nav,
+body.dark-mode .category-nav-item,
+body.dark-mode .subcategory-sidebar,
+body.dark-mode .category-page-header,
+body.dark-mode .order-history-card,
+body.dark-mode .order-empty-state,
+body.dark-mode .profile-list,
+body.dark-mode .back-home-btn,
+body.dark-mode .profile-back-btn,
+body.dark-mode .profile-edit-badge,
+body.dark-mode .profile-identity-footer,
+body.dark-mode .profile-avatar-circle {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
+body.dark-mode .subcategory-banner,
+body.dark-mode .birthday-banner,
+body.dark-mode .profile-header-gradient {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
+body.dark-mode .subcategory-products-area {
+  background-color: #0f172a !important;
+}
+
+body.dark-mode .category-img-wrapper,
+body.dark-mode .product-img-wrapper,
+body.dark-mode .subcat-img-wrapper,
+body.dark-mode .search-input {
+  background-color: transparent !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
+body.dark-mode .category-nav-item.active,
+body.dark-mode .subcategory-sidebar-item.active {
+  background-color: #334155 !important;
+  border-color: #475569 !important;
+}
+
+/* Specific text colors */
+body.dark-mode .action-card-label,
+body.dark-mode .settings-row-title,
+body.dark-mode .profile-section-heading,
+body.dark-mode .list-label,
+body.dark-mode .birthday-title,
+body.dark-mode .modal-header h2,
+body.dark-mode .form-group label,
+body.dark-mode .product-title,
+body.dark-mode .product-price,
+body.dark-mode .category-name,
+body.dark-mode .section-title,
+body.dark-mode .category-title,
+body.dark-mode .score,
+body.dark-mode .order-text-primary,
+body.dark-mode .subcat-name,
+body.dark-mode .subcategory-banner-title {
+  color: #f8fafc !important;
+}
+
+body.dark-mode .settings-row-subtitle,
+body.dark-mode .list-chevron,
+body.dark-mode .list-icon,
+body.dark-mode .profile-username svg,
+body.dark-mode .product-weight,
+body.dark-mode .product-subtitle,
+body.dark-mode .rating-label,
+body.dark-mode .price-unit,
+body.dark-mode .order-text-secondary,
+body.dark-mode .order-text-muted,
+body.dark-mode .items-count-badge,
+body.dark-mode .subcategory-banner-subtitle {
+  color: #94a3b8 !important;
+}
+
+body.dark-mode .order-alert.assigned-alert {
+  background-color: rgba(59, 130, 246, 0.1) !important;
+  border-left-color: #3b82f6 !important;
+  color: #60a5fa !important;
+}
+
+body.dark-mode .order-alert.rejected-alert {
+  background-color: rgba(239, 68, 68, 0.1) !important;
+  border-left-color: #ef4444 !important;
+  color: #f87171 !important;
+}
+
+body.dark-mode .order-total-row,
+body.dark-mode .order-history-card > div {
+  border-color: #334155 !important;
+}
+
+/* Modals & Inputs */
+body.dark-mode .modal-header,
+body.dark-mode .form-input,
+body.dark-mode .appearance-select-btn {
+  background-color: #0f172a !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
+body.dark-mode .form-input:focus {
+  border-color: #6366f1 !important;
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.2) !important;
+}
+
+/* Buttons */
+body.dark-mode .btn-primary,
+body.dark-mode .modal-body button[type="submit"] {
+  background-color: #6366f1 !important;
+  color: white !important;
+}
+
+body.dark-mode .btn-secondary,
+body.dark-mode .modal-body button[type="button"] {
+  background-color: transparent !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
+/* Lists and interactables */
+body.dark-mode .profile-list-item {
+  border-color: #334155 !important;
+}
+
+body.dark-mode .profile-list-item:hover,
+body.dark-mode .action-card:hover {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+body.dark-mode .update-version-badge,
+body.dark-mode .appearance-dropdown-menu {
+  background-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
+body.dark-mode .appearance-dropdown-menu button {
+  color: #f8fafc !important;
+}
+body.dark-mode .appearance-dropdown-menu button:hover {
+  background-color: #475569 !important;
+}
+
+body.dark-mode div[style*="background: #f0fdf4"],
+body.dark-mode div[style*="background: rgb(240, 253, 244)"] {
+  background-color: rgba(99, 102, 241, 0.1) !important;
+  border-color: #6366f1 !important;
+}
+
+/* ========================================= */
+/* PREMIUM PROFILE REDESIGN                  */
+/* ========================================= */
+.premium-profile-card {
+  background-color: #1e293b;
+  border-radius: 20px;
+  padding: 0;
+  border: 1px solid #334155;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+.premium-profile-top {
+  display: flex;
+  align-items: center;
+  padding: 20px;
+  gap: 16px;
+  position: relative;
+}
+.premium-avatar-wrapper {
+  position: relative;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background-color: #022c22;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.premium-avatar-letter {
+  font-size: 32px;
+  font-weight: 700;
+  color: #f8fafc;
+}
+.premium-avatar-wrapper img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.premium-camera-badge {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  background-color: #022c22;
+  border: 2px solid #1e293b;
+  color: #10b981;
+  border-radius: 50%;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.premium-user-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.premium-name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.premium-username {
+  font-size: 18px;
+  font-weight: 700;
+  color: #f8fafc;
+  margin: 0;
+}
+.premium-verified-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #10b981;
+  font-size: 10px;
+  font-weight: 600;
+}
+.premium-user-email,
+.premium-user-phone {
+  font-size: 12px;
+  color: #94a3b8;
+  margin: 0;
+}
+.premium-member-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background-color: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 6px;
+  margin-top: 4px;
+  width: fit-content;
+}
+.premium-chevron {
+  color: #94a3b8;
+}
+.premium-edit-row {
+  border-top: 1px solid #334155;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #10b981;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  background-color: rgba(0, 0, 0, 0.1);
+}
+.premium-birthday-banner {
+  background: linear-gradient(135deg, #3b0764 0%, #4c1d95 100%);
+  border-radius: 20px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+.premium-birthday-icon-wrapper {
+  width: 56px;
+  height: 56px;
+  background-color: rgba(255, 255, 255, 0.08);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  flex-shrink: 0;
+}
+.premium-birthday-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  z-index: 1;
+}
+.premium-birthday-title {
+  color: #f8fafc;
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0;
+}
+.premium-birthday-desc {
+  color: #cbd5e1;
+  font-size: 11px;
+  margin: 0 0 10px 0;
+  line-height: 1.4;
+}
+.premium-birthday-btn {
+  background-color: #ffffff;
+  color: #4c1d95;
+  border: none;
+  border-radius: 20px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  cursor: pointer;
+}
+.premium-action-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.premium-action-card {
+  background-color: #1e293b;
+  border-radius: 16px;
+  padding: 16px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #334155;
+  position: relative;
+  cursor: pointer;
+}
+.premium-action-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+.premium-action-icon.orders { color: #10b981; }
+.premium-action-icon.wallet { color: #f59e0b; }
+.premium-action-icon.help { color: #3b82f6; }
+.premium-order-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background-color: #f59e0b;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 800;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.premium-action-title {
+  color: #f8fafc;
+  font-size: 12px;
+  font-weight: 700;
+}
+.premium-action-subtitle {
+  color: #94a3b8;
+}
+
+body.dark-mode .profile-back-btn {
+  background-color: transparent !important;
+  border-color: transparent !important;
+  color: #f8fafc !important;
+  box-shadow: none !important;
+  font-size: 10px;
+}
+ 
+

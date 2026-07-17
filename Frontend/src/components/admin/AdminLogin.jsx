@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Mail, Lock, Shield, ArrowRight } from 'lucide-react';
+import { Mail, Lock, Shield, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import './AdminApp.css';
 
 function AdminLogin() {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleLogin = (e) => {
@@ -68,17 +69,24 @@ function AdminLogin() {
             <div style={{ position: 'relative' }}>
               <Lock size={18} color="#64748b" style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)' }} />
               <input 
-                type="password" 
+                type={showPassword ? "text" : "password"} 
                 placeholder="••••••••" 
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 style={{ 
-                  width: '100%', padding: '12px 16px 12px 42px', borderRadius: '12px', 
+                  width: '100%', padding: '12px 42px 12px 42px', borderRadius: '12px', 
                   border: '1px solid #334155', background: '#0f172a', color: '#f8fafc',
                   outline: 'none', fontSize: '15px', boxSizing: 'border-box'
                 }}
                 required
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center' }}
+              >
+                {showPassword ? <EyeOff size={18} color="#64748b" /> : <Eye size={18} color="#64748b" />}
+              </button>
             </div>
           </div>
 

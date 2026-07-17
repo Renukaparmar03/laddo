@@ -349,3 +349,47 @@ input:checked + .slider:before {
     grid-template-columns: 1fr;
   }
 }
+
+/* Dark Mode Overrides */
+body.seller-dark-theme {
+  --seller-card: #1e293b;
+  --seller-border: #334155;
+  --seller-text: #f8fafc;
+  --seller-text-muted: #94a3b8;
+  --seller-shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+  background-color: #0f172a;
+}
+
+body.seller-dark-theme .seller-settings-page {
+  background-color: #0f172a;
+}
+
+body.seller-dark-theme .settings-list-item:not(.no-hover):hover {
+  background-color: #334155;
+}
+
+body.seller-dark-theme .form-input {
+  background-color: #0f172a;
+  color: #f8fafc;
+}
+
+body.seller-dark-theme .section-icon {
+  background-color: #312e81;
+}
+
+body.seller-dark-theme .btn-support {
+  background-color: #334155;
+  color: #f8fafc;
+}
+
+body.seller-dark-theme .btn-support:hover {
+  background-color: #475569;
+}
+
+body.seller-dark-theme .btn-support.outline {
+  background-color: transparent;
+}
+
+body.seller-dark-theme .btn-support.outline:hover {
+  background-color: #334155;
+}

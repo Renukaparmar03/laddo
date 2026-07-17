@@ -77,21 +77,21 @@ const OrdersPage = ({ onProductSelect }) => {
         </div>
         <div style={{ padding: '0 16px' }}>
           {orders.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '40px 20px', color: '#666', background: '#fff', borderRadius: '12px', marginTop: '16px' }}>
+            <div className="order-empty-state">
               <ShoppingBag size={48} style={{ opacity: 0.3, marginBottom: '16px' }} />
-              <h3>No orders yet</h3>
-              <p>Looks like you haven't placed any orders yet.</p>
+              <h3 className="order-text-primary">No orders yet</h3>
+              <p className="order-text-secondary">Looks like you haven't placed any orders yet.</p>
             </div>
           ) : (
             orders.map(order => (
-              <div key={order._id} style={{ background: '#fff', borderRadius: '12px', padding: '16px', marginBottom: '16px', boxShadow: '0 2px 4px rgba(0,0,0,0.04)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #eee', paddingBottom: '12px', marginBottom: '12px' }}>
+              <div key={order._id} className="order-history-card">
+                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border-color, #eee)', paddingBottom: '12px', marginBottom: '12px' }}>
                   <div>
-                    <p style={{ margin: 0, fontSize: '12px', color: '#666' }}>Order ID: {order._id.substring(0,8).toUpperCase()}</p>
-                    <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#999' }}>{new Date(order.createdAt).toLocaleDateString()}</p>
+                    <p className="order-text-secondary" style={{ margin: 0, fontSize: '12px' }}>Order ID: {order._id.substring(0,8).toUpperCase()}</p>
+                    <p className="order-text-muted" style={{ margin: '4px 0 0 0', fontSize: '12px' }}>{new Date(order.createdAt).toLocaleDateString()}</p>
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <span style={{ 
+                    <span className="order-status-badge" style={{ 
                       fontSize: '12px', fontWeight: 'bold', padding: '4px 8px', borderRadius: '4px',
                       background: order.status === 'Rejected' || order.status === 'Cancelled' ? '#fee2e2' : order.status === 'Delivered' ? '#dcfce7' : '#fef9c3',
                       color: order.status === 'Rejected' || order.status === 'Cancelled' ? '#ef4444' : order.status === 'Delivered' ? '#16a34a' : '#ca8a04'
@@ -102,13 +102,13 @@ const OrdersPage = ({ onProductSelect }) => {
                 </div>
                 
                 {order.status === 'Rejected' && order.rejectionReason && (
-                  <div style={{ background: '#fef2f2', borderLeft: '4px solid #ef4444', padding: '12px', margin: '0 0 12px 0', fontSize: '13px', color: '#b91c1c', borderRadius: '4px' }}>
+                  <div className="order-alert rejected-alert">
                     <strong>Reason for rejection:</strong> {order.rejectionReason}
                   </div>
                 )}
 
                 {(order.status === 'Assigned' || order.status === 'Picked Up' || order.status === 'Out for Delivery') && (
-                  <div style={{ background: '#eff6ff', borderLeft: '4px solid #3b82f6', padding: '12px', margin: '0 0 12px 0', fontSize: '13px', color: '#1e40af', borderRadius: '4px' }}>
+                  <div className="order-alert assigned-alert">
                     <strong>Delivery OTP: {order.deliveryOtp || '5678'}</strong><br/>
                     <span style={{ fontSize: '12px' }}>Share this code with the delivery partner to receive your order.</span>
                   </div>
@@ -117,17 +117,17 @@ const OrdersPage = ({ onProductSelect }) => {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                   {order.orderItems.map((item, index) => (
                     <div key={index} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <img src={item.image} alt={item.title} style={{ width: '48px', height: '48px', borderRadius: '8px', objectFit: 'cover' }} />
+                      <img src={item.image} alt={item.title} className="order-item-img" />
                       <div style={{ flex: 1 }}>
-                        <p style={{ margin: 0, fontSize: '14px', fontWeight: '500', color: '#333' }}>{item.title}</p>
-                        <p style={{ margin: 0, fontSize: '12px', color: '#666' }}>Qty: {item.qty}</p>
+                        <p className="order-text-primary" style={{ margin: 0, fontSize: '14px', fontWeight: '500' }}>{item.title}</p>
+                        <p className="order-text-secondary" style={{ margin: 0, fontSize: '12px' }}>Qty: {item.qty}</p>
                       </div>
-                      <p style={{ margin: 0, fontSize: '14px', fontWeight: 'bold' }}>₹{item.price}</p>
+                      <p className="order-text-primary" style={{ margin: 0, fontSize: '14px', fontWeight: 'bold' }}>₹{item.price}</p>
                     </div>
                   ))}
                 </div>
                 
-                <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px dashed #eee', paddingTop: '12px', marginTop: '12px', fontWeight: 'bold' }}>
+                <div className="order-total-row">
                   <span>Total Amount</span>
                   <span>₹{order.totalPrice}</span>
                 </div>

@@ -1,12 +1,13 @@
 import React, { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { Phone, Lock, Bike, ArrowRight } from 'lucide-react'
+import { Phone, Lock, Bike, ArrowRight, Eye, EyeOff } from 'lucide-react'
 import './Delivery.css'
 
 function DeliveryLogin() {
   const navigate = useNavigate();
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async (e) => {
@@ -94,13 +95,23 @@ function DeliveryLogin() {
               </label>
               <Link to="/reset-password?type=delivery" style={{ fontSize: '13px', color: 'var(--del-primary)', textDecoration: 'none', fontWeight: '600' }}>Forgot Password?</Link>
             </div>
-            <input 
-              type="password" 
-              placeholder="Enter your password" 
-              className="del-input" 
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
+            <div style={{ position: 'relative' }}>
+              <input 
+                type={showPassword ? "text" : "password"} 
+                placeholder="Enter your password" 
+                className="del-input" 
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                style={{ paddingRight: '40px', width: '100%' }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center' }}
+              >
+                {showPassword ? <EyeOff size={18} color="var(--del-text-muted)" /> : <Eye size={18} color="var(--del-text-muted)" />}
+              </button>
+            </div>
           </div>
 
           <button 

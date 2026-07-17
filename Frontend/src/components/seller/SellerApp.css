@@ -539,3 +539,161 @@ body.seller-dark-theme {
     grid-template-columns: 1fr;
   }
 }
+
+/* Explicit Dark Mode Overrides */
+body.seller-dark-theme .card,
+body.seller-dark-theme .stat-card,
+body.seller-dark-theme .product-card,
+body.seller-dark-theme .earning-stat-card,
+body.seller-dark-theme .search-bar,
+body.seller-dark-theme .filter-tab,
+body.seller-dark-theme .empty-state,
+body.seller-dark-theme .modal-content,
+body.seller-dark-theme .modal-header,
+body.seller-dark-theme .modal-footer,
+body.seller-dark-theme .form-section,
+body.seller-dark-theme .filter-dropdown,
+body.seller-dark-theme .product-image-wrapper,
+body.seller-dark-theme .product-actions {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
+body.seller-dark-theme .stat-value,
+body.seller-dark-theme .card-header h3,
+body.seller-dark-theme .dashboard-welcome h1,
+body.seller-dark-theme .small-stat-card h4,
+body.seller-dark-theme .product-stat .name,
+body.seller-dark-theme .customer-stat h3,
+body.seller-dark-theme .product-cell span,
+body.seller-dark-theme .orders-table td,
+body.seller-dark-theme .orders-table th,
+body.seller-dark-theme .product-name,
+body.seller-dark-theme .product-price,
+body.seller-dark-theme .trx-amount,
+body.seller-dark-theme .trx-id,
+body.seller-dark-theme .trx-customer,
+body.seller-dark-theme .stock-value,
+body.seller-dark-theme .header-title h1,
+body.seller-dark-theme .form-group label,
+body.seller-dark-theme .modal-header h2 {
+  color: #f8fafc !important;
+}
+
+body.seller-dark-theme .stat-label,
+body.seller-dark-theme .dashboard-welcome p,
+body.seller-dark-theme .product-stat .sales,
+body.seller-dark-theme .customer-stat .trend,
+body.seller-dark-theme .date-select,
+body.seller-dark-theme .product-category,
+body.seller-dark-theme .product-stock,
+body.seller-dark-theme .header-title p,
+body.seller-dark-theme .empty-state p,
+body.seller-dark-theme .trx-date,
+body.seller-dark-theme .legend-item,
+body.seller-dark-theme .x-label,
+body.seller-dark-theme .y-axis {
+  color: #94a3b8 !important;
+}
+
+body.seller-dark-theme .date-select,
+body.seller-dark-theme .search-bar input,
+body.seller-dark-theme .filter-dropdown select,
+body.seller-dark-theme .form-group input,
+body.seller-dark-theme .form-group select,
+body.seller-dark-theme .form-group textarea,
+body.seller-dark-theme .btn-secondary {
+  background-color: #0f172a !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
+body.seller-dark-theme .btn-secondary:hover {
+  background-color: #1e293b !important;
+}
+
+body.seller-dark-theme .filter-tab:hover {
+  background-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
+body.seller-dark-theme .filter-tab.active {
+  background-color: #6366f1 !important;
+  color: white !important;
+  border-color: #6366f1 !important;
+}
+
+body.seller-dark-theme .stat-icon.bg-purple { background-color: #312e81 !important; color: #818cf8 !important; }
+body.seller-dark-theme .stat-icon.bg-blue { background-color: #1e3a8a !important; color: #60a5fa !important; }
+body.seller-dark-theme .stat-icon.bg-green { background-color: #064e3b !important; color: #34d399 !important; }
+body.seller-dark-theme .stat-icon.bg-orange { background-color: #7c2d12 !important; color: #fb923c !important; }
+
+body.seller-dark-theme .orders-table th,
+body.seller-dark-theme .orders-table td,
+body.seller-dark-theme .transactions-table th,
+body.seller-dark-theme .transactions-table td,
+body.seller-dark-theme .top-product-item,
+body.seller-dark-theme .product-meta {
+  border-bottom-color: #334155 !important;
+  border-top-color: #334155 !important;
+}
+
+body.seller-dark-theme .seller-action-btn {
+  border-right-color: #334155 !important;
+  color: #94a3b8 !important;
+}
+
+body.seller-dark-theme .seller-action-btn:hover {
+  background-color: #334155 !important;
+}
+
+/* Backgrounds that should be very dark #0f172a */
+body.seller-dark-theme .orders-table-full th,
+body.seller-dark-theme .transactions-table th,
+body.seller-dark-theme .orders-table th,
+body.seller-dark-theme .order-row:hover,
+body.seller-dark-theme .transactions-table tr:hover,
+body.seller-dark-theme .orders-table tbody tr:hover,
+body.seller-dark-theme .view-btn,
+body.seller-dark-theme .empty-icon-wrapper {
+  background-color: #0f172a !important;
+  color: #f8fafc !important;
+}
+
+/* Backgrounds that should be card dark #1e293b */
+body.seller-dark-theme .orders-list,
+body.seller-dark-theme .details-card,
+body.seller-dark-theme .status-banner,
+body.seller-dark-theme .payment-summary,
+body.seller-dark-theme .order-mobile-card {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
+/* Fix text colors */
+body.seller-dark-theme .orders-table-full td,
+body.seller-dark-theme .order-id,
+body.seller-dark-theme .customer-name,
+body.seller-dark-theme .total-price,
+body.seller-dark-theme .item-name,
+body.seller-dark-theme .item-total,
+body.seller-dark-theme .summary-row.total-row {
+  color: #f8fafc !important;
+}
+
+body.seller-dark-theme .orders-table-full th,
+body.seller-dark-theme .transactions-table th,
+body.seller-dark-theme .order-date,
+body.seller-dark-theme .payment-method,
+body.seller-dark-theme .product-qty,
+body.seller-dark-theme .item-meta,
+body.seller-dark-theme .summary-row {
+  color: #94a3b8 !important;
+}
+
+/* Fix view-btn hover */
+body.seller-dark-theme .view-btn:hover {
+  background-color: #6366f1 !important;
+}
